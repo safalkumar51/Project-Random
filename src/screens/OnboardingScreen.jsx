@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Image } from 'react-native'
+import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native'
 import React from 'react'
 
 import Onboarding from 'react-native-onboarding-swiper';
@@ -7,12 +7,33 @@ import { Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
+const Skip = ({...props}) => (
+    <TouchableOpacity style={styles.container} {...props}>
+        <Text style={styles.text}>Skip</Text>
+    </TouchableOpacity>
+);
+const Next = ({...props}) => (
+    <TouchableOpacity style={styles.container} {...props}>
+        <Text style={styles.text}>Next</Text>
+    </TouchableOpacity>
+);
+const Done = ({...props}) => (
+    <TouchableOpacity style={styles.container} {...props}>
+        <Text style={styles.text}>Done</Text>
+    </TouchableOpacity>
+);
+
 
 const OnboardingScreen = ({ navigation }) => {
     return (
         <Onboarding
-            onSkip={() => navigation.replace("LoginScreen")}
-            onDone={() => navigation.replace("LoginScreen")}
+            SkipButtonComponent={Skip}
+            NextButtonComponent={Next}
+            DoneButtonComponent={Done}
+
+            onSkip={() => {navigation.navigate("LoginScreen")}}
+            onDone={() => {navigation.navigate("LoginScreen")}}
+            
             pages={[
                 {
                     backgroundColor: '#fff',
@@ -90,4 +111,13 @@ const OnboardingScreen = ({ navigation }) => {
 
 export default OnboardingScreen
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+    container:{
+        margin:'8',
+    },
+    text: {
+        fontWeight:'690',
+        fontFamily:'Gabriel',
+        fontSize:20
+    }
+})
