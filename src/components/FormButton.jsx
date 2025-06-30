@@ -8,7 +8,7 @@ const { width, height } = Dimensions.get('window');
 const FormButton = ({buttonTitle, ...rest}) => {
   return (
     <View>
-      <TouchableOpacity style={styles.buttonContainer}>
+      <TouchableOpacity style={styles.buttonContainer} onPress={rest.onPress}>
         <Text style={styles.buttonText}>{buttonTitle}</Text>
       </TouchableOpacity>
     </View>
