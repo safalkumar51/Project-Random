@@ -1,13 +1,46 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, Alert} from 'react-native'
 import React, { useState } from 'react'
 import FormInput from '../components/FormInput'
 import FormButton from '../components/FormButton';
 import LoginScreen from './LoginScreen';
+import axios from 'axios';
 
 const SignupScreen = ({ navigation }) => {
-    const [email, setEmail] = useState();
-    const [password, setPassword] = useState();
-    const [confirmPassword, setConfirmPassword] = useState();
+    const [userName, setUserName] = useState();
+    const [userEmail, setUserEmail] = useState();
+    const [userPassword, setUserPassword] = useState();
+    const [userConfirmPassword, setUserConfirmPassword] = useState();
+
+    const signUpHandler = async () => {
+        if(!userEmail.endsWith("@hbtu.ac.in")){
+            alert("Only college email allowed.");
+            return;
+        }
+        if(userPassword !== userConfirmPassword){
+            Alert.alert(
+                "Sign Up Failed!!",
+                "Enter Password Carefully!"
+            );
+            return;
+        }
+        try {
+            const res = await axios.post('http://localhost:3000/user/signup', {
+                userName,
+                userEmail,
+                userPassword,
+                userConfirmPassword
+            });
+            // Verification needed and add verification
+            Alert.alert('Signup Successful!!',
+                'Now you can Sign In!'
+            );
+        } catch (err) {
+            Alert.alert('Signup Failed!!',
+                err.response?.data?.message || 'Error'
+            );
+        }
+    };
+
     return (
         <View style={styles.Container}>
             <Text>Add Random app image or logo</Text>
@@ -16,9 +49,18 @@ const SignupScreen = ({ navigation }) => {
                 iconType='Feather'
                 iconName='user'
                 iconSize={17}
+                placeholderText={'Full Name'}
+                labelValue={userName}
+                onChangeText={(userName) => setUserName(userName)}
+                autoCorrect={false}
+            />
+            <FormInput
+                iconType='Feather'
+                iconName='user'
+                iconSize={17}
                 placeholderText={'University Mail ID'}
-                labelValue={email}
-                onChangeText={(userEmail) => setEmail(userEmail)}
+                labelValue={userEmail}
+                onChangeText={(userEmail) => setUserEmail(userEmail)}
                 keyboardType='email-address'
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -28,8 +70,8 @@ const SignupScreen = ({ navigation }) => {
                 iconName='lock'
                 iconSize={25}
                 placeholderText={'Password'}
-                labelValue={password}
-                onChangeText={(userPassword) => setPassword(userPassword)}
+                labelValue={userPassword}
+                onChangeText={(userPassword) => setUserPassword(userPassword)}
                 autoCapitalize="none"
                 autoCorrect={false}
                 secureTextEntry={true}
@@ -39,14 +81,15 @@ const SignupScreen = ({ navigation }) => {
                 iconName='lock'
                 iconSize={25}
                 placeholderText={'Confirm Password'}
-                labelValue={confirmPassword}
-                onChangeText={(userConfirmPassword) => setConfirmPassword(userConfirmPassword)}
+                labelValue={userConfirmPassword}
+                onChangeText={(userConfirmPassword) => setUserConfirmPassword(userConfirmPassword)}
                 autoCapitalize="none"
                 autoCorrect={false}
                 secureTextEntry={true}
             />
             <FormButton
                 buttonTitle={'Sign Up'}
+                onPress={signUpHandler}
             />
             <View style={styles.SignInContainer}>
                 <Text style={styles.SignInTxt}>
@@ -83,7 +126,6 @@ const styles = StyleSheet.create({
     HeaderTxt: {
         fontSize: 25,
         fontWeight: 'bold',
-        fontFamily: 'Lato-Regular',
         marginBottom: 10,
     },
     SignInContainer: {
@@ -95,7 +137,6 @@ const styles = StyleSheet.create({
     },
     SignInTxt: {
         fontSize: 14,
-        fontFamily: 'Lato-Regular',
     },
     TCcontainer: {
         justifyContent: 'center',
@@ -106,7 +147,6 @@ const styles = StyleSheet.create({
     TCtxt: {
         fontSize: 13,
         fontWeight: '400',
-        fontFamily: 'Lato-Regular',
         color: 'grey',
     },
 })
