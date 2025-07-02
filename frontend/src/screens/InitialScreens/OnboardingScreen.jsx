@@ -31,15 +31,15 @@ const OnboardingScreen = ({ navigation }) => {
             NextButtonComponent={Next}
             DoneButtonComponent={Done}
 
-            onSkip={() => {navigation.navigate("LoginScreen")}}
-            onDone={() => {navigation.navigate("LoginScreen")}}
+            onSkip={() => {navigation.replace("LoginScreen")}}
+            onDone={() => {navigation.replace("LoginScreen")}}
             
             pages={[
                 {
                     backgroundColor: '#fff',
                     image: (
                         <Image
-                            source={require('../assets/Onboarding-img/Onboarding-img1.png')}
+                            source={require('../../assets/Onboarding-img/Onboarding-img1.png')}
                             style={{
                                 width: width * 0.8,       // 80% of screen width
                                 height: height * 0.4,     // 40% of screen height
@@ -62,7 +62,7 @@ const OnboardingScreen = ({ navigation }) => {
                     backgroundColor: '#fff',
                     image: (
                         <Image
-                            source={require('../assets/Onboarding-img/Onboarding-img2.png')}
+                            source={require('../../assets/Onboarding-img/Onboarding-img2.png')}
                             style={{
                                 width: width * 0.9,       // 80% of screen width
                                 height: height * 0.4,     // 40% of screen height
@@ -85,7 +85,7 @@ const OnboardingScreen = ({ navigation }) => {
                     backgroundColor: '#fff',
                     image: (
                         <Image
-                            source={require('../assets/Onboarding-img/Onboarding-img3.png')}
+                            source={require('../../assets/Onboarding-img/Onboarding-img3.png')}
                             style={{
                                 width: width * 0.8,       // 80% of screen width
                                 height: height * 0.4,     // 40% of screen height
