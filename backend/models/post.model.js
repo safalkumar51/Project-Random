@@ -5,7 +5,7 @@ const postSchema = mongoose.Schema({
         type: String
     },
     caption: {
-        type: String
+        type: String,
     },
     likes: [
         {

@@ -15,10 +15,17 @@ const SignupScreen = ({ navigation }) => {
     const [userConfirmPassword, setUserConfirmPassword] = useState();
 
     const signUpHandler = async () => {
-        if (!userEmail.endsWith("@hbtu.ac.in")) {
-            alert("Only college email allowed.");
+        
+        if(!userName || !userEmail || !userPassword){
+            Alert.alert("All fields are mandatory.");
             return;
         }
+
+        if (!userEmail.endsWith("@hbtu.ac.in")) {
+            Alert.alert("Only college email allowed.");
+            return;
+        }
+
         if (userPassword !== userConfirmPassword) {
             Alert.alert(
                 "Sign Up Failed!!",
@@ -26,12 +33,17 @@ const SignupScreen = ({ navigation }) => {
             );
             return;
         }
+
+        if(userPassword.length<8){
+            Alert.alert("Password must contain alteast 8 characters.");
+            return;
+        }
+        
         try {
-            const res = await axios.post('http://localhost:3000/user/signup', {
+            const response = await axios.post('http://localhost:4167/user/signUpOtp', {
                 userName,
                 userEmail,
                 userPassword,
-                userConfirmPassword
             });
             // Verification needed and add verification
             Alert.alert('Signup Successful!!',
