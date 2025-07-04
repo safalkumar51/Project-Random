@@ -239,5 +239,7 @@ export default HomeScreen
 const styles = StyleSheet.create({
     HomeContainer: {
         flex: 1,
+        // alignItems:"center",
+        // padding:20,
     },
 })

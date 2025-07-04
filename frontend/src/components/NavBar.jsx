@@ -25,6 +25,7 @@ const styles = StyleSheet.create({
     navBar: {
         height: width * 0.13,
         backgroundColor: '#fff',
+        width:"100%",
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -37,9 +38,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 2,
         width: width * 0.97,
-        marginHorizontal: 5,
-        marginVertical: 2,
+       // marginHorizontal: 5,
+       // marginVertical: 2,
         borderRadius: 8,
+        marginBottom:20,
     },
     randomBtn: {
         flex: 0.4,
