@@ -14,81 +14,62 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const userSignUpOtp = async (req, res) => {
-    try{
+const userForgotPasswordOtp = async (req, res) => {
+    try {
 
-        const { name, email, password } = req.body;
+        const { email } = req.body;
 
-        if(!name || !email || !password){
+        if (!email) {
             return res.status(400).json({
                 success: false,
                 message: "All fields are required!"
             });
         }
 
-        if(!email.endsWith("@hbtu.ac.in")){
+        if (!email.endsWith("@hbtu.ac.in")) {
             return res.status(401).json({
                 success: false,
                 message: "Only college email allowed."
             });
         }
-        
-        if(password.length < 8){
+
+        const userExists = await userModel.findOne({ email });
+        if (!userExists) {
             return res.status(400).json({
                 success: false,
-                message: "Password must contain alteast 8 characters."
+                message: "User doesn't exists!"
             });
         }
-
-
-
-        const userExists = await userModel.findOne({email});
-        if(userExists){
-            return res.status(409).json({
-                success: false,
-                message: "User Already Exists!"
-            });
-        }
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPass = await bcrypt.hash(password, salt);
 
         const otp = crypto.randomInt(100000, 999999).toString();
         const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-        // res.json({ otp, expiresAt, name, email, password });
-
-        let createdOtp = await otpModel.findOneAndUpdate(
-            {email},
-            {
-                otp,
-                expiresAt,
-                name,
-                email,
-                password: hashedPass,
-            },
-            {upsert: true}
+        await otpModel.findOneAndUpdate(
+            { email },
+            { otp, expiresAt, email },
+            { upsert: true }
         );
 
         await transporter.sendMail({
             from: process.env.MAIL_USER,
             to: email,
             subject: "Your OTP for Random Social Media App",
-            text: `Your OTP is ${otp}. It expires in 5 minutes. Don't share this otp with anyone!`,
+            text: `Your OTP is ${otp}. It expires in 5 minutes. Don't share this OTP with anyone!`,
         });
 
         return res.status(201).json({
             success: true,
             message: "OTP sent",
-        })
+        });
 
-    } catch(err){
-        console.log("Sign Up Verification Error : ", err.message);
+
+    } catch (err) {
+        console.log("Forgot Password OTP Generation Error : ", err.message);
         return res.status(500).json({
             success: false,
             error: err.message
         });
     }
-};
+}
 
-module.exports = userSignUpOtp;
+module.exports = userForgotPasswordOtp;
