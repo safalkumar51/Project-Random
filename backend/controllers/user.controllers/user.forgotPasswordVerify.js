@@ -36,6 +36,9 @@ const userForgotPasswordVerify = async (req, res) => {
 
         const authToken = jwt.sign({ email, id: userExists._id }, process.env.JWT_SECRET);
 
+        userExists.token = authToken;
+        await userExists.save();
+
         return res.status(201).json({
             success: true,
             message: "Password Updated Successfully",

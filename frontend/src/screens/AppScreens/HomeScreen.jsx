@@ -1,17 +1,25 @@
-import { Image, StyleSheet, Text, View, TouchableOpacity, FlatList } from 'react-native'
-import React from 'react'
+import { Image, StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native'
+import React, { useEffect, useState } from 'react'
+
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import PostCards from '../../components/PostCards';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import NavBar from '../../components/NavBar';
 
-const data = [
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
+
+/* const data = [
     {
         type: 'profile',
         id: '0',
         name: 'Some Name',
         email: 'someone@example.com',
-        profileImage: 'https://www.pngarts.com/files/10/Default-Profile-Picture-PNG-Free-Download.png',
+        profileImage: 'https://res.cloudinary.com/project-random/image/upload/v1751710445/default_yte3vu.png',
         bio: 'Lorem ipsum dolor sit amet consectetur, adipisicing elit. Excepturi iure adipisci praesentium. Provident temporibus facilis libero architecto quam, repudiandae dicta!',
     },
     {
@@ -194,38 +202,102 @@ const data = [
         postText: '"Always."',
         postImage: '',
     },
-];
+]; */
 
 
 const HomeScreen = () => {
 
-    const renderItem = ({ item }) => {
-        switch (item.type) {
-            case 'post':
-                return <PostCards
-                    name={item.name}
-                    time={item.time}
-                    profileImage={item.profileImage}
-                    postText={item.postText}
-                    postImage={item.postImage}
-                />
-            default:
-                return null;
+    const [posts, setPosts] = useState([]);
+    const [pageNumber, setPageNumber] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+
+    // function to fetch profile( if pageno = 1 ) and user post from backend
+    const fetchPosts = async (page) => {
+        if (loading || !hasMore) return;
+
+        setLoading(true);
+        try {
+
+            const authToken = await AsyncStorage.getItem('authToken');
+
+            if (!authToken) {
+                navigation.replace("LoginScreen");
+            }
+
+            const response = await axios.get(`http://10.0.2.2:4167/user/home?page=${page}`, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                }
+            });
+            if (response.data.success) {
+                setPosts(prev => [...prev, ...response.data.posts]);
+
+                setPageNumber(page);
+                setHasMore(page < response.data.totalPages);
+            }
+            else {
+                console.log(response.data.message);
+                navigation.replace("LoginScreen");
+            }
+
+        } catch (err) {
+            console.log('Error fetching posts:', err);
+        }
+
+        setLoading(false);
+    };
+
+    // on mounting fetchposts(pageno = 1)
+    useEffect(() => {
+        fetchPosts(1);
+    }, []);
+
+    // if user reaches end to flatlist loadmore
+    const loadMore = () => {
+        if (!loading && hasMore) {
+            fetchPosts(pageNumber + 1);
         }
     };
+
+
+
+    const renderItem = ({ item, index }) => {
+        if (index === 0) return null; // Skip the dummy item (used for NavBar)
+
+        const post = item;
+        console.log(post);
+        return (
+            <PostCards
+                name={post.owner.name}
+                time={dayjs(post.Date).fromNow()}
+                profileImage={post.owner.profilepic}
+                postText={post.caption}
+                postImage={post.postpic}
+            />
+        );
+    };
+      
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.HomeContainer}>
 
-                <FlatList data={data}
-                    keyExtractor={(item) => item.id}
+                <FlatList
+                    data={[{}, ...posts]}
+                    keyExtractor={(item, index) => index.toString()}
                     renderItem={renderItem}
 
-                    // This makes Navbar sticky
+                    // to run loadmore function when end is reached for infinite scrolling
+                    onEndReached={loadMore}
+                    onEndReachedThreshold={0.5}
+
+                    // this makes navbar sticky
                     ListHeaderComponent={<NavBar />}
                     stickyHeaderIndices={[0]}
 
+                    // to display loading as footer
+                    ListFooterComponent={loading && <ActivityIndicator />}
                     showsVerticalScrollIndicator={false}
                 />
 

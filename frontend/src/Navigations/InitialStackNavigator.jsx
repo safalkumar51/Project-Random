@@ -7,6 +7,7 @@ import LoginScreen from '../screens/InitialScreens/LoginScreen';
 import SignupScreen from '../screens/InitialScreens/SignupScreen';
 import ForgotPasswordScreen from '../screens/InitialScreens/ForgotPasswordScreen';
 import MainTabNavigator from './MainTabNavigator';
+import OtpScreen from '../screens/OtpScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -20,6 +21,7 @@ const InitialStackNavigator = ({ isFirstLaunch }) => {
             <Stack.Screen name="LoginScreen" component={LoginScreen} />
             <Stack.Screen name="SignupScreen" component={SignupScreen} />
             <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
+            <Stack.Screen name="OtpScreen" component={OtpScreen} />
             <Stack.Screen name="MainTab" component={MainTabNavigator} />
         </Stack.Navigator>
     )

@@ -9,7 +9,6 @@ import ProfileScreen from '../screens/AppScreens/ProfileScreen';
 import AlertScreen from '../screens/AppScreens/AlertScreen';
 
 import Icon from 'react-native-vector-icons/FontAwesome';
-import OtpScreen from '../screens/OtpScreen';
 
 
 
@@ -25,17 +24,15 @@ const MainTabNavigator = () => {
                 else if (route.name === 'Profile') iconName = 'user';
                 else if (route.name === 'Chat') iconName = 'comments';
                 else if (route.name === 'Activity') iconName = 'heart';
-                else if (route.name === 'Otp') iconName = 'notifiaction';
 
                 return <Icon name={iconName} size={size} color={color} />;
             },
         })}>
             <Tab.Screen name="Home" component={HomeScreen} />
             <Tab.Screen name="Chat" component={ChatScreen} />
-             <Tab.Screen name="Otp" component={OtpScreen}/>
             <Tab.Screen name="Activity" component={AlertScreen} />
             <Tab.Screen name="Profile" component={ProfileScreen} />
-           
+
         </Tab.Navigator>
     )
 }

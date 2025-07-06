@@ -22,7 +22,10 @@ const userSchema = mongoose.Schema({
     },
     profilepic: {
         type: String,
-        default: "default.png"
+        default: "https://res.cloudinary.com/project-random/image/upload/v1751710445/default_yte3vu.png"
+    },
+    token: {
+        type: String
     },
     posts: [
         {
@@ -30,10 +33,16 @@ const userSchema = mongoose.Schema({
             ref: 'Post'
         }
     ],
-    connections: [
+    follows: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
+        }
+    ],
+    connections: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Connection'
         }
     ]
 })

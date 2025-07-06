@@ -1,6 +1,11 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
 import React, { useState } from 'react';
+
+import { Dimensions } from 'react-native';
+
 import Icon from 'react-native-vector-icons/FontAwesome';
+
+const { width, height } = Dimensions.get('window');
 
 const PostCards = ({ name, time, profileImage, postText, postImage }) => {
     const [liked, setLiked] = useState(false);
@@ -70,7 +75,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderRadius: 15,
         marginBottom: 20,
-        width: '100%',
+        width: width,
         paddingBottom: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -114,8 +119,9 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     PostImage: {
-        width: '100%',
-        height: 225,
+        width: width,
+        maxHeight: width,
+        minHeight: width * 0.7
     },
     interactionWrapper: {
         flexDirection: 'row',

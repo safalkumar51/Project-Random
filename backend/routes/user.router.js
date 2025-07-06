@@ -1,5 +1,7 @@
 const express = require('express');
 
+const isLoggedIn = require('../middleware/isLoggedIn');
+
 const userSignInOtp = require('../controllers/user.controllers/user.signInOtp');
 const userSignInVerify = require('../controllers/user.controllers/user.signInVerify');
 const userSignUpVerify = require('../controllers/user.controllers/user.signUpVerify');
@@ -7,8 +9,9 @@ const userSignUpOtp = require('../controllers/user.controllers/user.signUpOtp');
 const userForgotPasswordOtp = require('../controllers/user.controllers/user.forgotPasswordOtp');
 const userForgotPasswordVerify = require('../controllers/user.controllers/user.forgotPasswordVerify');
 const userHomeFeed = require('../controllers/user.controllers/user.homeFeed');
-const isLoggedIn = require('../utils/isLoggedIn');
 const userProfile = require('../controllers/user.controllers/user.profile');
+const userSignOut = require('../controllers/user.controllers/user.signOut');
+const userDelete = require('../controllers/user.controllers/user.delete');
 
 const router = express.Router();
 
@@ -26,5 +29,7 @@ router.post('/forgotpassword/otp', userForgotPasswordOtp);
 router.post('/forgotpassword/verify', userForgotPasswordVerify);
 router.get('/home', isLoggedIn , userHomeFeed);
 router.get('/profile', isLoggedIn, userProfile);
+router.post('/signout', isLoggedIn, userSignOut);
+router.post('/delete', userDelete);
 
 module.exports = router;
