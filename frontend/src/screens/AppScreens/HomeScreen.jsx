@@ -304,7 +304,7 @@ const HomeScreen = () => {
             </View>
         </SafeAreaView>
     )
-}
+}  
 
 export default HomeScreen
 

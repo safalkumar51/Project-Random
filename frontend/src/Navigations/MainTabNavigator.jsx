@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import React from 'react';
+import ChatStackNavigator from './ChatStackNavigator'; // New navigator for chatscreen
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
@@ -29,7 +30,7 @@ const MainTabNavigator = () => {
             },
         })}>
             <Tab.Screen name="Home" component={HomeScreen} />
-            <Tab.Screen name="Chat" component={ChatScreen} />
+            <Tab.Screen name="Chat" component={ChatStackNavigator} /> 
             <Tab.Screen name="Activity" component={AlertScreen} />
             <Tab.Screen name="Profile" component={ProfileScreen} />
 
