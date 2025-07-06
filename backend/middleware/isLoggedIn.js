@@ -2,18 +2,22 @@ const jwt = require('jsonwebtoken');
 
 const isLoggedIn = async (req, res, next) => {
 
-    const authToken = req.header('Authorization')?.replace('Bearer ', '');
-    if (!authToken){
+    const authHeader = req.header('Authorization');
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')){
         return res.status(401).json({
             success: false,
             message: 'Log In Required!'
         });
     }
 
+    const authToken = authHeader.replace('Bearer ', '');
+
     try{
 
         const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
 
+        req.userToken = authToken;
         req.userId = decoded.id;
 
         next();

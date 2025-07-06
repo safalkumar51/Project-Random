@@ -7,12 +7,13 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 const { width, height } = Dimensions.get('window');
 
 const NavBar = () => {
+
     return (
         <View style={styles.navBar}>
-            <TouchableOpacity style={styles.randomBtn}>
-                <Text style={styles.randomTxt} onPress={() => { navigation.navigate("") }}>Random</Text>
+            <TouchableOpacity style={styles.randomBtn} onPress={() => { navigation.navigate("MainTab") }}>
+                <Text style={styles.randomTxt} >Random</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuBtn}>
+            <TouchableOpacity style={styles.menuBtn} onPress={() => {  }}>
                 <MaterialIcons name="dehaze" size={40} color='#2c2c2c' />
             </TouchableOpacity>
         </View>
@@ -25,6 +26,7 @@ const styles = StyleSheet.create({
     navBar: {
         height: width * 0.13,
         backgroundColor: '#fff',
+        width: width,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -36,10 +38,10 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 2,
-        width: width * 0.97,
-        marginHorizontal: 5,
+        // marginHorizontal: 5,
         marginVertical: 2,
         borderRadius: 8,
+        marginBottom: 20,
     },
     randomBtn: {
         flex: 0.4,
@@ -52,5 +54,5 @@ const styles = StyleSheet.create({
     menuBtn: {
         flex: 0.2,
         alignItems: 'flex-end'
-      },
+    },
 })

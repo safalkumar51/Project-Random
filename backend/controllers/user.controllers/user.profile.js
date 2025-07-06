@@ -5,13 +5,13 @@ const userProfile = async (req, res) => {
 
     try {
 
-        const pageNumber = req.body.pageNumber || 1;
+        const pageNumber = Number(req.query.page) || 1;
         const limit = 10;
         const skip = (pageNumber - 1) * limit;
 
         // 1. Get current user, select ignores fields other than name
-        const user = await userModel.findOne({ _id: req.userId }).select('name email profilepic bio');
-        if (!user) {
+        const user = await userModel.findOne({ _id: req.userId }).select('name email profilepic bio token');
+        if (!user || user.token !== req.userToken) {
             return res.status(404).json({
                 success: false,
                 message: 'Log In Required!'
@@ -22,13 +22,15 @@ const userProfile = async (req, res) => {
         // Added Pagination using skip and limit
         const posts = await postModel.find({ owner: req.userId })
             .populate('owner', 'name profilepic') // To get owner's name and profilepic
-            .sort({ createdAt: -1 }) // -1 >> To sort in descending order (latest first)
+            .sort({ Date: -1 }) // -1 >> To sort in descending order (latest first)
             .skip(skip) // skip >> To skip posts already sent
             .limit(limit); // limit >> To send limit posts
 
+        const total = await postModel.countDocuments({ owner: req.userId });
+
         return res.status(200).json({
             success: true,
-            page,
+            pageNumber,
             totalPages: Math.ceil(total / limit),
             totalPosts: total,
             profile: user,

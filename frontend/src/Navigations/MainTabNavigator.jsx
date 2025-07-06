@@ -32,6 +32,7 @@ const MainTabNavigator = () => {
             <Tab.Screen name="Chat" component={ChatScreen} />
             <Tab.Screen name="Activity" component={AlertScreen} />
             <Tab.Screen name="Profile" component={ProfileScreen} />
+
         </Tab.Navigator>
     )
 }
