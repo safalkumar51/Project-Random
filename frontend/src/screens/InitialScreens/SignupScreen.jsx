@@ -2,6 +2,7 @@ import { StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native'
 import React, { useState } from 'react'
 
 import axios from 'axios';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FormInput from '../../components/FormInput';
 import FormButton from '../../components/FormButton';
@@ -40,17 +41,25 @@ const SignupScreen = ({ navigation }) => {
         }
         
         try {
-            const response = await axios.post('http://localhost:4167/user/signUpOtp', {
+            const response = await axios.post('http://localhost:4167/user/signup/otp', {
                 userName,
                 userEmail,
                 userPassword,
             });
-            // Verification needed and add verification
-            Alert.alert('Signup Successful!!',
-                'Now you can Sign In!'
-            );
+            
+            if(response.data.success){
+                navigation.navigate("OtpScreen", {
+                    email,
+                    counter: 1
+                });
+            }
+            else{
+                Alert.alert("Something Went Wrong!");
+                console.log(response.data.message);
+            }
+
         } catch (err) {
-            Alert.alert('Signup Failed!!',
+            Alert.alert('Sign Up Failed!!',
                 err.response?.data?.message || 'Error'
             );
         }

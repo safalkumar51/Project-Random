@@ -1,5 +1,7 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useState } from 'react'
+
+import axios from 'axios';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,6 +10,42 @@ import FormButton from '../../components/FormButton';
 
 const ForgotPasswordScreen = ({ navigation }) => {
     const [email, setEmail] = useState();
+
+    const forgotPasswordHandler = async () => {
+
+        if (!email) {
+            Alert.alert("All fields are mandatory.");
+            return;
+        }
+
+        if (!email.endsWith("@hbtu.ac.in")) {
+            Alert.alert("Only college email allowed.");
+            return;
+        }
+
+        try {
+            const response = await axios.post('http://10.0.2.2:4167/user/forgotpassword/otp', {
+                email,
+            });
+
+            if (response.data.success) {
+                navigation.navigate("OtpScreen", {
+                    email,
+                    counter: 0
+                });
+            }
+            else {
+                Alert.alert("Something Went Wrong!");
+                console.log(response.data.message);
+            }
+
+        } catch (err) {
+            Alert.alert('Forgot Password Failed!!',
+                err.response?.data?.message || 'Error'
+            );
+        }
+    };
+
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.Container}>
@@ -19,13 +57,14 @@ const ForgotPasswordScreen = ({ navigation }) => {
                     iconSize={17}
                     placeholderText={'University Mail ID'}
                     labelValue={email}
-                    onChangeText={(userEmail) => setEmail(userEmail)}
+                    onChangeText={(email) => setEmail(email)}
                     keyboardType='email-address'
                     autoCapitalize="none"
                     autoCorrect={false}
                 />
                 <FormButton
-                    buttonTitle='Verify'
+                    buttonTitle='Send OTP'
+                    onPress={forgotPasswordHandler}
                 />
                 <View style={styles.SignInContainer}>
                     <Text style={styles.SignInTxt}>

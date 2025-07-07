@@ -27,6 +27,9 @@ const userSignUpVerify = async (req, res) => {
 
         const authToken = jwt.sign({ email, id: createdUser._id }, process.env.JWT_SECRET);
 
+        createdUser.token = authToken;
+        await createdUser.save();
+
         return res.status(202).json({
             success: true,
             message: "User Registered",
