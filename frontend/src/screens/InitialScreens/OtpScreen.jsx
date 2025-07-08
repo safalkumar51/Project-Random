@@ -3,9 +3,9 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import axios from 'axios';
 
-import FormInput from '../components/FormInput';
-import FormButton from '../components/FormButton';
-import setToken from '../utils/setAuthToken';
+import FormInput from '../../components/FormInput';
+import FormButton from '../../components/FormButton';
+import setToken from '../../utils/setAuthToken';
 
 const OTP_LENGTH = 6;
 

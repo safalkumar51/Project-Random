@@ -22,7 +22,7 @@ const userProfile = async (req, res) => {
         // Added Pagination using skip and limit
         const posts = await postModel.find({ owner: req.userId })
             .populate('owner', 'name profilepic') // To get owner's name and profilepic
-            .sort({ Date: -1 }) // -1 >> To sort in descending order (latest first)
+            .sort({ createdAt: -1 }) // -1 >> To sort in descending order (latest first)
             .skip(skip) // skip >> To skip posts already sent
             .limit(limit); // limit >> To send limit posts
 

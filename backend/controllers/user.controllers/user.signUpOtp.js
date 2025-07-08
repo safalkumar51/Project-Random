@@ -70,12 +70,12 @@ const userSignUpOtp = async (req, res) => {
             {upsert: true}
         );
 
-        await transporter.sendMail({
+        /* await transporter.sendMail({
             from: process.env.MAIL_USER,
             to: email,
             subject: "Your OTP for Random Social Media App",
             text: `Your OTP is ${otp}. It expires in 5 minutes. Don't share this otp with anyone!`,
-        });
+        }); */
 
         return res.status(201).json({
             success: true,

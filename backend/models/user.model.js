@@ -33,18 +33,41 @@ const userSchema = mongoose.Schema({
             ref: 'Post'
         }
     ],
-    follows: [
+    friendRequests: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
+            ref: 'FriendRequest'
         }
     ],
     connections: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Connection'
+            ref: 'User'
         }
-    ]
-})
+    ],
+    location: {
+        type: {
+            type: String,
+            enum: ['Point']
+        },
+        coordinates: {
+            type: [Number], // [longitude, latitude]
+            validate: {
+                validator: function (val) {
+                    return !val || (Array.isArray(val) && val.length === 2);
+                },
+                message: 'Coordinates must be an array of two numbers [lon, lat]'
+            }
+        }
+    }
+});
+
+userSchema.index({ location: '2dsphere' },
+    {
+        partialFilterExpression: {
+            'location.coordinates': { $exists: true }
+        }
+    }
+);
 
 module.exports = mongoose.model('User', userSchema);

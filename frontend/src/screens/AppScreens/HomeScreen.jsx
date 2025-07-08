@@ -13,7 +13,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
 
-/* const data = [
+const data = [
     {
         type: 'profile',
         id: '0',
@@ -202,7 +202,7 @@ dayjs.extend(relativeTime);
         postText: '"Always."',
         postImage: '',
     },
-]; */
+];
 
 
 const HomeScreen = () => {
@@ -250,7 +250,7 @@ const HomeScreen = () => {
 
     // on mounting fetchposts(pageno = 1)
     useEffect(() => {
-        fetchPosts(1);
+        //fetchPosts(1);
     }, []);
 
     // if user reaches end to flatlist loadmore
@@ -269,11 +269,16 @@ const HomeScreen = () => {
         console.log(post);
         return (
             <PostCards
-                name={post.owner.name}
-                time={dayjs(post.Date).fromNow()}
-                profileImage={post.owner.profilepic}
-                postText={post.caption}
-                postImage={post.postpic}
+                name={post.name}
+                time={post.time}
+                profileImage={post.profileImage}
+                postText={post.postText}
+                postImage={post.postImage}
+                //name={post.owner.name}
+                //time={dayjs(post.createdAt).fromNow()}
+                //profileImage={post.owner.profilepic}
+                //postText={post.caption}
+                //postImage={post.postpic}
             />
         );
     };
@@ -284,13 +289,14 @@ const HomeScreen = () => {
             <View style={styles.HomeContainer}>
 
                 <FlatList
-                    data={[{}, ...posts]}
+                    data={data}
+                    //data={[{}, ...posts]}
                     keyExtractor={(item, index) => index.toString()}
                     renderItem={renderItem}
 
                     // to run loadmore function when end is reached for infinite scrolling
-                    onEndReached={loadMore}
-                    onEndReachedThreshold={0.5}
+                    //onEndReached={loadMore}
+                    //onEndReachedThreshold={0.5}
 
                     // this makes navbar sticky
                     ListHeaderComponent={<NavBar />}

@@ -1,58 +1,66 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
-import React from 'react'
-
-import { Dimensions } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { Dimensions } from 'react-native';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const NavBar = () => {
+    const navigation = useNavigation();
 
     return (
         <View style={styles.navBar}>
-            <TouchableOpacity style={styles.randomBtn} onPress={() => { navigation.navigate("MainTab") }}>
-                <Text style={styles.randomTxt} >Random</Text>
+            {/* App Name / Logo */}
+            <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+                <Text style={styles.appTitle}>RANDOM</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuBtn} onPress={() => {  }}>
-                <MaterialIcons name="dehaze" size={40} color='#2c2c2c' />
-            </TouchableOpacity>
-        </View>
-    )
-}
 
-export default NavBar
+            {/* Right-side buttons */}
+            <View style={styles.iconRow}>
+                {/* Add Post Button */}
+                <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('AddPost')}>
+                    <MaterialIcons name="add-circle-outline" size={28} color="#222" />
+                </TouchableOpacity>
+
+                {/* Menu Button */}
+                <TouchableOpacity style={styles.iconButton} onPress={() => navigation.openDrawer()}>
+                    <MaterialIcons name="dehaze" size={28} color="#222" />
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+};
+
+export default NavBar;
 
 const styles = StyleSheet.create({
     navBar: {
-        height: width * 0.13,
+        height: 60,
         backgroundColor: '#fff',
-        width: width,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 14,
+        paddingHorizontal: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
-        elevation: 4, // for Android shadow
-        shadowColor: '#000', // for iOS shadow
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
         shadowRadius: 2,
-        // marginHorizontal: 5,
-        marginVertical: 2,
-        borderRadius: 8,
         marginBottom: 20,
     },
-    randomBtn: {
-        flex: 0.4,
+    appTitle: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#000',
     },
-    randomTxt: {
-        color: 'black',
-        fontSize: 30,
-        fontWeight: 500,
+    iconRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
-    menuBtn: {
-        flex: 0.2,
-        alignItems: 'flex-end'
+    iconButton: {
+        marginLeft: 16,
     },
-})
+});

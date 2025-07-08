@@ -19,7 +19,7 @@ dayjs.extend(relativeTime);
 
 const { width, height } = Dimensions.get('window');
 
-/* const data = [
+const data = [
     {
         type: 'profile',
         id: '0',
@@ -208,7 +208,7 @@ const { width, height } = Dimensions.get('window');
         postText: '"Always."',
         postImage: '',
     },
-]; */
+];
 
 
 
@@ -263,7 +263,7 @@ const ProfileScreen = ({ navigation }) => {
 
     // on mounting fetchposts(pageno = 1)
     useEffect(() => {
-        fetchPosts(1);
+        //fetchPosts(1);
     }, []);
 
     // if user reaches end to flatlist loadmore
@@ -276,26 +276,33 @@ const ProfileScreen = ({ navigation }) => {
 
 
     const renderItem = ({ item, index }) => {
-        if (index === 0 && profile) {
-            return (
-                <ProfileCard
-                    name={profile.name}
-                    email={profile.email}
-                    profileImage={profile.profilepic}
-                    bio={profile.bio}
-                />
-            );
-        }
+        //if (index === 0 && profile) {
+        //    return (
+        //        <ProfileCard
+        //            name={profile.name}
+        //            email={profile.email}
+        //            profileImage={profile.profilepic}
+        //            bio={profile.bio}
+        //        />
+        //    );
+        //}
 
-        const post = posts[index - 1]; // because index 0 is for profile
+        const post = item
+        
+        //const post = posts[index - 1]; // because index 0 is for profile
         if(post){
             return (
                 <PostCards
-                    name={post.owner.name}
-                    time={dayjs(post.Date).fromNow()}
-                    profileImage={post.owner.profilepic}
-                    postText={post.caption}
-                    postImage={post.postpic}
+                    name={post.name}
+                    time={post.time}
+                    profileImage={post.profileImage}
+                    postText={post.postText}
+                    postImage={post.postImage}
+                    //name={post.owner.name}
+                    //time={dayjs(post.createdAt).fromNow()}
+                    //profileImage={post.owner.profilepic}
+                    //postText={post.caption}
+                    //postImage={post.postpic}
                 />
             );
         }
@@ -308,13 +315,14 @@ const ProfileScreen = ({ navigation }) => {
             <View style={styles.main}>
 
                 <FlatList
-                    data={[{}, ...posts]}
+                    data={data}
+                    //data={[{}, ...posts]}
                     keyExtractor={(item, index) => index.toString()}
                     renderItem={renderItem}
 
                     // to run loadmore function when end is reached for infinite scrolling
-                    onEndReached={loadMore}
-                    onEndReachedThreshold={0.5}
+                    //onEndReached={loadMore}
+                    //onEndReachedThreshold={0.5}
 
                     // this makes navbar sticky
                     ListHeaderComponent={<NavBar />}

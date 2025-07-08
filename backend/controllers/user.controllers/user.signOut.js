@@ -5,7 +5,7 @@ const userSignOut = async (req, res) => {
     try{
 
         const user = await userModel.findOne({ _id: req.userId });
-        console.log(user.data);
+
         if (!user || user.token !== req.userToken) {
             return res.status(404).json({
                 success: false,
