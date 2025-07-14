@@ -6,13 +6,14 @@ import CustomDrawerContent from '../components/customDrawerContent';
 import DeleteAccountScreen from '../screens/DrawerScreens/DeleteAccountScreen'; //new
 import PersonalDetailsScreen from '../screens/DrawerScreens/PersonalDetailsScreen'; //new
 
-import AboutScreen from '../screens/DrawerScreens/AboutScreen';
+import AboutScreen from '../screens/AdditionalScreens/AboutScreen';
 import EditProfileScreen from '../screens/DrawerScreens/EditProfileScreen';
-import HelpScreen from '../screens/DrawerScreens/HelpScreen';
+import HelpScreen from '../screens/AdditionalScreens/HelpScreen';
 import MyConnectionScreen from '../screens/DrawerScreens/MyConnectionsScreen';
 import SettingsScreen from '../screens/DrawerScreens/SettingsScreen';
 import LogoutScreen from '../screens/DrawerScreens/LogOutScreen';
 import MainTabNavigator from './MainTabNavigator';
+import OtherProfileScreen from '../screens/AdditionalScreens/OtherProfileScreen';
 import TermsScreen from '../screens/DrawerScreens/TermsScreen';
 
 
@@ -24,7 +25,7 @@ const DrawerNavigator = () => {
     return (
         <Drawer.Navigator
             screenOptions={{
-                headerShown: true,
+                headerShown: false,
                 drawerPosition: 'right',
                 drawerStyle: {
                     width: 250, 
@@ -33,8 +34,8 @@ const DrawerNavigator = () => {
             drawerContent={(props) => <CustomDrawerContent {...props} />}
         >
             <Drawer.Screen name="Home" component={MainTabNavigator} />
-            <Drawer.Screen name="My Connections" component={MyConnectionScreen} />
             <Drawer.Screen name="Edit Profile" component={EditProfileScreen} />
+            <Drawer.Screen name="My Connections" component={MyConnectionScreen} />
             <Drawer.Screen name="Terms" component={TermsScreen} />
             <Drawer.Screen name="Help & Support" component={HelpScreen} />
             
@@ -44,6 +45,7 @@ const DrawerNavigator = () => {
             <Drawer.Screen name="About" component={AboutScreen} />
             <Drawer.Screen name="Setting" component={SettingsScreen} />
             <Drawer.Screen name="Logout" component={LogoutScreen} />
+            <Drawer.Screen name="OtherProfileScreen" component={OtherProfileScreen} />
         </Drawer.Navigator>
     );
 };

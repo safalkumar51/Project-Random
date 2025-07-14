@@ -11,13 +11,11 @@ const friendRequestSchema = mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'accepted', 'rejected', 'connected'],
+        enum: ['pending', 'requested', 'rejected', 'connected'],
         default: 'pending'
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
     }
+},{
+    timestamps: true
 })
 
 module.exports = mongoose.model('FriendRequest', friendRequestSchema);

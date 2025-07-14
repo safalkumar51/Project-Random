@@ -30,18 +30,12 @@ const CustomDrawerContent = (props) => {
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <DrawerContentScrollView {...props} contentContainerStyle={styles.scroll}>
-                <DrawerItem
+                {/*<DrawerItem
                     label="Home"
                     icon="home"
                     isActive={activeRoute === 'Home'}
                     onPress={() => navigation.navigate('Home')}
-                />
-                <DrawerItem
-                    label="My Connections"
-                    icon="people-outline"
-                    isActive={activeRoute === 'My Connections'}
-                    onPress={() => navigation.navigate('My Connections')} />
-
+                />*/}
                 <DrawerItem
                     label="Edit Profile"
                     icon="edit"
@@ -49,16 +43,25 @@ const CustomDrawerContent = (props) => {
                     onPress={() => navigation.navigate('Edit Profile')} />
 
                 <DrawerItem
+                    label="My Connections"
+                    icon="people-outline"
+                    isActive={activeRoute === 'My Connections'}
+                    onPress={() => navigation.navigate('My Connections')}/>
+
+                
+                {/*<DrawerItem
                     label="Help & Support"
                     icon="help-outline"
                     isActive={activeRoute === 'Help & Support'}
-                    onPress={() => navigation.navigate('Help & Support')} />
+                    onPress={() => navigation.navigate('Help & Support')}
+                />
 
                 <DrawerItem
                     label="About"
                     icon="info-outline"
                     isActive={activeRoute === 'About'}
-                    onPress={() => navigation.navigate('About')} />
+                    onPress={() => navigation.navigate('About')}
+                />*/}
 
 
                 <DrawerItem

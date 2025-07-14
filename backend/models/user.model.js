@@ -27,24 +27,6 @@ const userSchema = mongoose.Schema({
     token: {
         type: String
     },
-    posts: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Post'
-        }
-    ],
-    friendRequests: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'FriendRequest'
-        }
-    ],
-    connections: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
-        }
-    ],
     location: {
         type: {
             type: String,
@@ -60,7 +42,33 @@ const userSchema = mongoose.Schema({
             }
         }
     }
+},{
+    toJSON: { virtuals: true },  // 👈 Include virtuals in JSON
+    toObject: { virtuals: true },
+    timestamps: true
 });
+
+userSchema.virtual('friendRequests', {
+    ref: 'FriendRequest',
+    localField: '_id',
+    foreignField: 'to',
+    justOne: false,
+})
+
+userSchema.virtual('connections', {
+    ref: 'FriendRequest',
+    localField: '_id',
+    foreignField: 'to',
+    justOne: false,
+    match: {status: 'connected'},
+})
+
+userSchema.virtual('posts', {
+    ref: 'Post',
+    localField: '_id',
+    foreignField: 'owner',
+    justOne: false,
+})
 
 userSchema.index({ location: '2dsphere' },
     {

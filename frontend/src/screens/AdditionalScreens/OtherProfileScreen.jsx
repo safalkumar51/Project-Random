@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
 
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -14,10 +14,13 @@ import ProfileCard from '../../components/ProfileCard';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { useNavigation } from '@react-navigation/native';
+import StatusCard from '../../components/StatusCard';
 
 dayjs.extend(relativeTime);
 
 const { width, height } = Dimensions.get('window');
+
 
 const data = [
     {
@@ -210,14 +213,17 @@ const data = [
     },
 ];
 
-const ProfileScreen = ({ navigation }) => {
 
-    const [profile, setProfile] = useState({ posts:[] });
-    //const [posts, setPosts] = useState([]);
+const OtherProfileScreen = ({ route }) => {
+    const navigation = useNavigation();
+    const { status = '', otherId = '', requestId = '' } = route.params;
+
+    const [profile, setProfile] = useState({ posts: [] });
     const [pageNumber, setPageNumber] = useState(1);
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [totalPages, setTotalPages] = useState();
+    const [profileLoading, setProfileLoading] = useState(false);
 
     // function to fetch profile( if pageno = 1 ) and user post from backend
     const fetchProfile = async (page) => {
@@ -225,47 +231,73 @@ const ProfileScreen = ({ navigation }) => {
 
         setLoading(true);
         try {
-            
+            //console.error("Fetched Error");
             const authToken = await AsyncStorage.getItem('authToken');
 
-            if(!authToken){
+            if (!authToken) {
                 navigation.replace("LoginScreen");
                 return;
             }
 
-            const response = await axios.get(`http://10.0.2.2:4167/user/profile?page=${page}`, {
-                headers: {
-                    Authorization: `Bearer ${authToken}`,
-                }
-            });
-            if (response.data.success) {
-                if (page === 1) {
-                    setProfile(response.data.profile);
-                    //setPosts(response.data.profile);
-                    setTotalPages(response.data.totalPages);
-                } else {
-                    setProfile(prev => {
-                        if (!prev) return response.data.profile; // fallback
-                        return {
-                            ...prev,
-                            posts: [...prev.posts, ...response.data.profile.posts]
-                        }
-                    });
-                }
+            if(status === 'connected'){
+                const response = await axios.get('http://10.0.2.2:4167/connection/profile', {
+                    headers: {
+                        Authorization: `Bearer ${authToken}`,
+                    }, params: {
+                        page,
+                        otherId
+                    }
+                });
+                if (response.data.success) {
+                    if (page === 1) {
+                        setProfile(response.data.profile);
+                        setTotalPages(response.data.totalPages);
+                    } else {
+                        setProfile(prev => {
+                            if (!prev) return response.data.profile; // fallback
+                            return {
+                                ...prev,
+                                posts: [...prev.posts, ...response.data.profile.posts]
+                            }
+                        });
+                    }
 
-                setPageNumber(page);
-                setHasMore(page < totalPages);
-            }
-            else{
-                console.error(response.data.message);
-                if (response.data.message === 'Log In Required!') {
-                    await AsyncStorage.removeItem('authToken');
-                    navigation.replace("LoginScreen");
+                    setPageNumber(page);
+                    setHasMore(page < totalPages);
                 }
+                else {
+                    console.error(response.data.message);
+                    if (response.data.message === 'Log In Required!') {
+                        await AsyncStorage.removeItem('authToken');
+                        navigation.replace("LoginScreen");
+                    }
+                }
+                //Alert.alert(response.data.profile.name);
+
+            } else {
+                const response = await axios.get('http://10.0.2.2:4167/connection/requestprofile', {
+                    headers: {
+                        Authorization: `Bearer ${authToken}`,
+                    }, params: {
+                        otherId
+                    }
+                });
+                if (response.data.success) {
+                    setProfile(response.data.profile);
+                    setHasMore(false);
+                }
+                else {
+                    console.error(response.data.message);
+                    if (response.data.message === 'Log In Required!') {
+                        await AsyncStorage.removeItem('authToken');
+                        navigation.replace("LoginScreen");
+                    }
+                }
+                //Alert.alert(response.data.profile.name);
             }
 
         } catch (err) {
-            console.error('Error fetching profile:', err);
+            console.error('Error fetching others profile:', err);
         }
 
         setLoading(false);
@@ -273,8 +305,19 @@ const ProfileScreen = ({ navigation }) => {
 
     // on mounting fetchposts(pageno = 1)
     useEffect(() => {
-        //fetchProfile(1);
-    }, []);
+        setProfileLoading(true);
+        const loadData = async () => {
+            setProfile({ posts: [] }); // clear old data
+            setPageNumber(1);
+            setLoading(false);
+            setHasMore(true);
+            setTotalPages(undefined);
+
+            await fetchProfile(1);
+        }
+        //loadData();
+        setProfileLoading(false);
+    }, [otherId, status, requestId]);
 
     // if user reaches end to flatlist loadmore
     const loadMore = () => {
@@ -282,7 +325,7 @@ const ProfileScreen = ({ navigation }) => {
             fetchProfile(pageNumber + 1);
         }
     };
-    
+
 
 
     const renderItem = ({ item }) => {
@@ -298,18 +341,14 @@ const ProfileScreen = ({ navigation }) => {
                 //profileImage={item.owner.profilepic}
                 //postText={item.caption}
                 //postImage={item.postpic}
-                //ownerId={item.owner._id}
             />
         );
     };
-    
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.main}>
-
                 <NavBar />
-
                 <FlatList
                     //data={profile.posts}
                     //keyExtractor={(item) => item._id}
@@ -324,13 +363,25 @@ const ProfileScreen = ({ navigation }) => {
                     // this makes navbar sticky
                     //ListHeaderComponent={() => (
                     //    <View>
-                    //        <ProfileCard
-                    //            key="profile"
-                    //            name={profile.name}
-                    //            email={profile.email}
-                    //            profileImage={profile.profilepic}
-                    //            bio={profile.bio}
-                    //        />
+                    //        {profileLoading ? (
+                    //            <ActivityIndicator size="large" />
+                    //        ) : (
+                    //            <>
+                    //                <ProfileCard
+                    //                    key={`profile-${otherId}`}
+                    //                    name={profile.name}
+                    //                    email={profile.email}
+                    //                    profileImage={profile.profilepic}
+                    //                    bio={profile.bio}
+                    //                    status={status}
+                    //                />
+                    //                <StatusCard
+                    //                    status={status}
+                    //                    requestId={requestId}
+                    //                    senderId={otherId}
+                    //                />
+                    //            </>
+                    //        )}
                     //    </View>
                     //)}
                     //stickyHeaderIndices={[]}
@@ -339,13 +390,12 @@ const ProfileScreen = ({ navigation }) => {
                     ListFooterComponent={loading && <ActivityIndicator />}
                     showsVerticalScrollIndicator={false}
                 />
-
             </View>
         </SafeAreaView>
     )
 }
 
-export default ProfileScreen
+export default OtherProfileScreen
 
 const styles = StyleSheet.create({
     main: {

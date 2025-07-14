@@ -4,14 +4,20 @@ import React, { useState } from 'react';
 import { Dimensions } from 'react-native';
 
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
-const PostCards = ({ name, time, profileImage, postText, postImage }) => {
+const PostCards = ({ name, time, profileImage, postText, postImage, ownerId }) => {
+    const navigation = useNavigation();
     const [liked, setLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(0);
     const [commented, setCommented] = useState(false);
     const [commentCount, setCommentCount] = useState(0);
+
+    const getProfileHandler = () => {
+        navigation.navigate("OtherProfileScreen", {status: "connected", otherId: ownerId, requestId: ""});
+    }
 
     const toggleLike = () => {
         setLiked(!liked);
@@ -26,13 +32,13 @@ const PostCards = ({ name, time, profileImage, postText, postImage }) => {
     return (
         <View style={styles.shadowWrapper}>
             <View style={styles.card}>
-                <View style={styles.topRow}>
+                <TouchableOpacity style={styles.topRow} onPress={getProfileHandler}>
                     <Image style={styles.avatar} source={{ uri: profileImage }} />
                     <View style={styles.ImageTxt}>
                         <Text style={styles.name}>{name}</Text>
                         <Text style={styles.time}>{time}</Text>
                     </View>
-                </View>
+                </TouchableOpacity>
 
                 <Text style={styles.postText}>{postText}</Text>
 
@@ -74,7 +80,7 @@ const styles = StyleSheet.create({
     card: {
         backgroundColor: 'white',
         borderRadius: 15,
-        marginBottom: 20,
+        marginBottom: 10,
         width: width,
         paddingBottom: 10,
         shadowColor: '#000',
@@ -82,7 +88,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 10,
         elevation: 7,
-
     },
     topRow: {
         flexDirection: 'row',
