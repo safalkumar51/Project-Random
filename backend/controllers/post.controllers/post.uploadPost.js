@@ -21,8 +21,8 @@ const uploadPost = async (req, res) => {
         }
 
         // get current user, select ignores fields other than posts
-        let user = await userModel.findOne({ _id: userId }).select('posts');
-        if (!user) {
+        let user = await userModel.findOne({ _id: userId }).select('posts token');
+        if (!user || user.token !== req.userToken) {
             return res.status(404).json({
                 success: false,
                 message: 'Log In Required!'

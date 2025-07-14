@@ -4,15 +4,19 @@ const isLoggedIn = require('../middleware/isLoggedIn');
 const connectionAccept = require('../controllers/connection.controllers/connection.accept');
 const connectionReject = require('../controllers/connection.controllers/connection.reject');
 const connectionRemove = require('../controllers/connection.controllers/connection.remove');
+const connectionGetter = require('../controllers/connection.controllers/connection.getter');
+const connectionRequestsGetter = require('../controllers/connection.controllers/connection.requestsGetter');
+const connectionProfileGetter = require('../controllers/connection.controllers/connection.profileGetter');
+const connectionRequestProfileGetter = require('../controllers/connection.controllers/connection.requestProfileGetter');
 
 const router = express.Router();
 
-router.post('/', isLoggedIn, async (req, res) => {
-    res.send("Friend Request Router Working");
-});
-
+router.get('/', isLoggedIn, connectionGetter);
 router.post('/accept', isLoggedIn, connectionAccept);
 router.post('/reject', isLoggedIn, connectionReject);
 router.post('/remove', isLoggedIn, connectionRemove);
+router.get('/requests', isLoggedIn, connectionRequestsGetter);
+router.get('/profile', isLoggedIn, connectionProfileGetter);
+router.get('/requestprofile', isLoggedIn, connectionRequestProfileGetter);
 
 module.exports = router;

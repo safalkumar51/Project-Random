@@ -4,13 +4,14 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 
 import CustomDrawerContent from '../components/customDrawerContent';
 
-import AboutScreen from '../screens/DrawerScreens/AboutScreen';
+import AboutScreen from '../screens/AdditionalScreens/AboutScreen';
 import EditProfileScreen from '../screens/DrawerScreens/EditProfileScreen';
-import HelpScreen from '../screens/DrawerScreens/HelpScreen';
+import HelpScreen from '../screens/AdditionalScreens/HelpScreen';
 import MyConnectionScreen from '../screens/DrawerScreens/MyConnectionsScreen';
 import SettingScreen from '../screens/DrawerScreens/SettingsScreen';
 import LogoutScreen from '../screens/DrawerScreens/LogOutScreen';
 import MainTabNavigator from './MainTabNavigator';
+import OtherProfileScreen from '../screens/AdditionalScreens/OtherProfileScreen';
 
 const Drawer = createDrawerNavigator();
 
@@ -18,7 +19,7 @@ const DrawerNavigator = () => {
     return (
         <Drawer.Navigator
             screenOptions={{
-                headerShown: true,
+                headerShown: false,
                 drawerPosition: 'right',
                 drawerStyle: {
                     width: 250, // ✅ Reduced width
@@ -27,12 +28,13 @@ const DrawerNavigator = () => {
             drawerContent={(props) => <CustomDrawerContent {...props} />}
         >
             <Drawer.Screen name="Home" component={MainTabNavigator} />
-            <Drawer.Screen name="My Connections" component={MyConnectionScreen} />
             <Drawer.Screen name="Edit Profile" component={EditProfileScreen} />
+            <Drawer.Screen name="My Connections" component={MyConnectionScreen} />
             <Drawer.Screen name="Help & Support" component={HelpScreen} />
             <Drawer.Screen name="About" component={AboutScreen} />
             <Drawer.Screen name="Setting" component={SettingScreen} />
             <Drawer.Screen name="Logout" component={LogoutScreen} />
+            <Drawer.Screen name="OtherProfileScreen" component={OtherProfileScreen} />
         </Drawer.Navigator>
     );
 };

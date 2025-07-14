@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native'
+import { StyleSheet, View, FlatList, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState } from 'react'
 
 import axios from 'axios';
@@ -211,10 +211,12 @@ const HomeScreen = () => {
     const [pageNumber, setPageNumber] = useState(1);
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
+    const [totalPages, setTotalPages] = useState();
+
 
     // function to fetch profile( if pageno = 1 ) and user post from backend
     const fetchPosts = async (page) => {
-        if (loading || !hasMore) return;
+        if (page !== 1 && (loading || !hasMore)) return;
 
         setLoading(true);
         try {
@@ -223,6 +225,7 @@ const HomeScreen = () => {
 
             if (!authToken) {
                 navigation.replace("LoginScreen");
+                return;
             }
 
             const response = await axios.get(`http://10.0.2.2:4167/user/home?page=${page}`, {
@@ -233,12 +236,19 @@ const HomeScreen = () => {
             if (response.data.success) {
                 setPosts(prev => [...prev, ...response.data.posts]);
 
+                if(page === 1){
+                    setTotalPages(response.data.totalPages);
+                }
+
                 setPageNumber(page);
-                setHasMore(page < response.data.totalPages);
+                setHasMore(page < totalPages);
             }
             else {
                 console.log(response.data.message);
-                navigation.replace("LoginScreen");
+                if (response.data.message === 'Log In Required!') {
+                    await AsyncStorage.removeItem('authToken');
+                    navigation.replace("LoginScreen");
+                }
             }
 
         } catch (err) {
@@ -260,25 +270,20 @@ const HomeScreen = () => {
         }
     };
 
-
-
-    const renderItem = ({ item, index }) => {
-        if (index === 0) return null; // Skip the dummy item (used for NavBar)
-
-        const post = item;
-        console.log(post);
+    const renderItem = ({ item }) => {
         return (
             <PostCards
-                name={post.name}
-                time={post.time}
-                profileImage={post.profileImage}
-                postText={post.postText}
-                postImage={post.postImage}
-                //name={post.owner.name}
-                //time={dayjs(post.createdAt).fromNow()}
-                //profileImage={post.owner.profilepic}
-                //postText={post.caption}
-                //postImage={post.postpic}
+                name={item.name}
+                time={item.time}
+                profileImage={item.profileImage}
+                postText={item.postText}
+                postImage={item.postImage}
+                //name={item.owner.name}
+                //time={dayjs(item.createdAt).fromNow()}
+                //profileImage={item.owner.profilepic}
+                //postText={item.caption}
+                //postImage={item.postpic}
+                //ownerId={item.owner._id}
             />
         );
     };
@@ -290,8 +295,9 @@ const HomeScreen = () => {
 
                 <FlatList
                     data={data}
-                    //data={[{}, ...posts]}
-                    keyExtractor={(item, index) => index.toString()}
+                    //data={posts}
+                    //keyExtractor={(item) => item._id}
+                    keyExtractor={(item) => item.id}
                     renderItem={renderItem}
 
                     // to run loadmore function when end is reached for infinite scrolling
