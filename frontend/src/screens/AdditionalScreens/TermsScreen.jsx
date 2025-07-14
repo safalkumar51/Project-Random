@@ -1,10 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import BackButton from '../../components/BackButton';
 
 const TermsScreen = () => {
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Terms & Conditions</Text>
+      <View style={styles.header}>
+        <BackButton />
+        <Text style={styles.headerText}>
+          Terms & Conditions
+        </Text>
+      </View>
 
       <Text style={styles.sectionTitle}>1. Acceptance of Terms</Text>
       <Text style={styles.text}>
@@ -55,11 +61,20 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
   },
-  title: {
-    fontSize: 22,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: -15,
+    marginVertical: 15,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#bbb',
+  },
+  headerText: {
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#334',
+    color: '#333',
   },
   sectionTitle: {
     fontSize: 18,

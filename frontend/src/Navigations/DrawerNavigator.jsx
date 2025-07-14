@@ -3,8 +3,8 @@ import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 
 import CustomDrawerContent from '../components/customDrawerContent';
-import DeleteAccountScreen from '../screens/DrawerScreens/DeleteAccountScreen'; //new
-import PersonalDetailsScreen from '../screens/DrawerScreens/PersonalDetailsScreen'; //new
+import DeleteAccountScreen from '../screens/AdditionalScreens/DeleteAccountScreen'; //new
+import PersonalDetailsScreen from '../screens/AdditionalScreens/PersonalDetailsScreen'; //new
 
 import AboutScreen from '../screens/AdditionalScreens/AboutScreen';
 import EditProfileScreen from '../screens/DrawerScreens/EditProfileScreen';
@@ -14,7 +14,7 @@ import SettingsScreen from '../screens/DrawerScreens/SettingsScreen';
 import LogoutScreen from '../screens/DrawerScreens/LogOutScreen';
 import MainTabNavigator from './MainTabNavigator';
 import OtherProfileScreen from '../screens/AdditionalScreens/OtherProfileScreen';
-import TermsScreen from '../screens/DrawerScreens/TermsScreen';
+import TermsScreen from '../screens/AdditionalScreens/TermsScreen';
 
 
 
