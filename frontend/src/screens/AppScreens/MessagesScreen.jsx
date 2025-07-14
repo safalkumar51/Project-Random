@@ -2,28 +2,29 @@ import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image } from 'react-native';
 
 const messages = [
-    {
-        id: '1',
-        name: 'Nishant',
-        lastMessage: 'Yo bro, update?',
-        time: '9:45 AM',
-        avatar: { uri: 'https://randomuser.me/api/portraits/men/3.jpg' },
-    },
-    {
-        id: '2',
-        name: 'Ravi',
-        lastMessage: 'Check your mail',
-        time: 'Yesterday',
-        avatar: { uri: 'https://randomuser.me/api/portraits/men/1.jpg' },
-    },
-    {
-        id: '3',
-        name: 'Aryan',
-        lastMessage: 'Join Zoom',
-        time: '2 days ago',
-        avatar: { uri: 'https://randomuser.me/api/portraits/men/2.jpg' },
-    },
+  {
+    id: '1',
+    name: 'Nishant',
+    time: '9:45 AM',
+    avatar: { uri: 'https://randomuser.me/api/portraits/men/3.jpg' },
+    unreadCount: 2,
+  },
+  {
+    id: '2',
+    name: 'Ravi',
+    time: 'Yesterday',
+    avatar: { uri: 'https://randomuser.me/api/portraits/men/1.jpg' },
+    unreadCount: 0,
+  },
+  {
+    id: '3',
+    name: 'Aryan',
+    time: '2 days ago',
+    avatar: { uri: 'https://randomuser.me/api/portraits/men/2.jpg' },
+    unreadCount: 1,
+  },
 ];
+
 
 const MessagesScreen = ({ navigation }) => {
     const renderItem = ({ item }) => (
@@ -38,9 +39,14 @@ const MessagesScreen = ({ navigation }) => {
                     <Text style={styles.name}>{item.name}</Text>
                     <Text style={styles.time}>{item.time}</Text>
                 </View>
-                <Text style={styles.message} numberOfLines={1}>
-                    {item.lastMessage}
-                </Text>
+                {item.unreadCount > 0 ? (
+  <Text style={styles.newMessage}>
+    {item.unreadCount} New Message{item.unreadCount > 1 ? 's' : ''}
+  </Text>
+) : (
+  <Text style={styles.message}>No new messages</Text>
+)}
+
             </View>
         </TouchableOpacity>
     );
@@ -93,6 +99,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#555',
     },
+    newMessage: {
+  fontSize: 14,
+  color: '#007aff',
+  fontWeight: '600',
+},
+
 });
 
 export default MessagesScreen;
