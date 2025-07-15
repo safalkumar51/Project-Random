@@ -325,7 +325,6 @@ const ProfileScreen = ({ navigation }) => {
                     //ListHeaderComponent={() => (
                     //    <View>
                     //        <ProfileCard
-                    //            key="profile"
                     //            name={profile.name}
                     //            email={profile.email}
                     //            profileImage={profile.profilepic}

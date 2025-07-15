@@ -348,48 +348,54 @@ const OtherProfileScreen = ({ route }) => {
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.main}>
-                <NavBar />
-                <FlatList
-                    //data={profile.posts}
-                    //keyExtractor={(item) => item._id}
-                    data={data}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderItem}
+                <View style={styles.header}>
+                    <BackButton />
+                    <Text style={styles.headerText}>
+                        Profile
+                    </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                    <FlatList
+                        //data={profile.posts}
+                        //keyExtractor={(item) => item._id}
+                        data={data}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderItem}
 
-                    // to run loadmore function when end is reached for infinite scrolling
-                    //onEndReached={loadMore}
-                    //onEndReachedThreshold={0.5}
+                        // to run loadmore function when end is reached for infinite scrolling
+                        //onEndReached={loadMore}
+                        //onEndReachedThreshold={0.5}
 
-                    // this makes navbar sticky
-                    //ListHeaderComponent={() => (
-                    //    <View>
-                    //        {profileLoading ? (
-                    //            <ActivityIndicator size="large" />
-                    //        ) : (
-                    //            <>
-                    //                <ProfileCard
-                    //                    key={`profile-${otherId}`}
-                    //                    name={profile.name}
-                    //                    email={profile.email}
-                    //                    profileImage={profile.profilepic}
-                    //                    bio={profile.bio}
-                    //                    status={status}
-                    //                />
-                    //                <StatusCard
-                    //                    status={status}
-                    //                    requestId={requestId}
-                    //                    senderId={otherId}
-                    //                />
-                    //            </>
-                    //        )}
-                    //    </View>
-                    //)}
-                    //stickyHeaderIndices={[]}
+                        // this makes navbar sticky
+                        //ListHeaderComponent={() => (
+                        //    <View>
+                        //        {profileLoading ? (
+                        //            <ActivityIndicator size="large" />
+                        //        ) : (
+                        //            <>
+                        //                <ProfileCard
+                        //                    name={profile.name}
+                        //                    email={profile.email}
+                        //                    profileImage={profile.profilepic}
+                        //                    bio={profile.bio}
+                        //                    status={status}
+                        //                />
+                        //                <StatusCard
+                        //                    status={status}
+                        //                    requestId={requestId}
+                        //                    senderId={otherId}
+                        //                />
+                        //            </>
+                        //        )}
+                        //    </View>
+                        //)}
+                        //stickyHeaderIndices={[]}
 
-                    // to display loading as footer
-                    ListFooterComponent={loading && <ActivityIndicator />}
-                    showsVerticalScrollIndicator={false}
-                />
+                        // to display loading as footer
+                        ListFooterComponent={loading && <ActivityIndicator />}
+                        showsVerticalScrollIndicator={false}
+                    />
+                </View>
             </View>
         </SafeAreaView>
     )
@@ -401,5 +407,18 @@ const styles = StyleSheet.create({
     main: {
         flex: 1,
         position: 'relative'
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        paddingBottom: 6,
+        //borderBottomWidth: 1,
+        //borderBottomColor: '#bbb',
+    },
+    headerText: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#333',
     },
 })

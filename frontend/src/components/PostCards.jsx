@@ -1,7 +1,5 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Dimensions } from 'react-native';
 import React, { useState } from 'react';
-
-import { Dimensions } from 'react-native';
 
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
@@ -10,6 +8,7 @@ const { width, height } = Dimensions.get('window');
 
 const PostCards = ({ name, time, profileImage, postText, postImage, ownerId }) => {
     const navigation = useNavigation();
+    
     const [liked, setLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(0);
     const [commented, setCommented] = useState(false);
@@ -17,6 +16,10 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId }) =
 
     const getProfileHandler = () => {
         navigation.navigate("OtherProfileScreen", {status: "connected", otherId: ownerId, requestId: ""});
+    }
+
+    const getPostHandler = () => {
+        navigation.navigate("PostScreen");
     }
 
     const toggleLike = () => {
@@ -39,12 +42,13 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId }) =
                         <Text style={styles.time}>{time}</Text>
                     </View>
                 </TouchableOpacity>
+                <TouchableOpacity onPress={getPostHandler}>
+                    <Text style={styles.postText}>{postText}</Text>
 
-                <Text style={styles.postText}>{postText}</Text>
-
-                {postImage ? (
-                    <Image style={styles.PostImage} source={{ uri: postImage }} />
-                ) : null}
+                    {postImage ? (
+                        <Image style={styles.PostImage} source={{ uri: postImage }} />
+                    ) : null}
+                </TouchableOpacity>
 
                 <View style={styles.interactionWrapper}>
                     <TouchableOpacity style={styles.interaction} onPress={toggleLike}>
@@ -58,7 +62,7 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId }) =
                         </Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.interaction} onPress={toggleComment}>
+                    <TouchableOpacity style={styles.interaction} onPress={getPostHandler}>
                         <Icon
                             name={commented ? 'comment' : 'comment-o'}
                             size={26}

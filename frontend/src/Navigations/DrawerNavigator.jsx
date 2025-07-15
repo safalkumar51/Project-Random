@@ -15,6 +15,7 @@ import LogoutScreen from '../screens/DrawerScreens/LogOutScreen';
 import MainTabNavigator from './MainTabNavigator';
 import OtherProfileScreen from '../screens/AdditionalScreens/OtherProfileScreen';
 import TermsScreen from '../screens/AdditionalScreens/TermsScreen';
+import PostScreen from '../screens/AdditionalScreens/PostScreen';
 
 
 
@@ -45,7 +46,9 @@ const DrawerNavigator = () => {
             <Drawer.Screen name="About" component={AboutScreen} />
             <Drawer.Screen name="Setting" component={SettingsScreen} />
             <Drawer.Screen name="Logout" component={LogoutScreen} />
+
             <Drawer.Screen name="OtherProfileScreen" component={OtherProfileScreen} />
+            <Drawer.Screen name="PostScreen" component={PostScreen} />
         </Drawer.Navigator>
     );
 };
