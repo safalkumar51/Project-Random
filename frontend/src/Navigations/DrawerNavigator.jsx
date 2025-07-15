@@ -18,7 +18,7 @@ const DrawerNavigator = () => {
     return (
         <Drawer.Navigator
             screenOptions={{
-                headerShown: true,
+                headerShown: false,
                 drawerPosition: 'right',
                 drawerStyle: {
                     width: 250, // ✅ Reduced width

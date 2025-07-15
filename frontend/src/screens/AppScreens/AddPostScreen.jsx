@@ -1,0 +1,237 @@
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Alert,
+} from 'react-native';
+import React, {useRef, useState} from 'react';
+import BackButton from '../../components/BackButton';
+import ScreenWrapper from '../../components/ScreenWrapper';
+import RichTextEditor from '../../components/RichTextEditor';
+import Icons from 'react-native-vector-icons/FontAwesome6';
+import ImagePicker from 'react-native-image-crop-picker';
+import {SafeAreaView} from 'react-native-safe-area-context';
+
+const AddPostScreen = () => {
+  const bodyRef = useRef('');
+  const editorRef = useRef(null);
+  const [selectedMedia, setSelectedMedia] = useState(null);
+
+  const chooseFromGallery = () => {
+    ImagePicker.openPicker({
+      width: 300,
+      height: 300,
+      cropping: true,
+    }).then(image => {
+      setSelectedMedia({path: image.path, mime: image.mime});
+    });
+  };
+
+  const takePhotoFromCamera = () => {
+    ImagePicker.openCamera({
+      compressImageMaxHeight: 300,
+      compressImageMaxWidth: 300,
+      cropping: true,
+    }).then(image => {
+      setSelectedMedia({path: image.path, mime: image.mime});
+    });
+  };
+
+  const chooseVideoFromGallery = () => {
+    ImagePicker.openPicker({
+      mediaType: 'video',
+    }).then(video => {
+      setSelectedMedia({path: video.path, mime: video.mime});
+    });
+  };
+
+  const removeMedia = () => {
+    setSelectedMedia(null);
+  };
+
+  const onSubmit = async () => {
+    console.log('Post Body:', bodyRef.current);
+    console.log('Selected Media:', selectedMedia);
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={{flex: 1}}>
+        <View style={styles.Header}>
+          <BackButton />
+          <Text style={styles.headerTxt}>Create Post</Text>
+        </View>
+
+        <ScrollView
+          contentContainerStyle={{paddingBottom: 120}}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+          <View style={styles.textEditor}>
+            <RichTextEditor
+              editorRef={editorRef}
+              onChange={body => (bodyRef.current = body)}
+            />
+          </View>
+
+          {/* MEDIA PREVIEW */}
+          {selectedMedia && (
+            <View style={styles.previewWrapper}>
+              {selectedMedia.mime.startsWith('image') ? (
+                <>
+                  <Image
+                    source={{uri: selectedMedia.path}}
+                    style={styles.previewImage}
+                    resizeMode="cover"
+                  />
+                  <TouchableOpacity style={styles.removeButton} onPress={removeMedia}>
+                    <Text style={styles.removeText}>×</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <Text style={styles.videoText}>
+                     Video selected: {selectedMedia.path.split('/').pop()}
+                  </Text>
+                  <TouchableOpacity onPress={removeMedia}>
+                    <Text style={styles.removeText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+
+          <View style={styles.media}>
+            <Text style={styles.addImageTxt}>Add to your Post</Text>
+            <View style={styles.mediaIcon}>
+              <TouchableOpacity onPress={chooseFromGallery}>
+                <Icons name="image" size={25} color="gray" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={chooseVideoFromGallery}>
+                <Icons name="video" size={25} color="gray" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={takePhotoFromCamera}>
+                <Icons name="camera" size={25} color="gray" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+     {/* on sunbmit function pending */}
+        <View style={styles.postButtonWrapper}>
+          <TouchableOpacity style={styles.postBtn} onPress={onSubmit}>
+            <Text style={styles.postBtnTxt}>POST</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+export default AddPostScreen;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  Header: {
+    flexDirection: 'row',
+   // alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  headerTxt: {
+    fontWeight: 'bold',
+    fontSize: 25,
+   // marginLeft: 80,
+   textAlign: 'center',
+  },
+  textEditor: {
+    paddingHorizontal: 16,
+    marginTop: 10,
+  },
+  previewWrapper: {
+    marginTop: 1,
+    marginHorizontal: 16,
+    position: 'relative',
+    alignItems: 'center',
+  },
+  previewImage: {
+    width: '95%',
+    height: 200,
+    borderRadius: 30,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 20,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 50,
+    paddingHorizontal: 10,
+    //paddingVertical:10,
+  },
+  removeText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  videoText: {
+    color: 'gray',
+    fontStyle: 'italic',
+    flex: 1,
+    marginHorizontal: 16,
+  },
+  media: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderWidth: 1.5,
+    padding: 12,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+    borderColor: 'lightgray',
+    marginHorizontal: 10,
+    marginTop: 20,
+    marignLeft:30,
+   // marginRight:30,
+  },
+  mediaIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  postBtn: {
+    backgroundColor: 'royalblue',
+    height: 50,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    
+    
+  },
+  postBtnTxt: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 18,
+    
+  },
+  postButtonWrapper: {
+    position: 'absolute',
+    bottom: 10,
+    left: 16,
+    right: 16,
+    backgroundColor: 'white',
+    borderRadius: 10,
+  
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  addImageTxt: {
+    fontWeight: 'bold',
+    fontSize: 15,
+    color: 'gray',
+  },
+});

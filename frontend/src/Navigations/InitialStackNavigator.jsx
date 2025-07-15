@@ -11,6 +11,7 @@ import OtpScreen from '../screens/InitialScreens/OtpScreen';
 import DrawerNavigator from './DrawerNavigator';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import AddPostScreen from '../screens/AppScreens/AddPostScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -52,6 +53,7 @@ const InitialStackNavigator = ({ isFirstLaunch }) => {
             <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
             <Stack.Screen name="OtpScreen" component={OtpScreen} />
             <Stack.Screen name="MainTab" component={DrawerNavigator} />
+           <Stack.Screen name="AddPost" component={AddPostScreen} />
         </Stack.Navigator>
     )
 }

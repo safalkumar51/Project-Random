@@ -20,12 +20,13 @@ const NavBar = () => {
             <View style={styles.iconRow}>
                 {/* Add Post Button */}
                 <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('AddPost')}>
-                    <MaterialIcons name="add-circle-outline" size={28} color="#222" />
+                   <MaterialIcons name="add-box" size={35} color="#333" />
+
                 </TouchableOpacity>
 
                 {/* Menu Button */}
                 <TouchableOpacity style={styles.iconButton} onPress={() => navigation.openDrawer()}>
-                    <MaterialIcons name="dehaze" size={28} color="#222" />
+                    <MaterialIcons name="dehaze" size={30} color="#222" />
                 </TouchableOpacity>
             </View>
         </View>

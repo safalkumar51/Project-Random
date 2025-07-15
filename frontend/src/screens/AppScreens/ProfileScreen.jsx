@@ -276,7 +276,7 @@ const ProfileScreen = ({ navigation }) => {
 
 
     const renderItem = ({ item, index }) => {
-        //if (index === 0 && profile) {
+        // if (index === 0 && profile) {
         //    return (
         //        <ProfileCard
         //            name={profile.name}
@@ -285,7 +285,7 @@ const ProfileScreen = ({ navigation }) => {
         //            bio={profile.bio}
         //        />
         //    );
-        //}
+        // }
 
         const post = item
         
