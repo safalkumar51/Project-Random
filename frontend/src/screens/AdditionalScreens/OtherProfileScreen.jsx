@@ -16,6 +16,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useNavigation } from '@react-navigation/native';
 import StatusCard from '../../components/StatusCard';
+import BackButton from '../../components/BackButton';
 
 dayjs.extend(relativeTime);
 
