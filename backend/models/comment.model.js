@@ -16,11 +16,6 @@ const commentSchema = mongoose.Schema({
         required: true,
         trim: true
     },
-    parentComment: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Comment',
-        default: null
-    },
     likesCount: {
         type: Number,
         default: 0
@@ -30,20 +25,13 @@ const commentSchema = mongoose.Schema({
         enum: ['active', 'removed', 'flagged'],
         default: 'active'
     },
-    createdAt: {
+    timestamp: {
         type: Date,
         default: Date.now
-    },
-    editedAt: {
-        type: Date
-    },
-    updatedAt: {
-        type: Date
     }
 });
 
 commentSchema.pre('save', function(next) {
-    this.updatedAt = Date.now();
     next();
 });
 

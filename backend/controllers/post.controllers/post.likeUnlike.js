@@ -9,21 +9,30 @@ const likeUnlikePost = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Post ID is required' });
         }
 
-        // Check if like already exists and is active
-        let existingLike = await Like.findOne({ user: userId, post: postId, status: 'active' });
+        // Check if like document exists for user and post
+        let existingLike = await Like.findOne({ user: userId, post: postId });
 
         if (existingLike) {
-            // Unlike the post (soft delete)
-            existingLike.status = 'removed';
-            await existingLike.save();
-            return res.status(200).json({ success: true, message: 'Post unliked' });
+            if (existingLike.status === 'active') {
+                // Unlike the post (soft delete)
+                existingLike.status = 'removed';
+                await existingLike.save();
+                return res.status(200).json({ success: true, message: 'Post unliked' });
+            } else {
+                // Reactivate the like
+                existingLike.status = 'active';
+                existingLike.timestamp = Date.now();
+                await existingLike.save();
+                return res.status(200).json({ success: true, message: 'Post liked' });
+            }
         } else {
-            // Like the post
+            // Create new like document
             const newLike = new Like({
                 user: userId,
                 post: postId,
                 type: 'like', // fixed type as per user request
-                status: 'active'
+                status: 'active',
+                timestamp: Date.now()
             });
             await newLike.save();
             return res.status(200).json({ success: true, message: 'Post liked' });

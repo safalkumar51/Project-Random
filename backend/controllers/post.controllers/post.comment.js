@@ -3,7 +3,7 @@ const Comment = require('../../models/comment.model');
 const addComment = async (req, res) => {
     try {
         const userId = req.userId;
-        const { postId, text, parentComment } = req.body;
+        const { postId, text } = req.body;
 
         if (!postId || !text) {
             return res.status(400).json({ success: false, message: 'Post ID and comment text are required' });
@@ -13,7 +13,6 @@ const addComment = async (req, res) => {
             user: userId,
             post: postId,
             text: text.trim(),
-            parentComment: parentComment || null,
             status: 'active'
         });
 

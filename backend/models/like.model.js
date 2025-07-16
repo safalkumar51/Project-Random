@@ -13,7 +13,7 @@ const likeSchema = mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['like', 'love', 'haha', 'wow', 'sad', 'angry'],
+        enum: ['like'],
         default: 'like'
     },
     status: {
@@ -21,17 +21,13 @@ const likeSchema = mongoose.Schema({
         enum: ['active', 'removed'],
         default: 'active'
     },
-    createdAt: {
+    timestamp: {
         type: Date,
         default: Date.now
-    },
-    updatedAt: {
-        type: Date
     }
 });
 
 likeSchema.pre('save', function(next) {
-    this.updatedAt = Date.now();
     next();
 });
 
