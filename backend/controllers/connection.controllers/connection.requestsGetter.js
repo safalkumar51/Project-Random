@@ -39,7 +39,7 @@ const connectionRequestsGetter = async (req, res) => {
                 success: true,
                 pageNumber,
                 totalPages: Math.ceil(total / limit),
-                totalConnections: total,
+                totalRequests: total,
                 requests: user.friendRequests
             })
 

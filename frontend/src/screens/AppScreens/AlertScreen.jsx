@@ -1,7 +1,7 @@
-import { StyleSheet, View, ActivityIndicator, FlatList } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { StyleSheet, View, ActivityIndicator, FlatList, Alert, Animated } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import ActivityCard from '../../components/ActivityCard';
@@ -10,6 +10,7 @@ import axios from 'axios';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 
 dayjs.extend(relativeTime);
 
@@ -142,7 +143,16 @@ const usersData = [
     },
 ];
 
-const AlertScreen = ({ navigation }) => {
+const AlertScreen = () => {
+    const navigation = useNavigation();
+    const isFocused = useIsFocused();
+
+    const flatListRef = useRef(null);
+    const headerHeight = 60;
+    const headerTranslateY = useRef(new Animated.Value(0)).current;
+    const lastScrollY = useRef(0);
+    const scrollDirection = useRef('up');
+    const insets = useSafeAreaInsets();
 
     const [requests, setRequests] = useState([]);
     const [pageNumber, setPageNumber] = useState(1);
@@ -191,10 +201,55 @@ const AlertScreen = ({ navigation }) => {
         setLoading(false);
     };
 
+    useEffect(() => {
+        const reload = navigation.addListener('tabPress', () => {
+            if (isFocused) {
+                if (lastScrollY > 0) {
+                    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+                } else {
+                    Alert.alert("Run");
+                    //fetchRequests(1);
+                }
+            }
+        })
+
+        return reload;
+    }, [navigation, isFocused, lastScrollY]);
+
     // on mounting fetchrequests(pageno = 1)
     useEffect(() => {
         //fetchRequests(1);
     }, []);
+
+    // Track scroll offset
+
+    const handleScroll = (event) => {
+        const currentY = event.nativeEvent.contentOffset.y;
+
+        if (currentY > lastScrollY.current) {
+            if (scrollDirection.current !== 'down' && currentY > 60) {
+                Animated.timing(headerTranslateY, {
+                    toValue: -headerHeight - insets.top,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'down';
+            }
+        } else {
+            if (scrollDirection.current !== 'up') {
+                Animated.timing(headerTranslateY, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'up';
+            }
+        }
+
+        lastScrollY.current = currentY;
+    }
+
+    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
     // if user reaches end to flatlist loadmore
     const loadMore = () => {
@@ -203,7 +258,7 @@ const AlertScreen = ({ navigation }) => {
         }
     };
 
-    const renderItem = ({item}) => {
+    const renderItem = ({ item }) => {
         // if (index === 0) return null; // Skip the dummy item (used for NavBar)
         return (
             <ActivityCard
@@ -211,12 +266,12 @@ const AlertScreen = ({ navigation }) => {
                 profileImage={item.profileImage}
                 time={item.time}
                 status={item.status}
-                //name={item.from.name}
-                //profileImage={item.from.profilepic}
-                //time={dayjs(item.createdAt).fromNow()}
-                //status={item.status}
-                //requestId={item._id}
-                //senderId={item.from._id}
+            //name={item.from.name}
+            //profileImage={item.from.profilepic}
+            //time={dayjs(item.createdAt).fromNow()}
+            //status={item.status}
+            //requestId={item._id}
+            //senderId={item.from._id}
             />
         );
     }
@@ -224,26 +279,31 @@ const AlertScreen = ({ navigation }) => {
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.main}>
+                <NavBar scrollY={headerTranslateY} />
 
-                <FlatList
-                    //data={requests}
-                    //keyExtractor={(item) => item._id}
-                    data={usersData}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderItem}
+                <View style={{ flex: 1 }}>
+                    <AnimatedFlatList
+                        ref={flatListRef}
+                        //data={requests}
+                        //keyExtractor={(item) => item._id}
+                        data={usersData}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderItem}
+                        onScroll={handleScroll}
+                        scrollEventThrottle={16}
+                        contentContainerStyle={{ paddingTop: headerHeight }}
 
-                    // to run loadmore function when end is reached for infinite scrolling
-                    //onEndReached={loadMore}
-                    //onEndReachedThreshold={0.5}
+                        // to run loadmore function when end is reached for infinite scrolling
+                        //onEndReached={loadMore}
+                        //onEndReachedThreshold={0.5}
 
-                    // this makes navbar sticky
-                    ListHeaderComponent={<NavBar />}
-                    stickyHeaderIndices={[0]}
 
-                    // to display loading as footer
-                    ListFooterComponent={loading && <ActivityIndicator />}
-                    showsVerticalScrollIndicator={false}
-                />
+
+                        // to display loading as footer
+                        ListFooterComponent={loading && <ActivityIndicator />}
+                        showsVerticalScrollIndicator={false}
+                    />
+                </View>
 
             </View>
         </SafeAreaView>

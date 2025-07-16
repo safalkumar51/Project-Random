@@ -55,10 +55,11 @@ export default CommentCard
 
 const styles = StyleSheet.create({
     card: {
+        flex: 1,
         backgroundColor: '#f9f9f9',
         borderRadius: 14,
         marginVertical: 2,
-        width: width * 0.95,
+        width: width,
         alignSelf: 'center',
         padding: 12,
         shadowColor: '#000',
@@ -66,6 +67,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 6,
         elevation: 5,
+        //borderBottomColor: '#777',
+        //borderBottomWidth: 1,
     },
     upper: {
         flexDirection: 'row',

@@ -12,6 +12,6 @@ const BackButton = () => {
     )
 }
 
-export default BackButton
+export default BackButton;
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({});

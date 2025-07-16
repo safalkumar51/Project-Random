@@ -5,7 +5,7 @@ const connectionReject = async (req, res) => {
     const { requestId, senderId } = req.body;
 
     try {
-        const user = await userModel.findOne({ _id: req.userId }).select('friendRequests token');
+        const user = await userModel.findOne({ _id: req.userId }).select('token');
         if (!user || user.token !== req.userToken) {
             return res.status(401).json({
                 success: false,

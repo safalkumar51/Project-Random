@@ -1,10 +1,11 @@
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import NavBar from '../../components/NavBar'
+import { ActivityIndicator, FlatList, StyleSheet, View, Animated } from 'react-native'
+import React, { useRef } from 'react'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+
 import CommentCard from '../../components/CommentCard'
 import PostCards from '../../components/PostCards'
 import BackButton from '../../components/BackButton'
+import SharedHeader from '../../components/SharedHeader'
 
 const post = {
     name: "Monkey D. Luffy",
@@ -179,6 +180,39 @@ const data = [
 ];
 
 const PostScreen = () => {
+    const headerHeight = 60;
+    const headerTranslateY = useRef(new Animated.Value(0)).current;
+    const lastScrollY = useRef(0);
+    const scrollDirection = useRef('up');
+    const insets = useSafeAreaInsets();
+
+    const handleScroll = (event) => {
+        const currentY = event.nativeEvent.contentOffset.y;
+        if(currentY>lastScrollY.current){
+            if(scrollDirection.current !== 'down' && currentY > 60){
+                Animated.timing(headerTranslateY, {
+                    toValue: -headerHeight - insets.top,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'down';
+            }
+        } else{
+            if(scrollDirection.current !== 'up'){
+                Animated.timing(headerTranslateY, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'up';
+            }
+        }
+
+        lastScrollY.current = currentY;
+    }
+
+    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+
     const renderItem = ({ item }) => {
         return (
             <CommentCard
@@ -193,17 +227,19 @@ const PostScreen = () => {
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.main}>
-                <View style={styles.header}>
-                    <BackButton />
-                    <Text style={styles.headerText}>
-                        Post
-                    </Text>
-                </View>
+                <SharedHeader
+                    scrollY={headerTranslateY}
+                    title="Post"
+                    leftComponent={<BackButton />}
+                />
                 <View style={{ flex: 1 }}>
-                    <FlatList
+                    <AnimatedFlatList
                         data={data}
                         keyExtractor={(item) => item.id}
                         renderItem={renderItem}
+
+                        onScroll={handleScroll}
+                        scrollEventThrottle={16}
 
                         // to run loadmore function when end is reached for infinite scrolling
                         //onEndReached={loadMore}
@@ -222,7 +258,8 @@ const PostScreen = () => {
                                 />
                             </View>
                         )}
-                        stickyHeaderIndices={[]}
+                        
+                        contentContainerStyle={{ paddingTop: headerHeight }}
 
                         // to display loading as footer
                         ListFooterComponent={/*loading && */<ActivityIndicator />}
@@ -240,18 +277,5 @@ const styles = StyleSheet.create({
     main: {
         flex: 1,
         position: 'relative'
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-        paddingBottom: 6,
-        //borderBottomWidth: 1,
-        //borderBottomColor: '#bbb',
-    },
-    headerText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#333',
     },
 })

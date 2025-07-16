@@ -1,22 +1,21 @@
-import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, View, Dimensions, Animated } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 
-import { Dimensions } from 'react-native';
 
-import NavBar from '../../components/NavBar';
 import PostCards from '../../components/PostCards';
 import ProfileCard from '../../components/ProfileCard';
+import StatusCard from '../../components/StatusCard';
+import BackButton from '../../components/BackButton';
+import SharedHeader from '../../components/SharedHeader';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { useNavigation } from '@react-navigation/native';
-import StatusCard from '../../components/StatusCard';
-import BackButton from '../../components/BackButton';
 
 dayjs.extend(relativeTime);
 
@@ -240,7 +239,7 @@ const OtherProfileScreen = ({ route }) => {
                 return;
             }
 
-            if(status === 'connected'){
+            if (status === 'connected') {
                 const response = await axios.get('http://10.0.2.2:4167/connection/profile', {
                     headers: {
                         Authorization: `Bearer ${authToken}`,
@@ -327,7 +326,38 @@ const OtherProfileScreen = ({ route }) => {
         }
     };
 
+    const headerHeight = 60;
+    const headerTranslateY = useRef(new Animated.Value(0)).current;
+    const lastScrollY = useRef(0);
+    const scrollDirection = useRef('up');
+    const insets = useSafeAreaInsets();
 
+    const handleScroll = (event) => {
+        const currentY = event.nativeEvent.contentOffset.y;
+        if (currentY > lastScrollY.current) {
+            if (scrollDirection.current !== 'down' && currentY > 60) {
+                Animated.timing(headerTranslateY, {
+                    toValue: -headerHeight - insets.top,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'down';
+            }
+        } else {
+            if (scrollDirection.current !== 'up') {
+                Animated.timing(headerTranslateY, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'up';
+            }
+        }
+
+        lastScrollY.current = currentY;
+    }
+
+    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
     const renderItem = ({ item }) => {
         return (
@@ -337,11 +367,11 @@ const OtherProfileScreen = ({ route }) => {
                 profileImage={item.profileImage}
                 postText={item.postText}
                 postImage={item.postImage}
-                //name={item.owner.name}
-                //time={dayjs(item.createdAt).fromNow()}
-                //profileImage={item.owner.profilepic}
-                //postText={item.caption}
-                //postImage={item.postpic}
+            //name={item.owner.name}
+            //time={dayjs(item.createdAt).fromNow()}
+            //profileImage={item.owner.profilepic}
+            //postText={item.caption}
+            //postImage={item.postpic}
             />
         );
     };
@@ -349,19 +379,23 @@ const OtherProfileScreen = ({ route }) => {
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.main}>
-                <View style={styles.header}>
-                    <BackButton />
-                    <Text style={styles.headerText}>
-                        Profile
-                    </Text>
-                </View>
+                <SharedHeader
+                    scrollY={headerTranslateY}
+                    title="Profile"
+                    leftComponent={<BackButton />}
+                />
                 <View style={{ flex: 1 }}>
-                    <FlatList
+                    <AnimatedFlatList
                         //data={profile.posts}
                         //keyExtractor={(item) => item._id}
                         data={data}
                         keyExtractor={(item) => item.id}
                         renderItem={renderItem}
+
+                        onScroll={handleScroll}
+                        scrollEventThrottle={16}
+
+                        contentContainerStyle={{ paddingTop: headerHeight }}
 
                         // to run loadmore function when end is reached for infinite scrolling
                         //onEndReached={loadMore}
@@ -413,9 +447,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
-        paddingBottom: 6,
-        //borderBottomWidth: 1,
-        //borderBottomColor: '#bbb',
+        width: width,
+        padding: 10,
+        backgroundColor: 'white',
     },
     headerText: {
         fontSize: 24,

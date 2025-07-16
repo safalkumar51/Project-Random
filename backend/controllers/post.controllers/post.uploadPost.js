@@ -13,19 +13,19 @@ const uploadPost = async (req, res) => {
         const userId = req.userId;
         const localFilePath = req.file?.path;
 
-        if(!caption && !localFilePath){
-            return res.status(400).json({
-                success: false,
-                message: 'Post not uploaded'
-            });
-        }
-
         // get current user, select ignores fields other than posts
-        let user = await userModel.findOne({ _id: userId }).select('posts token');
+        let user = await userModel.findOne({ _id: userId }).select('token');
         if (!user || user.token !== req.userToken) {
             return res.status(404).json({
                 success: false,
                 message: 'Log In Required!'
+            });
+        }
+
+        if(!caption && !localFilePath){
+            return res.status(400).json({
+                success: false,
+                message: 'Post not uploaded'
             });
         }
 
@@ -58,9 +58,6 @@ const uploadPost = async (req, res) => {
                 await createdPost.save();
             }
         }
-
-        user.posts.push(createdPost._id);
-        await user.save();
 
         return res.status(200).json({
             success: true,

@@ -1,19 +1,22 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { ActivityIndicator, StyleSheet, Text, View, Dimensions, Animated, FlatList } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { FlatList } from 'react-native-gesture-handler';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import MyConnectionCard from '../../components/MyConnectionCard';
-import NavBar from '../../components/NavBar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { useNavigation } from '@react-navigation/native';
+
+import MyConnectionCard from '../../components/MyConnectionCard';
+import BackButton from '../../components/BackButton';
+import SharedHeader from '../../components/SharedHeader';
 
 dayjs.extend(relativeTime);
+
+const { width, height } = Dimensions.get('window');
 
 const usersData = [
     {
@@ -155,7 +158,7 @@ const MyConnectionsScreen = () => {
 
             if (response.data.success) {
                 setConnections(prev => [...prev, ...response.data.connections]);
-                if(page === 1){
+                if (page === 1) {
                     setTotalPages(response.data.totalPages);
                 }
                 setPageNumber(page);
@@ -188,7 +191,40 @@ const MyConnectionsScreen = () => {
         }
     };
 
-    const renderItem = ({item}) => {
+    const headerHeight = 60;
+    const headerTranslateY = useRef(new Animated.Value(0)).current;
+    const lastScrollY = useRef(0);
+    const scrollDirection = useRef('up');
+    const insets = useSafeAreaInsets();
+
+    const handleScroll = (event) => {
+        const currentY = event.nativeEvent.contentOffset.y;
+        if (currentY > lastScrollY.current) {
+            if (scrollDirection.current !== 'down' && currentY > 60) {
+                Animated.timing(headerTranslateY, {
+                    toValue: -headerHeight - insets.top,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'down';
+            }
+        } else {
+            if (scrollDirection.current !== 'up') {
+                Animated.timing(headerTranslateY, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'up';
+            }
+        }
+
+        lastScrollY.current = currentY;
+    }
+
+    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+
+    const renderItem = ({ item }) => {
 
         return (
             <MyConnectionCard
@@ -205,25 +241,33 @@ const MyConnectionsScreen = () => {
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.main}>
-                <FlatList
-                    //data={connections}
-                    //keyExtractor={(item) => item._id}
-                    data={usersData}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderItem}
-
-                    // to run loadmore function when end is reached for infinite scrolling
-                    //onEndReached={loadMore}
-                    //onEndReachedThreshold={0.5}
-
-                    // this makes navbar sticky
-                    ListHeaderComponent={<NavBar />}
-                    stickyHeaderIndices={[0]}
-
-                    // to display loading as footer
-                    ListFooterComponent={loading && <ActivityIndicator />}
-                    showsVerticalScrollIndicator={false}
+                <SharedHeader
+                    scrollY={headerTranslateY}
+                    title="My Connections"
+                    leftComponent={<BackButton />}
                 />
+                <View style={{ flex: 1 }}>
+                    <AnimatedFlatList
+                        //data={connections}
+                        //keyExtractor={(item) => item._id}
+                        data={usersData}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderItem}
+
+                        onScroll={handleScroll}
+                        scrollEventThrottle={16}
+
+                        contentContainerStyle={{ paddingTop: headerHeight }}
+
+                        // to run loadmore function when end is reached for infinite scrolling
+                        //onEndReached={loadMore}
+                        //onEndReachedThreshold={0.5}
+
+                        // to display loading as footer
+                        ListFooterComponent={loading && <ActivityIndicator />}
+                        showsVerticalScrollIndicator={false}
+                    />
+                </View>
             </View>
         </SafeAreaView>
     )
@@ -234,5 +278,6 @@ export default MyConnectionsScreen
 const styles = StyleSheet.create({
     main: {
         flex: 1,
-    }
+        position: 'realtive',
+    },
 })
