@@ -16,6 +16,27 @@ const storage = multer.diskStorage({
 
 })
 
-const upload = multer({ storage })
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = [
+        'image/jpeg',       // .jpeg or .jpg
+        'image/jpg',        // (not always needed, but included for safety)
+        'image/png',        // .png
+        'image/heic',       // iOS default image format (newer devices)
+        'image/heif'        // some variations of HEIC
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Unsupported file type'), false);
+    }
+};
+
+const upload = multer({
+    storage,
+    fileFilter,
+    limits: {
+        fileSize: 20 * 1024 * 1024, // 50MB max
+    }
+})
 
 module.exports = upload;

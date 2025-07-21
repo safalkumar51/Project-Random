@@ -14,7 +14,7 @@ const userProfile = async (req, res) => {
             .select('name email profilepic bio token')
             .populate({
                 path: 'posts',
-                select: 'postpic caption owner',
+                select: 'postpic caption owner createdAt',
                 options: {
                     sort: {createdAt: -1},
                     skip: skip,

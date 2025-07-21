@@ -259,7 +259,6 @@ const AlertScreen = () => {
     };
 
     const renderItem = ({ item }) => {
-        // if (index === 0) return null; // Skip the dummy item (used for NavBar)
         return (
             <ActivityCard
                 name={item.name}

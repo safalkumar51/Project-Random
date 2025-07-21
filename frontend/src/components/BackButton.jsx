@@ -16,12 +16,4 @@ const BackButton = ({ color = '#000', size = 25, style }) => {
 
 export default BackButton;
 
-const styles = StyleSheet.create({
-  button: {
-    alignSelf:'flex-start',
-    padding: 3,
-    borderRadius:3,
-    backgroundColor:'rgba(0,0,0,0.07)',
-    marginRight:20
-  },
-});
+const styles = StyleSheet.create({});

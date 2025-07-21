@@ -245,10 +245,11 @@ const HomeScreen = () => {
                 }
             });
             if (response.data.success) {
-                setPosts(prev => [...prev, ...response.data.posts]);
-
                 if (page === 1) {
+                    setPosts(response.data.posts);
                     setTotalPages(response.data.totalPages);
+                } else{
+                    setPosts(prev => [...prev, ...response.data.posts]);
                 }
 
                 setPageNumber(page);
@@ -365,8 +366,6 @@ const HomeScreen = () => {
                         // to run loadmore function when end is reached for infinite scrolling
                         //onEndReached={loadMore}
                         //onEndReachedThreshold={0.5}
-
-                        // this makes navbar sticky
 
                         // to display loading as footer
                         ListFooterComponent={loading && <ActivityIndicator />}
