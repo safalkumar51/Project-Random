@@ -4,24 +4,23 @@ const userModel = require("../../models/user.model");
 const connectionAccept = async (req, res) => {
     const { requestId, senderId } = req.body;
 
-    if (!requestId || !senderId) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid request: Missing required fields"
-        });
-    }
-
-    const user = await userModel.findOne({ _id: req.userId }).select('connections token');
-    if (!user || user.token !== req.userToken) {
-        return res.status(404).json({
-            success: false,
-            message: 'Log In Required!'
-        });
-    }
-
     try {
+        const user = await userModel.findOne({ _id: req.userId }).select('token');
+        if (!user || user.token !== req.userToken) {
+            return res.status(404).json({
+                success: false,
+                message: 'Log In Required!'
+            });
+        }
 
-        const sender = await userModel.findOne({ _id: senderId }).select('connections');
+        if (!requestId || !senderId) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid request: Missing required fields"
+            });
+        }
+        
+        const sender = await userModel.findOne({ _id: senderId }).select('_id');
 
         // Ensure both requests exist
         let myWay = await friendRequestModel.findOne({ from: req.userId, to: senderId });
@@ -41,7 +40,7 @@ const connectionAccept = async (req, res) => {
             });
         }
 
-        if (myWay.status === 'accepted') {
+        if (myWay.status === 'requested') {
             // 1. Mutually accepted – create connection
             otherWay.status = 'connected';
             myWay.status = 'connected';
@@ -49,31 +48,21 @@ const connectionAccept = async (req, res) => {
             // 2. Save both friend request updates in parallel
             await Promise.all([otherWay.save(), myWay.save()]);
 
-            // 3. Add connection to both users' connections array safely (no duplicates)
-            await Promise.all([
-                userModel.updateOne(
-                    { _id: sender._id },
-                    { $addToSet: { connections: req.userId } }
-                ),
-                userModel.updateOne(
-                    { _id: user._id },
-                    { $addToSet: { connections: senderId } }
-                )
-            ]);
-
             return res.status(201).json({
                 success: true,
-                message: "Connected successfully"
+                message: "Connected successfully",
+                status: "connected"
             });
             
         } else {
             // First time acceptance
-            otherWay.status = 'accepted';
+            otherWay.status = 'requested';
             await otherWay.save();
 
             return res.status(202).json({
                 success: true,
-                message: "Friend request accepted successfully"
+                message: "Friend request accepted successfully",
+                status: "requested"
             });
         }
 

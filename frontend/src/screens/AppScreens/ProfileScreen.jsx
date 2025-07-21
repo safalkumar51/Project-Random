@@ -1,10 +1,10 @@
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, Alert, Animated } from 'react-native'
+import React, { useState, useEffect, useRef } from 'react'
 
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Dimensions } from 'react-native';
 
@@ -14,6 +14,7 @@ import ProfileCard from '../../components/ProfileCard';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 
 dayjs.extend(relativeTime);
 
@@ -210,27 +211,38 @@ const data = [
     },
 ];
 
+const ProfileScreen = () => {
 
+    const navigation = useNavigation();
+    const isFocused = useIsFocused();
+    const insets = useSafeAreaInsets();
 
-const ProfileScreen = ({ navigation }) => {
+    const flatListRef = useRef(null);
 
-    const [profile, setProfile] = useState(null);
-    const [posts, setPosts] = useState([]);
+    const headerHeight = 60;
+    const headerTranslateY = useRef(new Animated.Value(0)).current;
+    const lastScrollY = useRef(0);
+    const scrollDirection = useRef('up');
+
+    const [profile, setProfile] = useState({ posts: [] });
+    //const [posts, setPosts] = useState([]);
     const [pageNumber, setPageNumber] = useState(1);
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
+    const [totalPages, setTotalPages] = useState();
 
     // function to fetch profile( if pageno = 1 ) and user post from backend
-    const fetchPosts = async (page) => {
-        if (loading || !hasMore) return;
+    const fetchProfile = async (page) => {
+        if (page !== 1 && (loading || !hasMore)) return;
 
         setLoading(true);
         try {
-            
+
             const authToken = await AsyncStorage.getItem('authToken');
 
-            if(!authToken){
+            if (!authToken) {
                 navigation.replace("LoginScreen");
+                return;
             }
 
             const response = await axios.get(`http://10.0.2.2:4167/user/profile?page=${page}`, {
@@ -241,97 +253,154 @@ const ProfileScreen = ({ navigation }) => {
             if (response.data.success) {
                 if (page === 1) {
                     setProfile(response.data.profile);
-                    setPosts(response.data.posts);
+                    //setPosts(response.data.profile);
+                    setTotalPages(response.data.totalPages);
                 } else {
-                    setPosts(prev => [...prev, ...response.data.posts]);
+                    setProfile(prev => {
+                        if (!prev) return response.data.profile; // fallback
+                        return {
+                            ...prev,
+                            posts: [...prev.posts, ...response.data.profile.posts]
+                        }
+                    });
                 }
 
                 setPageNumber(page);
-                setHasMore(page < response.data.totalPages);
+                setHasMore(page < totalPages);
             }
-            else{
-                console.log(response.data.message);
-                navigation.replace("LoginScreen");
+            else {
+                console.error(response.data.message);
+                if (response.data.message === 'Log In Required!') {
+                    await AsyncStorage.removeItem('authToken');
+                    navigation.replace("LoginScreen");
+                }
             }
 
         } catch (err) {
-            console.log('Error fetching posts:', err);
+            console.error('Error fetching profile:', err);
         }
 
         setLoading(false);
     };
 
+    useEffect(() => {
+        const reload = navigation.addListener('tabPress', () => {
+            if (isFocused) {
+                if (lastScrollY > 0) {
+                    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+                } else {
+                    Alert.alert("Run")
+                    //fetchProfile(1);
+                }
+            }
+        })
+
+        return reload;
+    }, [navigation, isFocused, lastScrollY]);
+
     // on mounting fetchposts(pageno = 1)
     useEffect(() => {
-        //fetchPosts(1);
+        //fetchProfile(1);
     }, []);
+
+    // Track scroll offset
+
+    const handleScroll = (event) => {
+        const currentY = event.nativeEvent.contentOffset.y;
+
+        if (currentY > lastScrollY.current) {
+            if (scrollDirection.current !== 'down' && currentY > 60) {
+                Animated.timing(headerTranslateY, {
+                    toValue: -headerHeight - insets.top,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'down';
+            }
+        } else {
+            if (scrollDirection.current !== 'up') {
+                Animated.timing(headerTranslateY, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'up';
+            }
+        }
+
+        lastScrollY.current = currentY;
+    }
+
+    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
     // if user reaches end to flatlist loadmore
     const loadMore = () => {
         if (!loading && hasMore) {
-            fetchPosts(pageNumber + 1);
+            fetchProfile(pageNumber + 1);
         }
     };
-    
 
 
-    const renderItem = ({ item, index }) => {
-        // if (index === 0 && profile) {
-        //    return (
-        //        <ProfileCard
-        //            name={profile.name}
-        //            email={profile.email}
-        //            profileImage={profile.profilepic}
-        //            bio={profile.bio}
-        //        />
-        //    );
-        // }
 
-        const post = item
-        
-        //const post = posts[index - 1]; // because index 0 is for profile
-        if(post){
-            return (
-                <PostCards
-                    name={post.name}
-                    time={post.time}
-                    profileImage={post.profileImage}
-                    postText={post.postText}
-                    postImage={post.postImage}
-                    //name={post.owner.name}
-                    //time={dayjs(post.createdAt).fromNow()}
-                    //profileImage={post.owner.profilepic}
-                    //postText={post.caption}
-                    //postImage={post.postpic}
-                />
-            );
-        }
-        return null;
+    const renderItem = ({ item }) => {
+        return (
+            <PostCards
+                name={item.name}
+                time={item.time}
+                profileImage={item.profileImage}
+                postText={item.postText}
+                postImage={item.postImage}
+            //name={item.owner.name}
+            //time={dayjs(item.createdAt).fromNow()}
+            //profileImage={item.owner.profilepic}
+            //postText={item.caption}
+            //postImage={item.postpic}
+            //ownerId={item.owner._id}
+            />
+        );
     };
-    
+
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.main}>
 
-                <FlatList
-                    data={data}
-                    //data={[{}, ...posts]}
-                    keyExtractor={(item, index) => index.toString()}
-                    renderItem={renderItem}
+                <NavBar scrollY={headerTranslateY}/>
 
-                    // to run loadmore function when end is reached for infinite scrolling
-                    //onEndReached={loadMore}
-                    //onEndReachedThreshold={0.5}
+                <View style={{ flex: 1 }}>
+                    <AnimatedFlatList
+                        ref={flatListRef}
+                        //data={profile.posts}
+                        //keyExtractor={(item) => item._id}
+                        data={data}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderItem}
+                        onScroll={handleScroll}
+                        scrollEventThrottle={16}
 
-                    // this makes navbar sticky
-                    ListHeaderComponent={<NavBar />}
-                    stickyHeaderIndices={[0]}
+                        contentContainerStyle={{ paddingTop: headerHeight }}
 
-                    // to display loading as footer
-                    ListFooterComponent={loading && <ActivityIndicator />}
-                    showsVerticalScrollIndicator={false}
-                />
+                        // to run loadmore function when end is reached for infinite scrolling
+                        //onEndReached={loadMore}
+                        //onEndReachedThreshold={0.5}
+
+                        // this makes navbar sticky
+                        //ListHeaderComponent={() => (
+                        //    <View>
+                        //        <ProfileCard
+                        //            name={profile.name}
+                        //            email={profile.email}
+                        //            profileImage={profile.profilepic}
+                        //            bio={profile.bio}
+                        //        />
+                        //    </View>
+                        //)}
+
+                        // to display loading as footer
+                        ListFooterComponent={loading && <ActivityIndicator />}
+                        showsVerticalScrollIndicator={false}
+                    />
+                </View>
 
             </View>
         </SafeAreaView>
@@ -343,5 +412,6 @@ export default ProfileScreen
 const styles = StyleSheet.create({
     main: {
         flex: 1,
+        position: 'relative'
     },
 })

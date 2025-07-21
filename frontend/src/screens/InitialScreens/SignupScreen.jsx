@@ -10,24 +10,24 @@ import FormButton from '../../components/FormButton';
 
 
 const SignupScreen = ({ navigation }) => {
-    const [userName, setUserName] = useState();
-    const [userEmail, setUserEmail] = useState();
-    const [userPassword, setUserPassword] = useState();
-    const [userConfirmPassword, setUserConfirmPassword] = useState();
+    const [name, setName] = useState();
+    const [email, setEmail] = useState();
+    const [password, setPassword] = useState();
+    const [confirmPassword, setConfirmPassword] = useState();
 
     const signUpHandler = async () => {
         
-        if(!userName || !userEmail || !userPassword){
+        if(!name || !email || !password){
             Alert.alert("All fields are mandatory.");
             return;
         }
 
-        if (!userEmail.endsWith("@hbtu.ac.in")) {
+        if (!email.endsWith("@hbtu.ac.in")) {
             Alert.alert("Only college email allowed.");
             return;
         }
 
-        if (userPassword !== userConfirmPassword) {
+        if (password !== confirmPassword) {
             Alert.alert(
                 "Sign Up Failed!!",
                 "Enter Password Carefully!"
@@ -35,16 +35,16 @@ const SignupScreen = ({ navigation }) => {
             return;
         }
 
-        if(userPassword.length<8){
+        if(password.length<8){
             Alert.alert("Password must contain alteast 8 characters.");
             return;
         }
         
         try {
-            const response = await axios.post('http://localhost:4167/user/signup/otp', {
-                userName,
-                userEmail,
-                userPassword,
+            const response = await axios.post('http://10.0.2.2:4167/user/signup/otp', {
+                name,
+                email,
+                password,
             });
             
             if(response.data.success){
@@ -75,8 +75,8 @@ const SignupScreen = ({ navigation }) => {
                     iconName='user'
                     iconSize={17}
                     placeholderText={'Full Name'}
-                    labelValue={userName}
-                    onChangeText={(userName) => setUserName(userName)}
+                    labelValue={name}
+                    onChangeText={(name) => setName(name)}
                     autoCorrect={false}
                 />
                 <FormInput
@@ -84,8 +84,8 @@ const SignupScreen = ({ navigation }) => {
                     iconName='user'
                     iconSize={17}
                     placeholderText={'University Mail ID'}
-                    labelValue={userEmail}
-                    onChangeText={(userEmail) => setUserEmail(userEmail)}
+                    labelValue={email}
+                    onChangeText={(email) => setEmail(email)}
                     keyboardType='email-address'
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -95,8 +95,8 @@ const SignupScreen = ({ navigation }) => {
                     iconName='lock'
                     iconSize={25}
                     placeholderText={'Password'}
-                    labelValue={userPassword}
-                    onChangeText={(userPassword) => setUserPassword(userPassword)}
+                    labelValue={password}
+                    onChangeText={(password) => setPassword(password)}
                     autoCapitalize="none"
                     autoCorrect={false}
                     secureTextEntry={true}
@@ -106,8 +106,8 @@ const SignupScreen = ({ navigation }) => {
                     iconName='lock'
                     iconSize={25}
                     placeholderText={'Confirm Password'}
-                    labelValue={userConfirmPassword}
-                    onChangeText={(userConfirmPassword) => setUserConfirmPassword(userConfirmPassword)}
+                    labelValue={confirmPassword}
+                    onChangeText={(confirmPassword) => setConfirmPassword(confirmPassword)}
                     autoCapitalize="none"
                     autoCorrect={false}
                     secureTextEntry={true}

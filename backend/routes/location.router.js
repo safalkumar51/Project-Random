@@ -31,7 +31,7 @@ router.post('/', isLoggedIn, async (req, res) => {
                 // $near is used to search nearby
                 $near: {
                     $geometry: { type: 'Point', coordinates: [lon, lat] }, // location
-                    $maxDistance: 20 // Range: 20 meters
+                    $maxDistance: 40 // Range: 40 meters
                 }
             }
         });

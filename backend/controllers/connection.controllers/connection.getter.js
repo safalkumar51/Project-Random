@@ -1,30 +1,29 @@
-const postModel = require("../../models/post.model");
 const userModel = require("../../models/user.model");
+const friendRequestModel = require("../../models/friendRequest.model");
 
-const userProfile = async (req, res) => {
+const connectionGetter = async (req, res) => {
+    const pageNumber = Number(req.query.page) || 1;
+    const limit = 40;
+    const skip = (pageNumber - 1) * limit;
 
     try {
 
-        const pageNumber = Number(req.query.page) || 1;
-        const limit = 20;
-        const skip = (pageNumber - 1) * limit;
-
-        // 1. Get current user, select ignores fields other than name
         const user = await userModel.findOne({ _id: req.userId })
-            .select('name email profilepic bio token')
+            .select('token')
             .populate({
-                path: 'posts',
-                select: 'postpic caption owner',
+                path: 'connections',
+                select: 'from updatedAt',
                 options: {
-                    sort: {createdAt: -1},
-                    skip: skip,
+                    sort: { updatedAt: -1 },        // Override default sort
+                    skip: skip, // Pagination
                     limit: limit
                 },
                 populate: {
-                    path: 'owner',
+                    path: 'from',
                     select: 'name profilepic'
                 }
-            });
+            })
+            .lean();
 
         if (!user || user.token !== req.userToken) {
             return res.status(404).json({
@@ -34,26 +33,26 @@ const userProfile = async (req, res) => {
         }
 
         if(pageNumber === 1){
-            const total = await postModel.countDocuments({ owner: req.userId });
+            const total = await friendRequestModel.countDocuments({ to: req.userId, status: 'connected' });
 
             return res.status(200).json({
                 success: true,
                 pageNumber,
                 totalPages: Math.ceil(total / limit),
-                totalPosts: total,
-                profile: user
-            });
+                totalConnections: total,
+                connections: user.connections,
+            })
 
-        } else{
+        } else {
             return res.status(200).json({
                 success: true,
                 pageNumber,
-                profile: user
-            });
+                connections: user.connections,
+            })
         }
 
     } catch (err) {
-        console.log("User Profile Error : ", err.message);
+        console.error("Connection Getter Error : ", err.message);
         return res.status(500).json({
             success: false,
             error: err.message
@@ -61,4 +60,4 @@ const userProfile = async (req, res) => {
     }
 }
 
-module.exports = userProfile;
+module.exports = connectionGetter;
