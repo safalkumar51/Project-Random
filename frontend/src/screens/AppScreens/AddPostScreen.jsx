@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import SharedHeader from '../../components/SharedHeader';
 
 const AddPostScreen = () => {
 
@@ -122,13 +123,14 @@ const AddPostScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={{ flex: 1 }}>
-                <View style={styles.Header}>
-                    <BackButton />
-                    <Text style={styles.headerTxt}>Create Post</Text>
-                </View>
+                <SharedHeader
+                    scrollY= {0}
+                    title="Create Post"
+                    leftComponent={<BackButton />}
+                />
 
                 <ScrollView
-                    contentContainerStyle={{ paddingBottom: 120 }}
+                    contentContainerStyle={{ paddingVertical: 80 }}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled">
                     <View style={styles.textEditor}>

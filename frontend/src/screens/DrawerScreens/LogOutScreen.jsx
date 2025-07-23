@@ -3,6 +3,7 @@ import React, { useEffect } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import { socket } from '../../utils/socket';
 
 const LogOutScreen = () => {
     const navigation = useNavigation();
@@ -36,8 +37,7 @@ const LogOutScreen = () => {
                 console.error('Sign Out Error:', err);
             }
         }
-
-        //logout();
+        logout();
     }, []);
 
     return null;

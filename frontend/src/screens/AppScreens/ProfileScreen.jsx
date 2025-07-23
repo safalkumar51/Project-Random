@@ -225,7 +225,6 @@ const ProfileScreen = () => {
     const scrollDirection = useRef('up');
 
     const [profile, setProfile] = useState({ posts: [] });
-    //const [posts, setPosts] = useState([]);
     const [pageNumber, setPageNumber] = useState(1);
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
@@ -289,8 +288,7 @@ const ProfileScreen = () => {
                 if (lastScrollY > 0) {
                     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
                 } else {
-                    Alert.alert("Run")
-                    //fetchProfile(1);
+                    fetchProfile(1);
                 }
             }
         })
@@ -300,7 +298,7 @@ const ProfileScreen = () => {
 
     // on mounting fetchposts(pageno = 1)
     useEffect(() => {
-        //fetchProfile(1);
+        fetchProfile(1);
     }, []);
 
     // Track scroll offset
@@ -345,17 +343,17 @@ const ProfileScreen = () => {
     const renderItem = ({ item }) => {
         return (
             <PostCards
-                name={item.name}
-                time={item.time}
-                profileImage={item.profileImage}
-                postText={item.postText}
-                postImage={item.postImage}
-            //name={item.owner.name}
-            //time={dayjs(item.createdAt).fromNow()}
-            //profileImage={item.owner.profilepic}
-            //postText={item.caption}
-            //postImage={item.postpic}
-            //ownerId={item.owner._id}
+                //name={item.name}
+                //time={item.time}
+                //profileImage={item.profileImage}
+                //postText={item.postText}
+                //postImage={item.postImage}
+                name={item.owner.name}
+                time={dayjs(item.createdAt).fromNow()}
+                profileImage={item.owner.profilepic}
+                postText={item.caption}
+                postImage={item.postpic}
+                ownerId={item.owner._id}
             />
         );
     };
@@ -370,10 +368,10 @@ const ProfileScreen = () => {
                 <View style={{ flex: 1 }}>
                     <AnimatedFlatList
                         ref={flatListRef}
-                        //data={profile.posts}
-                        //keyExtractor={(item) => item._id}
-                        data={data}
-                        keyExtractor={(item) => item.id}
+                        data={profile.posts}
+                        keyExtractor={(item) => item._id}
+                        //data={data}
+                        //keyExtractor={(item) => item.id}
                         renderItem={renderItem}
                         onScroll={handleScroll}
                         scrollEventThrottle={16}
@@ -381,20 +379,20 @@ const ProfileScreen = () => {
                         contentContainerStyle={{ paddingTop: headerHeight }}
 
                         // to run loadmore function when end is reached for infinite scrolling
-                        //onEndReached={loadMore}
-                        //onEndReachedThreshold={0.5}
+                        onEndReached={loadMore}
+                        onEndReachedThreshold={0.5}
 
                         // this makes navbar sticky
-                        //ListHeaderComponent={() => (
-                        //    <View>
-                        //        <ProfileCard
-                        //            name={profile.name}
-                        //            email={profile.email}
-                        //            profileImage={profile.profilepic}
-                        //            bio={profile.bio}
-                        //        />
-                        //    </View>
-                        //)}
+                        ListHeaderComponent={() => (
+                            <View>
+                                <ProfileCard
+                                    name={profile.name}
+                                    email={profile.email}
+                                    profileImage={profile.profilepic}
+                                    bio={profile.bio}
+                                />
+                            </View>
+                        )}
 
                         // to display loading as footer
                         ListFooterComponent={loading && <ActivityIndicator />}

@@ -52,16 +52,9 @@ router.post('/', isLoggedIn, async (req, res) => {
                     friendRequestModel.create({ from: other._id, to: me._id })
                 ]);
 
-                // Store only incoming request in each user's friendRequests
-                await userModel.updateOne(
-                    { _id: me._id },
-                    { $addToSet: { friendRequests: otherWay._id } }
-                );
-                await userModel.updateOne(
-                    { _id: other._id },
-                    { $addToSet: { friendRequests: myWay._id } }
-                );
-
+                const io = req.app.get('io');
+                io.to(me._id.toString()).emit('receive_request', otherWay);
+                io.to(other._id.toString()).emit('receive_request', myWay);
             }
         }
 

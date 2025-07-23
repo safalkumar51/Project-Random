@@ -48,6 +48,9 @@ const connectionAccept = async (req, res) => {
             // 2. Save both friend request updates in parallel
             await Promise.all([otherWay.save(), myWay.save()]);
 
+            const io = req.app.get('io');
+            io.to(senderId).emit('receive_connection', myWay);
+
             return res.status(201).json({
                 success: true,
                 message: "Connected successfully",

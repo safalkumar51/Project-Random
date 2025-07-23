@@ -12,7 +12,7 @@ const SharedHeader = ({ scrollY, title = '', leftComponent = null }) => {
             style={[
                 styles.header,
                 {
-                    paddingTop: insets.top,
+                    //paddingTop: insets.top,
                     transform: [{ translateY: scrollY }]
                 }
             ]}
@@ -35,7 +35,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 10,
-        gap: 10
+        gap: 10,
+        borderBottomWidth: 2,
+        borderBottomColor: '#eee',
     },
     headerText: {
         fontSize: 24,

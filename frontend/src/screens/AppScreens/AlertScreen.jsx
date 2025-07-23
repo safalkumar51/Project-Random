@@ -11,6 +11,7 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { socket } from '../../utils/socket';
 
 dayjs.extend(relativeTime);
 
@@ -161,7 +162,7 @@ const AlertScreen = () => {
     const [totalPages, setTotalPages] = useState();
 
     const fetchRequests = async (page) => {
-        if (loading || !hasMore) return;
+        if (page !== 1 && (loading || !hasMore)) return;
 
         setLoading(true);
         try {
@@ -179,9 +180,12 @@ const AlertScreen = () => {
             });
 
             if (response.data.success) {
-                setRequests(prev => [...prev, ...response.data.requests]);
+                
                 if (page === 1) {
+                    setRequests(response.data.requests);
                     setTotalPages(response.data.totalPages);
+                } else{
+                    setRequests(prev => [...prev, ...response.data.requests]);
                 }
                 setPageNumber(page);
                 setHasMore(page < totalPages);
@@ -207,8 +211,7 @@ const AlertScreen = () => {
                 if (lastScrollY > 0) {
                     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
                 } else {
-                    Alert.alert("Run");
-                    //fetchRequests(1);
+                    fetchRequests(1);
                 }
             }
         })
@@ -218,7 +221,17 @@ const AlertScreen = () => {
 
     // on mounting fetchrequests(pageno = 1)
     useEffect(() => {
-        //fetchRequests(1);
+        const handleRequest = (data) => {
+            Alert.alert("run");
+        };
+        socket.off('receive_request', handleRequest); // prevent duplicates
+        socket.on('receive_request', handleRequest);
+
+        fetchRequests(1);
+
+        return () => {
+            socket.off('receive_request', handleRequest);
+        }
     }, []);
 
     // Track scroll offset
@@ -261,16 +274,16 @@ const AlertScreen = () => {
     const renderItem = ({ item }) => {
         return (
             <ActivityCard
-                name={item.name}
-                profileImage={item.profileImage}
-                time={item.time}
+                //name={item.name}
+                //profileImage={item.profileImage}
+                //time={item.time}
+                //status={item.status}
+                name={item.from.name}
+                profileImage={item.from.profilepic}
+                time={dayjs(item.createdAt).fromNow()}
                 status={item.status}
-            //name={item.from.name}
-            //profileImage={item.from.profilepic}
-            //time={dayjs(item.createdAt).fromNow()}
-            //status={item.status}
-            //requestId={item._id}
-            //senderId={item.from._id}
+                requestId={item._id}
+                senderId={item.from._id}
             />
         );
     }
@@ -283,18 +296,18 @@ const AlertScreen = () => {
                 <View style={{ flex: 1 }}>
                     <AnimatedFlatList
                         ref={flatListRef}
-                        //data={requests}
-                        //keyExtractor={(item) => item._id}
-                        data={usersData}
-                        keyExtractor={(item) => item.id}
+                        data={requests}
+                        keyExtractor={(item) => item._id}
+                        //data={usersData}
+                        //keyExtractor={(item) => item.id}
                         renderItem={renderItem}
                         onScroll={handleScroll}
                         scrollEventThrottle={16}
                         contentContainerStyle={{ paddingTop: headerHeight }}
 
                         // to run loadmore function when end is reached for infinite scrolling
-                        //onEndReached={loadMore}
-                        //onEndReachedThreshold={0.5}
+                        onEndReached={loadMore}
+                        onEndReachedThreshold={0.5}
 
 
 

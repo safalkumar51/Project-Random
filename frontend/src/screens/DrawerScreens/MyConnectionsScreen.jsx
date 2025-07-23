@@ -1,4 +1,4 @@
-import { ActivityIndicator, StyleSheet, Text, View, Dimensions, Animated, FlatList } from 'react-native'
+import { ActivityIndicator, StyleSheet, Text, View, Dimensions, Animated, FlatList, Alert } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +13,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import MyConnectionCard from '../../components/MyConnectionCard';
 import BackButton from '../../components/BackButton';
 import SharedHeader from '../../components/SharedHeader';
+import { socket } from '../../utils/socket';
 
 dayjs.extend(relativeTime);
 
@@ -157,9 +158,12 @@ const MyConnectionsScreen = () => {
             });
 
             if (response.data.success) {
-                setConnections(prev => [...prev, ...response.data.connections]);
                 if (page === 1) {
+                    setConnections(response.data.connections);
                     setTotalPages(response.data.totalPages);
+                }
+                else{
+                    setConnections(prev => [...prev, ...response.data.connections]);
                 }
                 setPageNumber(page);
                 setHasMore(page < totalPages);
@@ -181,7 +185,17 @@ const MyConnectionsScreen = () => {
 
     // on mounting fetchrequests(pageno = 1)
     useEffect(() => {
-        //fetchConnections(1);
+        const handleConnection = (data) => {
+            Alert.alert("run");
+        };
+        socket.off('receive_connection', handleConnection); // prevent duplicates
+        socket.on('receive_connection', handleConnection);
+
+        fetchConnections(1);
+
+        return () => {
+            socket.off('receive_connection', handleConnection);
+        }
     }, []);
 
     // if user reaches end to flatlist loadmore
@@ -228,13 +242,13 @@ const MyConnectionsScreen = () => {
 
         return (
             <MyConnectionCard
-                //name={item.from.name}
-                //profileImage={item.from.profilepic}
-                //time={dayjs(item.updatedAt).fromNow()}
-                //senderId={item.from._id}
-                name={item.name}
-                profileImage={item.profileImage}
-                time={item.time}
+                name={item.from.name}
+                profileImage={item.from.profilepic}
+                time={dayjs(item.updatedAt).fromNow()}
+                senderId={item.from._id}
+            //name={item.name}
+            //profileImage={item.profileImage}
+            //time={item.time}
             />
         );
     }
@@ -248,10 +262,10 @@ const MyConnectionsScreen = () => {
                 />
                 <View style={{ flex: 1 }}>
                     <AnimatedFlatList
-                        //data={connections}
-                        //keyExtractor={(item) => item._id}
-                        data={usersData}
-                        keyExtractor={(item) => item.id}
+                        data={connections}
+                        keyExtractor={(item) => item._id}
+                        //data={usersData}
+                        //keyExtractor={(item) => item.id}
                         renderItem={renderItem}
 
                         onScroll={handleScroll}
@@ -260,8 +274,8 @@ const MyConnectionsScreen = () => {
                         contentContainerStyle={{ paddingTop: headerHeight }}
 
                         // to run loadmore function when end is reached for infinite scrolling
-                        //onEndReached={loadMore}
-                        //onEndReachedThreshold={0.5}
+                        onEndReached={loadMore}
+                        onEndReachedThreshold={0.5}
 
                         // to display loading as footer
                         ListFooterComponent={loading && <ActivityIndicator />}

@@ -14,7 +14,7 @@ const NavBar = ({ scrollY }) => {
         <Animated.View 
             style={[ styles.navBar,
                 {
-                    paddingTop: insets.top,
+                    //paddingTop: insets.top,
                     transform: [{ translateY: scrollY }]
                 }
             ]}

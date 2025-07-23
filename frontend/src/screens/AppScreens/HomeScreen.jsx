@@ -11,6 +11,7 @@ import NavBar from '../../components/NavBar';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { initSocket, socket } from '../../utils/socket';
 
 dayjs.extend(relativeTime);
 
@@ -277,7 +278,7 @@ const HomeScreen = () => {
                 if (lastScrollY > 0) {
                     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
                 } else {
-                    //fetchPosts(1);
+                    fetchPosts(1);
                 }
             }
         });
@@ -287,7 +288,17 @@ const HomeScreen = () => {
 
     // on mounting fetchposts(pageno = 1)
     useEffect(() => {
-        //fetchPosts(1);
+        const connectSocket = async () => {
+            const authToken = await AsyncStorage.getItem('authToken');
+            initSocket(authToken);
+        }
+        connectSocket();
+        fetchPosts(1);
+
+        return () => {
+            socket.disconnect(); // ✅ disconnects only on unmount
+            console.log('Socket disconnected on component unmount');
+        };
     }, []);
 
     // Track scroll offset
@@ -330,17 +341,17 @@ const HomeScreen = () => {
     const renderItem = ({ item }) => {
         return (
             <PostCards
-                name={item.name}
-                time={item.time}
-                profileImage={item.profileImage}
-                postText={item.postText}
-                postImage={item.postImage}
-            //name={item.owner.name}
-            //time={dayjs(item.createdAt).fromNow()}
-            //profileImage={item.owner.profilepic}
-            //postText={item.caption}
-            //postImage={item.postpic}
-            //ownerId={item.owner._id}
+                //name={item.name}
+                //time={item.time}
+                //profileImage={item.profileImage}
+                //postText={item.postText}
+                //postImage={item.postImage}
+                name={item.owner.name}
+                time={dayjs(item.createdAt).fromNow()}
+                profileImage={item.owner.profilepic}
+                postText={item.caption}
+                postImage={item.postpic}
+                ownerId={item.owner._id}
             />
         );
     };
@@ -354,18 +365,18 @@ const HomeScreen = () => {
                 <View style={{ flex: 1 }}>
                     <AnimatedFlatList
                         ref={flatListRef}
-                        data={data}
-                        //data={posts}
-                        //keyExtractor={(item) => item._id}
-                        keyExtractor={(item) => item.id}
+                        //data={data}
+                        //keyExtractor={(item) => item.id}
+                        data={posts}
+                        keyExtractor={(item) => item._id}
                         renderItem={renderItem}
                         onScroll={handleScroll}
                         scrollEventThrottle={16}
                         contentContainerStyle={{ paddingTop: headerHeight }}
 
                         // to run loadmore function when end is reached for infinite scrolling
-                        //onEndReached={loadMore}
-                        //onEndReachedThreshold={0.5}
+                        onEndReached={loadMore}
+                        onEndReachedThreshold={0.5}
 
                         // to display loading as footer
                         ListFooterComponent={loading && <ActivityIndicator />}
