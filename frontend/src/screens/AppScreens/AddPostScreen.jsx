@@ -173,9 +173,9 @@ const AddPostScreen = () => {
                             <TouchableOpacity onPress={chooseFromGallery}>
                                 <Icons name="image" size={25} color="gray" />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={chooseVideoFromGallery}>
+                            {/* <TouchableOpacity onPress={chooseVideoFromGallery}>
                                 <Icons name="video" size={25} color="gray" />
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
                             <TouchableOpacity onPress={takePhotoFromCamera}>
                                 <Icons name="camera" size={25} color="gray" />
                             </TouchableOpacity>
