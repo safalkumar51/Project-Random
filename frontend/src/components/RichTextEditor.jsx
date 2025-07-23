@@ -9,21 +9,21 @@ const RichTextEditor = ({ editorRef, onChange }) => {
         editor={editorRef}
         actions={[
          // actions.insertImage,
-          actions.setBold,
-          actions.setItalic,
-          actions.insertBulletsList,
-          actions.insertOrderedList,
-          actions.insertLink,
-          actions.keyboard,
-          actions.setStrikethrough,
-          actions.setUnderline,
-          actions.removeFormat,
-          actions.insertVideo,
-          actions.checkboxList,
-          actions.undo,
-          actions.redo,
-          actions.heading1,
-          actions.heading4
+          // actions.setBold,
+          // actions.setItalic,
+          // actions.insertBulletsList,
+          // actions.insertOrderedList,
+          // actions.insertLink,
+          // actions.keyboard,
+          // actions.setStrikethrough,
+          // actions.setUnderline,
+          // actions.removeFormat,
+          // actions.insertVideo,
+          // actions.checkboxList,
+          // actions.undo,
+          // actions.redo,
+          // actions.heading1,
+          // actions.heading4
         ]}
         iconMap={{
             [actions.heading1]:({tintColor})=><Text style={{color:tintColor}}>H1</Text>,
