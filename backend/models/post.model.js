@@ -17,11 +17,11 @@ const postSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
-    },
-    Date: {
-        type: Date,
-        default: Date.now
     }
+},{
+    timestamps: true
 })
+
+postSchema.index({ owner: 1, createdAt: -1 }); // For feed query
 
 module.exports = mongoose.model('Post', postSchema);

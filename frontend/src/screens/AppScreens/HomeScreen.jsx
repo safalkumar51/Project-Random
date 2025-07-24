@@ -1,19 +1,20 @@
-import { Image, StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { StyleSheet, View, FlatList, ActivityIndicator, Alert, Animated } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import PostCards from '../../components/PostCards';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import NavBar from '../../components/NavBar';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 
 dayjs.extend(relativeTime);
 
-/* const data = [
+const data = [
     {
         type: 'profile',
         id: '0',
@@ -202,19 +203,31 @@ dayjs.extend(relativeTime);
         postText: '"Always."',
         postImage: '',
     },
-]; */
+];
 
 
 const HomeScreen = () => {
+
+    const navigation = useNavigation();
+    const isFocused = useIsFocused();
+
+    const flatListRef = useRef(null);
+    const headerHeight = 60;
+    const headerTranslateY = useRef(new Animated.Value(0)).current;
+    const lastScrollY = useRef(0);
+    const scrollDirection = useRef('up');
+    const insets = useSafeAreaInsets();
 
     const [posts, setPosts] = useState([]);
     const [pageNumber, setPageNumber] = useState(1);
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
+    const [totalPages, setTotalPages] = useState();
+
 
     // function to fetch profile( if pageno = 1 ) and user post from backend
     const fetchPosts = async (page) => {
-        if (loading || !hasMore) return;
+        if (page !== 1 && (loading || !hasMore)) return;
 
         setLoading(true);
         try {
@@ -223,6 +236,7 @@ const HomeScreen = () => {
 
             if (!authToken) {
                 navigation.replace("LoginScreen");
+                return;
             }
 
             const response = await axios.get(`http://10.0.2.2:4167/user/home?page=${page}`, {
@@ -231,14 +245,22 @@ const HomeScreen = () => {
                 }
             });
             if (response.data.success) {
-                setPosts(prev => [...prev, ...response.data.posts]);
+                if (page === 1) {
+                    setPosts(response.data.posts);
+                    setTotalPages(response.data.totalPages);
+                } else{
+                    setPosts(prev => [...prev, ...response.data.posts]);
+                }
 
                 setPageNumber(page);
-                setHasMore(page < response.data.totalPages);
+                setHasMore(page < totalPages);
             }
             else {
                 console.log(response.data.message);
-                navigation.replace("LoginScreen");
+                if (response.data.message === 'Log In Required!') {
+                    await AsyncStorage.removeItem('authToken');
+                    navigation.replace("LoginScreen");
+                }
             }
 
         } catch (err) {
@@ -248,10 +270,55 @@ const HomeScreen = () => {
         setLoading(false);
     };
 
+    useEffect(() => {
+        // function to reload or scroll to top 
+        const reload = navigation.addListener('tabPress', () => {
+            if (isFocused) {
+                if (lastScrollY > 0) {
+                    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+                } else {
+                    //fetchPosts(1);
+                }
+            }
+        });
+
+        return reload;
+    }, [navigation, isFocused, lastScrollY]);
+
     // on mounting fetchposts(pageno = 1)
     useEffect(() => {
-        fetchPosts(1);
+        //fetchPosts(1);
     }, []);
+
+    // Track scroll offset
+
+    const handleScroll = (event) => {
+        const currentY = event.nativeEvent.contentOffset.y;
+
+        if (currentY > lastScrollY.current) {
+            if (scrollDirection.current !== 'down' && currentY > 60) {
+                Animated.timing(headerTranslateY, {
+                    toValue: -headerHeight - insets.top,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'down';
+            }
+        } else {
+            if (scrollDirection.current !== 'up') {
+                Animated.timing(headerTranslateY, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'up';
+            }
+        }
+
+        lastScrollY.current = currentY;
+    }
+
+    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
     // if user reaches end to flatlist loadmore
     const loadMore = () => {
@@ -260,46 +327,51 @@ const HomeScreen = () => {
         }
     };
 
-
-
-    const renderItem = ({ item, index }) => {
-        if (index === 0) return null; // Skip the dummy item (used for NavBar)
-
-        const post = item;
-        console.log(post);
+    const renderItem = ({ item }) => {
         return (
             <PostCards
-                name={post.owner.name}
-                time={dayjs(post.Date).fromNow()}
-                profileImage={post.owner.profilepic}
-                postText={post.caption}
-                postImage={post.postpic}
+                name={item.name}
+                time={item.time}
+                profileImage={item.profileImage}
+                postText={item.postText}
+                postImage={item.postImage}
+            //name={item.owner.name}
+            //time={dayjs(item.createdAt).fromNow()}
+            //profileImage={item.owner.profilepic}
+            //postText={item.caption}
+            //postImage={item.postpic}
+            //ownerId={item.owner._id}
             />
         );
     };
-      
+
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.HomeContainer}>
+                <NavBar scrollY={headerTranslateY} />
 
-                <FlatList
-                    data={[{}, ...posts]}
-                    keyExtractor={(item, index) => index.toString()}
-                    renderItem={renderItem}
+                <View style={{ flex: 1 }}>
+                    <AnimatedFlatList
+                        ref={flatListRef}
+                        data={data}
+                        //data={posts}
+                        //keyExtractor={(item) => item._id}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderItem}
+                        onScroll={handleScroll}
+                        scrollEventThrottle={16}
+                        contentContainerStyle={{ paddingTop: headerHeight }}
 
-                    // to run loadmore function when end is reached for infinite scrolling
-                    onEndReached={loadMore}
-                    onEndReachedThreshold={0.5}
+                        // to run loadmore function when end is reached for infinite scrolling
+                        //onEndReached={loadMore}
+                        //onEndReachedThreshold={0.5}
 
-                    // this makes navbar sticky
-                    ListHeaderComponent={<NavBar />}
-                    stickyHeaderIndices={[0]}
-
-                    // to display loading as footer
-                    ListFooterComponent={loading && <ActivityIndicator />}
-                    showsVerticalScrollIndicator={false}
-                />
+                        // to display loading as footer
+                        ListFooterComponent={loading && <ActivityIndicator />}
+                        showsVerticalScrollIndicator={false}
+                    />
+                </View>
 
             </View>
         </SafeAreaView>

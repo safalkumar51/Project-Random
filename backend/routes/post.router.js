@@ -11,7 +11,7 @@ const { addComment, deleteComment } = require('../controllers/post.controllers/p
 const router = express.Router();
 
 router.get('/', (req,res) => {
-    res.send("Posts Router Working");
+    res.send("Post Router Working");
 });
 
 router.post('/upload', isLoggedIn, upload.single("postpic"), uploadPost);

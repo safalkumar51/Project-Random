@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 
 import { enableScreens } from 'react-native-screens';
@@ -43,6 +43,7 @@ const App = () => {
   if (isFirstLaunch === null) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator />
         <Text>Loading...</Text>
       </View>
     );

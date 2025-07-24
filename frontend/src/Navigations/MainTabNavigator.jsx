@@ -4,12 +4,11 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import HomeScreen from '../screens/AppScreens/HomeScreen';
-import ChatScreen from '../screens/AppScreens/ChatScreen';
+import ChatStackNavigator from './ChatStackNavigator';
 import ProfileScreen from '../screens/AppScreens/ProfileScreen';
 import AlertScreen from '../screens/AppScreens/AlertScreen';
 
 import Icon from 'react-native-vector-icons/FontAwesome';
-
 
 
 const Tab = createBottomTabNavigator();
@@ -29,7 +28,7 @@ const MainTabNavigator = () => {
             },
         })}>
             <Tab.Screen name="Home" component={HomeScreen} />
-            <Tab.Screen name="Chat" component={ChatScreen} />
+            <Tab.Screen name="Chat" component={ChatStackNavigator} />
             <Tab.Screen name="Activity" component={AlertScreen} />
             <Tab.Screen name="Profile" component={ProfileScreen} />
 

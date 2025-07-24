@@ -27,24 +27,55 @@ const userSchema = mongoose.Schema({
     token: {
         type: String
     },
-    posts: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Post'
+    location: {
+        type: {
+            type: String,
+            enum: ['Point']
+        },
+        coordinates: {
+            type: [Number], // [longitude, latitude]
+            validate: {
+                validator: function (val) {
+                    return !val || (Array.isArray(val) && val.length === 2);
+                },
+                message: 'Coordinates must be an array of two numbers [lon, lat]'
+            }
         }
-    ],
-    follows: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
-        }
-    ],
-    connections: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Connection'
-        }
-    ]
+    }
+},{
+    toJSON: { virtuals: true },  // 👈 Include virtuals in JSON
+    toObject: { virtuals: true },
+    timestamps: true
+});
+
+userSchema.virtual('friendRequests', {
+    ref: 'FriendRequest',
+    localField: '_id',
+    foreignField: 'to',
+    justOne: false,
 })
+
+userSchema.virtual('connections', {
+    ref: 'FriendRequest',
+    localField: '_id',
+    foreignField: 'to',
+    justOne: false,
+    match: {status: 'connected'},
+})
+
+userSchema.virtual('posts', {
+    ref: 'Post',
+    localField: '_id',
+    foreignField: 'owner',
+    justOne: false,
+})
+
+userSchema.index({ location: '2dsphere' },
+    {
+        partialFilterExpression: {
+            'location.coordinates': { $exists: true }
+        }
+    }
+);
 
 module.exports = mongoose.model('User', userSchema);

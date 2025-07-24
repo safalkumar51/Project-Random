@@ -6,11 +6,26 @@ const userProfile = async (req, res) => {
     try {
 
         const pageNumber = Number(req.query.page) || 1;
-        const limit = 10;
+        const limit = 20;
         const skip = (pageNumber - 1) * limit;
 
         // 1. Get current user, select ignores fields other than name
-        const user = await userModel.findOne({ _id: req.userId }).select('name email profilepic bio token');
+        const user = await userModel.findOne({ _id: req.userId })
+            .select('name email profilepic bio token')
+            .populate({
+                path: 'posts',
+                select: 'postpic caption owner createdAt',
+                options: {
+                    sort: {createdAt: -1},
+                    skip: skip,
+                    limit: limit
+                },
+                populate: {
+                    path: 'owner',
+                    select: 'name profilepic'
+                }
+            });
+
         if (!user || user.token !== req.userToken) {
             return res.status(404).json({
                 success: false,
@@ -18,24 +33,24 @@ const userProfile = async (req, res) => {
             });
         }
 
-        // 2. Get posts owned the user
-        // Added Pagination using skip and limit
-        const posts = await postModel.find({ owner: req.userId })
-            .populate('owner', 'name profilepic') // To get owner's name and profilepic
-            .sort({ Date: -1 }) // -1 >> To sort in descending order (latest first)
-            .skip(skip) // skip >> To skip posts already sent
-            .limit(limit); // limit >> To send limit posts
+        if(pageNumber === 1){
+            const total = await postModel.countDocuments({ owner: req.userId });
 
-        const total = await postModel.countDocuments({ owner: req.userId });
+            return res.status(200).json({
+                success: true,
+                pageNumber,
+                totalPages: Math.ceil(total / limit),
+                totalPosts: total,
+                profile: user
+            });
 
-        return res.status(200).json({
-            success: true,
-            pageNumber,
-            totalPages: Math.ceil(total / limit),
-            totalPosts: total,
-            profile: user,
-            posts: posts
-        });
+        } else{
+            return res.status(200).json({
+                success: true,
+                pageNumber,
+                profile: user
+            });
+        }
 
     } catch (err) {
         console.log("User Profile Error : ", err.message);

@@ -1,17 +1,26 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Dimensions } from 'react-native';
 import React, { useState } from 'react';
 
-import { Dimensions } from 'react-native';
-
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
-const PostCards = ({ name, time, profileImage, postText, postImage }) => {
+const PostCards = ({ name, time, profileImage, postText, postImage, ownerId }) => {
+    const navigation = useNavigation();
+    
     const [liked, setLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(0);
     const [commented, setCommented] = useState(false);
     const [commentCount, setCommentCount] = useState(0);
+
+    const getProfileHandler = () => {
+        navigation.navigate("OtherProfileScreen", {status: "connected", otherId: ownerId, requestId: ""});
+    }
+
+    const getPostHandler = () => {
+        navigation.navigate("PostScreen");
+    }
 
     const toggleLike = () => {
         setLiked(!liked);
@@ -26,19 +35,20 @@ const PostCards = ({ name, time, profileImage, postText, postImage }) => {
     return (
         <View style={styles.shadowWrapper}>
             <View style={styles.card}>
-                <View style={styles.topRow}>
+                <TouchableOpacity style={styles.topRow} onPress={getProfileHandler}>
                     <Image style={styles.avatar} source={{ uri: profileImage }} />
                     <View style={styles.ImageTxt}>
                         <Text style={styles.name}>{name}</Text>
                         <Text style={styles.time}>{time}</Text>
                     </View>
-                </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={getPostHandler}>
+                    <Text style={styles.postText}>{postText}</Text>
 
-                <Text style={styles.postText}>{postText}</Text>
-
-                {postImage ? (
-                    <Image style={styles.PostImage} source={{ uri: postImage }} />
-                ) : null}
+                    {postImage ? (
+                        <Image style={styles.PostImage} source={{ uri: postImage }} />
+                    ) : null}
+                </TouchableOpacity>
 
                 <View style={styles.interactionWrapper}>
                     <TouchableOpacity style={styles.interaction} onPress={toggleLike}>
@@ -52,7 +62,7 @@ const PostCards = ({ name, time, profileImage, postText, postImage }) => {
                         </Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.interaction} onPress={toggleComment}>
+                    <TouchableOpacity style={styles.interaction} onPress={getPostHandler}>
                         <Icon
                             name={commented ? 'comment' : 'comment-o'}
                             size={26}
@@ -74,7 +84,7 @@ const styles = StyleSheet.create({
     card: {
         backgroundColor: 'white',
         borderRadius: 15,
-        marginBottom: 20,
+        marginVertical: 5,
         width: width,
         paddingBottom: 10,
         shadowColor: '#000',
@@ -82,7 +92,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 10,
         elevation: 7,
-
     },
     topRow: {
         flexDirection: 'row',

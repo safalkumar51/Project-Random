@@ -1,4 +1,3 @@
-const connectionModel = require("../../models/connection.model");
 const postModel = require("../../models/post.model");
 const userModel = require("../../models/user.model");
 
@@ -17,7 +16,6 @@ const userDelete = async (req, res) => {
         await postModel.deleteMany({ owner: req.userId });
 
         // Delete all connections involving user
-        await connectionModel.deleteMany({ users: req.userId });
 
         // Delete the user
         await userModel.findOneAndDelete({ _id: req.userId });

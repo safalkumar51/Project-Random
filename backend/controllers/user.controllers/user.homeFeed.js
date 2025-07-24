@@ -1,4 +1,3 @@
-const connectionModel = require('../../models/connection.model');
 const postModel = require('../../models/post.model');
 const userModel = require('../../models/user.model');
 
@@ -6,52 +5,60 @@ const userHomeFeed = async (req, res) => {
     try{
 
         const pageNumber = Number(req.query.page) || 1;
-        const limit = 10;
+        const limit = 20;
         const skip = (pageNumber - 1) * limit;
 
-        // 1. Get current user, select ignores fields other than connections
-        const user = await userModel.findOne( {_id: req.userId} ).select('connections token');
-        if (!user || user.token !== req.userToken){
-            return res.status(404).json({
+        // 1. Get user's connections
+        const user = await userModel.findOne({_id: req.userId})
+            .select('token')
+            .populate({
+                path: 'connections',
+                select: 'from',
+                populate: {
+                    path: 'from',
+                    select: '_id'
+                }
+            })
+            .lean();
+
+        if (!user || user.token !== req.userToken) {
+            return res.status(401).json({
                 success: false,
                 message: 'Log In Required!'
             });
         }
 
-        // 2. Get ids of connection of the user
-        const connections = await connectionModel.find({ users: req.userId }).populate('users');
-        
-        const connectedUsers = [];
+        // 2. Prepare all user IDs to fetch posts from (connections + self)
+        const idsToFetch = user.connections.map(c => c.from._id);
+        idsToFetch.push(req.userId); // Include user's own posts
 
-        connections.forEach(conn => {
-            conn.users.forEach(user => {
-                if (user._id.toString() !== req,userId.toString()) {
-                    connectedUsers.push(user);
-                }
-            });
-        });
-
-        // 3. Add user's own ID to include their posts too
-        const idsToFetch = [...connectedUsers, req.userId];
-
-        // 4. Get posts owned by any of the connected users or the user themselves
-        // Added Pagination using skip and limit
+        // 3. Fetch paginated posts
         const posts = await postModel.find({ owner: { $in: idsToFetch } })
-            .populate('owner', 'name profilepic') // To get owner's name and profilepic
-            .sort({ Date: -1 }) // -1 >> To sort in descending order (latest first)
+            .sort({ createdAt: -1 }) // -1 >> To sort in descending order (latest first)
             .skip(skip) // skip >> To skip posts already sent
-            .limit(limit); // limit >> To send limit posts
-
-        const total = await postModel.countDocuments({ owner: { $in: idsToFetch } });
-
-        return res.status(200).json({
-            success: true,
-            pageNumber,
-            totalPages: Math.ceil(total / limit),
-            totalPosts: total,
-            posts: posts
-        });
+            .limit(limit) // limit >> To send limit posts
+            .populate('owner', 'name profilepic') // To get owner's name and profilepic
+            .lean(); // to fetch posts for read only, optimize the db load
         
+        if(pageNumber === 1){
+            const total = await postModel.countDocuments({ owner: { $in: idsToFetch } });
+            
+            return res.status(200).json({
+                success: true,
+                pageNumber,
+                totalPages: Math.ceil(total / limit),
+                totalPosts: total,
+                posts
+            });
+
+        } else{
+            return res.status(200).json({
+                success: true,
+                pageNumber,
+                posts
+            });
+        }
+
     } catch(err){
         console.log("User Home Feed Error : ", err.message);
         return res.status(500).json({
