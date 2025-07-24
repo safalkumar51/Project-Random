@@ -16,10 +16,23 @@ const commentSchema = mongoose.Schema({
         required: true,
         trim: true
     },
-    createdAt: {
+    likesCount: {
+        type: Number,
+        default: 0
+    },
+    status: {
+        type: String,
+        enum: ['active', 'removed', 'flagged'],
+        default: 'active'
+    },
+    timestamp: {
         type: Date,
         default: Date.now
     }
+});
+
+commentSchema.pre('save', function(next) {
+    next();
 });
 
 module.exports = mongoose.model('Comment', commentSchema);
