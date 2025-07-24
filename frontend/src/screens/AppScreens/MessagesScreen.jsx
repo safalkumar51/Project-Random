@@ -37,7 +37,7 @@ const data = [
 ];
 
 
-const MessagesScreen = ({ }) => {
+const MessagesScreen = () => {
 
     const navigation = useNavigation();
     const isFocused = useIsFocused();
@@ -102,10 +102,12 @@ const MessagesScreen = ({ }) => {
     };
 
     useEffect(() => {
+        console.log(navigation.getState());
         // function to reload or scroll to top 
         const reload = navigation.addListener('tabPress', () => {
             if (isFocused) {
                 if (lastScrollY.current > 0) {
+                    //Alert.alert("y");
                     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
                 } else {
                     fetchMessages(1);

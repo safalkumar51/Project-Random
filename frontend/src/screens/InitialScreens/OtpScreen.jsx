@@ -58,7 +58,7 @@ const OtpScreen = ({ navigation, route }) => {
 
             if (password !== confirmPassword) {
                 Alert.alert(
-                    "Sign Up Failed!!",
+                    "Change Password Failed!!",
                     "Enter Password Carefully!"
                 );
                 return;

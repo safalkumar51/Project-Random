@@ -15,10 +15,10 @@ const userEditProfile = async (req,res) => {
             })
         }
 
-        if(!name || !bio){
+        if(!name){
             return res.status(400).json({
                 success: false,
-                message: "All fields are required!"
+                message: "Name field is required!"
             })
         }
 

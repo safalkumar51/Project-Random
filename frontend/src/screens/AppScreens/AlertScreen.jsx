@@ -208,7 +208,7 @@ const AlertScreen = () => {
     useEffect(() => {
         const reload = navigation.addListener('tabPress', () => {
             if (isFocused) {
-                if (lastScrollY > 0) {
+                if (lastScrollY.current > 0) {
                     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
                 } else {
                     fetchRequests(1);
