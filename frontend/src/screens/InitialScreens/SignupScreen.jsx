@@ -6,6 +6,7 @@ import axios from 'axios';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FormInput from '../../components/FormInput';
 import FormButton from '../../components/FormButton';
+import baseURL from '../../assets/config';
 
 
 
@@ -41,7 +42,7 @@ const SignupScreen = ({ navigation }) => {
         }
         
         try {
-            const response = await axios.post('http://10.0.2.2:4167/user/signup/otp', {
+            const response = await axios.post(`${ baseURL }/user/signup/otp`, {
                 name,
                 email,
                 password,

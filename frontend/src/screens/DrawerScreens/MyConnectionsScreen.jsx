@@ -14,6 +14,7 @@ import MyConnectionCard from '../../components/MyConnectionCard';
 import BackButton from '../../components/BackButton';
 import SharedHeader from '../../components/SharedHeader';
 import { socket } from '../../utils/socket';
+import baseURL from '../../assets/config';
 
 dayjs.extend(relativeTime);
 
@@ -151,7 +152,7 @@ const MyConnectionsScreen = () => {
                 return;
             }
 
-            const response = await axios.get(`http://10.0.2.2:4167/connection?page=${page}`, {
+            const response = await axios.get(`${ baseURL }/connection?page=${page}`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                 }
@@ -191,7 +192,7 @@ const MyConnectionsScreen = () => {
         socket.off('receive_connection', handleConnection); // prevent duplicates
         socket.on('receive_connection', handleConnection);
 
-        fetchConnections(1);
+        //fetchConnections(1);
 
         return () => {
             socket.off('receive_connection', handleConnection);
@@ -201,7 +202,7 @@ const MyConnectionsScreen = () => {
     // if user reaches end to flatlist loadmore
     const loadMore = () => {
         if (!loading && hasMore) {
-            fetchConnections(pageNumber + 1);
+            //fetchConnections(pageNumber + 1);
         }
     };
 
@@ -242,13 +243,13 @@ const MyConnectionsScreen = () => {
 
         return (
             <MyConnectionCard
-                name={item.from.name}
-                profileImage={item.from.profilepic}
-                time={dayjs(item.updatedAt).fromNow()}
-                senderId={item.from._id}
-            //name={item.name}
-            //profileImage={item.profileImage}
-            //time={item.time}
+                //name={item.from.name}
+                //profileImage={item.from.profilepic}
+                //time={dayjs(item.updatedAt).fromNow()}
+                //senderId={item.from._id}
+                name={item.name}
+                profileImage={item.profileImage}
+                time={item.time}
             />
         );
     }
@@ -262,10 +263,10 @@ const MyConnectionsScreen = () => {
                 />
                 <View style={{ flex: 1 }}>
                     <AnimatedFlatList
-                        data={connections}
-                        keyExtractor={(item) => item._id}
-                        //data={usersData}
-                        //keyExtractor={(item) => item.id}
+                        //data={connections}
+                        //keyExtractor={(item) => item._id}
+                        data={usersData}
+                        keyExtractor={(item) => item.id}
                         renderItem={renderItem}
 
                         onScroll={handleScroll}
@@ -274,11 +275,11 @@ const MyConnectionsScreen = () => {
                         contentContainerStyle={{ paddingTop: headerHeight }}
 
                         // to run loadmore function when end is reached for infinite scrolling
-                        onEndReached={loadMore}
-                        onEndReachedThreshold={0.5}
+                        //onEndReached={loadMore}
+                        //onEndReachedThreshold={0.5}
 
                         // to display loading as footer
-                        ListFooterComponent={loading && <ActivityIndicator />}
+                        //ListFooterComponent={loading && <ActivityIndicator />}
                         showsVerticalScrollIndicator={false}
                     />
                 </View>

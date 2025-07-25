@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { initSocket, socket } from '../../utils/socket';
+import baseURL from '../../assets/config';
 
 dayjs.extend(relativeTime);
 
@@ -240,7 +241,7 @@ const HomeScreen = () => {
                 return;
             }
 
-            const response = await axios.get(`http://10.0.2.2:4167/user/home?page=${page}`, {
+            const response = await axios.get(`${ baseURL }/user/home?page=${page}`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                 }
@@ -278,7 +279,7 @@ const HomeScreen = () => {
                 if (lastScrollY > 0) {
                     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
                 } else {
-                    fetchPosts(1);
+                    //fetchPosts(1);
                 }
             }
         });
@@ -334,30 +335,30 @@ const HomeScreen = () => {
     // if user reaches end to flatlist loadmore
     const loadMore = () => {
         if (!loading && hasMore) {
-            fetchPosts(pageNumber + 1);
+            //fetchPosts(pageNumber + 1);
         }
     };
 
     const renderItem = ({ item }) => {
         return (
             <PostCards
-                //name={item.name}
-                //time={item.time}
-                //profileImage={item.profileImage}
-                //postText={item.postText}
-                //postImage={item.postImage}
-                name={item.owner?.name}
-                time={dayjs(item.createdAt).fromNow()}
-                profileImage={item.owner?.profilepic}
-                postText={item.caption}
-                postImage={item.postpic}
-                ownerId={item.owner?._id}
-                postId={item._id}
-                likesCount={item.likesCount}
-                commentsCount={item.commentsCount}
-                isLiked={item.isLiked}
-                isCommented={item.isCommented}
-                isMine={item.isMine}
+                name={item.name}
+                time={item.time}
+                profileImage={item.profileImage}
+                postText={item.postText}
+                postImage={item.postImage}
+                //name={item.owner?.name}
+                //time={dayjs(item.createdAt).fromNow()}
+                //profileImage={item.owner?.profilepic}
+                //postText={item.caption}
+                //postImage={item.postpic}
+                //ownerId={item.owner?._id}
+                //postId={item._id}
+                //likesCount={item.likesCount}
+                //commentsCount={item.commentsCount}
+                //isLiked={item.isLiked}
+                //isCommented={item.isCommented}
+                //isMine={item.isMine}
             />
         );
     };
@@ -371,21 +372,21 @@ const HomeScreen = () => {
                 <View style={{ flex: 1 }}>
                     <AnimatedFlatList
                         ref={flatListRef}
-                        //data={data}
-                        //keyExtractor={(item) => item.id}
-                        data={posts}
-                        keyExtractor={(item) => item._id}
+                        data={data}
+                        keyExtractor={(item) => item.id}
+                        //data={posts}
+                        //keyExtractor={(item) => item._id}
                         renderItem={renderItem}
                         onScroll={handleScroll}
                         scrollEventThrottle={16}
                         contentContainerStyle={{ paddingTop: headerHeight }}
 
                         // to run loadmore function when end is reached for infinite scrolling
-                        onEndReached={loadMore}
-                        onEndReachedThreshold={0.5}
+                        //onEndReached={loadMore}
+                        //onEndReachedThreshold={0.5}
 
                         // to display loading as footer
-                        ListFooterComponent={loading && <ActivityIndicator />}
+                        //ListFooterComponent={loading && <ActivityIndicator />}
                         showsVerticalScrollIndicator={false}
                     />
                 </View>

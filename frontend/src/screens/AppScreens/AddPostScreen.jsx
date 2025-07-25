@@ -19,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import SharedHeader from '../../components/SharedHeader';
+import baseURL from '../../assets/config';
 
 const AddPostScreen = () => {
 
@@ -61,7 +62,7 @@ const AddPostScreen = () => {
     };
 
     const submitHandler = async () => {
-        return Alert.alert("Post");
+        return;
         try {
 
             const authToken = await AsyncStorage.getItem('authToken');
@@ -97,7 +98,7 @@ const AddPostScreen = () => {
                 });
             }
 
-            const response = await axios.post("http://10.0.2.2:4167/post/upload", formData, {
+            const response = await axios.post(`${ baseURL }/post/upload`, formData, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                     'Content-Type': 'multipart/form-data',

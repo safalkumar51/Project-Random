@@ -14,6 +14,7 @@ import FormButton from '../../components/FormButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import baseURL from '../../assets/config';
 
 
 
@@ -44,6 +45,7 @@ const EditProfileScreen = () => {
     };
 
     const changeProfilePhotoHandler = async (image) => {
+        return;
         try{
 
             const authToken = await AsyncStorage.getItem('authToken');
@@ -71,7 +73,7 @@ const EditProfileScreen = () => {
                 name: filename,                 // File name like 'photo.jpg'
             });
 
-            const response = await axios.post("http://10.0.2.2:4167/user/changeprofilephoto", formData, {
+            const response = await axios.post(`${ baseURL }/user/changeprofilephoto`, formData, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                     'Content-Type': 'multipart/form-data',
@@ -95,6 +97,7 @@ const EditProfileScreen = () => {
     }
 
     const editProfileHandler = async () => {
+        return;
         if (!name.trim()) {
             Alert.alert("Name field can't be empty");
             return;
@@ -113,7 +116,7 @@ const EditProfileScreen = () => {
                 return;
             }
 
-            const response = await axios.post('http://10.0.2.2:4167/user/editprofile', {
+            const response = await axios.post(`${ baseURL }/user/editprofile`, {
                 name,
                 bio
             }, {
@@ -138,6 +141,7 @@ const EditProfileScreen = () => {
     }
 
     const changePasswordHandler = async () => {
+        return;
         if (!password || !newPassword || !confirmPassword) {
             Alert.alert("All fields are required!");
             return;
@@ -164,7 +168,7 @@ const EditProfileScreen = () => {
                 return;
             }
 
-            const response = await axios.post('http://10.0.2.2:4167/user/changepassword', {
+            const response = await axios.post(`${ baseURL }/user/changepassword`, {
                 oldPassword: password,
                 newPassword
             }, {

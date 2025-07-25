@@ -50,7 +50,7 @@ app.use('/connection', connectiontRouter);
 app.use('/chat', chatRouter);
 app.use('/messages', messagesRouter);
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on localhost:${PORT}`);
 });
 

@@ -14,6 +14,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { socket } from '../../utils/socket';
+import baseURL from '../../assets/config';
 
 dayjs.extend(relativeTime);
 
@@ -73,7 +74,7 @@ const ChatScreen = ({ route }) => {
                 return;
             }
 
-            const response = await axios.get(`http://10.0.2.2:4167/chat?page=${page}&otherId=${otherId}`, {
+            const response = await axios.get(`${ baseURL }/chat?page=${page}&otherId=${otherId}`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                 }
@@ -111,7 +112,7 @@ const ChatScreen = ({ route }) => {
         };
         socket.off('receive_chat', handleRequest); // prevent duplicates
         socket.on('receive_chat', handleRequest);
-        fetchChats(1);
+        //fetchChats(1);
 
         return () => {
             socket.off('receive_chat', handleRequest);
@@ -121,11 +122,12 @@ const ChatScreen = ({ route }) => {
     // if user reaches end to flatlist loadmore
     const loadMore = () => {
         if (!loading && hasMore) {
-            fetchChats(pageNumber + 1);
+            //fetchChats(pageNumber + 1);
         }
     };
 
     const sendMessage = async () => {
+        return;
         if (text.trim() !== "") {
             try {
 
@@ -135,7 +137,7 @@ const ChatScreen = ({ route }) => {
                     return;
                 }
 
-                const response = await axios.post('http://10.0.2.2:4167/chat/send', {
+                const response = await axios.post(`${ baseURL }/chat/send`, {
                     otherId,
                     message: text
                 }, {
@@ -168,16 +170,16 @@ const ChatScreen = ({ route }) => {
     const renderItem = ({ item }) => {
         return (
             <ChatCard
-                //otherId={'2'}
-                //id={item.id}
-                //avatar={item.avatar}
-                //message={item.text}
-                //time={item.timestamp}
-                otherId={otherId}
-                id={`${item.from}`}
-                avatar={avatar}
-                message={item.message}
-                time={dayjs(item.createdAt).fromNow()}
+                otherId={'2'}
+                id={item.id}
+                avatar={item.avatar}
+                message={item.text}
+                time={item.timestamp}
+                //otherId={otherId}
+                //id={`${item.from}`}
+                //avatar={avatar}
+                //message={item.message}
+                //time={dayjs(item.createdAt).fromNow()}
             />
         );
     };
@@ -197,20 +199,20 @@ const ChatScreen = ({ route }) => {
                         />
                         <View style={{ flex: 1 }}>
                             <AnimatedFlatList
-                                //data={data}
-                                //keyExtractor={(item) => item.id}
-                                data={chats}
-                                keyExtractor={(item) => item._id}
+                                data={data}
+                                keyExtractor={(item) => item.id}
+                                //data={chats}
+                                //keyExtractor={(item) => item._id}
                                 renderItem={renderItem}
                                 onScroll={handleScroll}
                                 scrollEventThrottle={16}
 
                                 // to run loadmore function when end is reached for infinite scrolling
-                                onEndReached={loadMore}
-                                onEndReachedThreshold={0.5}
+                                //onEndReached={loadMore}
+                                //onEndReachedThreshold={0.5}
 
                                 // to display loading as footer
-                                ListFooterComponent={loading && <ActivityIndicator />}
+                                //ListFooterComponent={loading && <ActivityIndicator />}
                                 showsVerticalScrollIndicator={false}
 
                                 contentContainerStyle={styles.messagesContainer}

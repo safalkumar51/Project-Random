@@ -15,6 +15,7 @@ import ProfileCard from '../../components/ProfileCard';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
+import baseURL from '../../assets/config';
 
 dayjs.extend(relativeTime);
 
@@ -244,7 +245,7 @@ const ProfileScreen = () => {
                 return;
             }
 
-            const response = await axios.get(`http://10.0.2.2:4167/user/profile?page=${page}`, {
+            const response = await axios.get(`${ baseURL }/user/profile?page=${page}`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                 }
@@ -288,7 +289,7 @@ const ProfileScreen = () => {
                 if (lastScrollY > 0) {
                     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
                 } else {
-                    fetchProfile(1);
+                    //fetchProfile(1);
                 }
             }
         })
@@ -298,7 +299,7 @@ const ProfileScreen = () => {
 
     // on mounting fetchposts(pageno = 1)
     useEffect(() => {
-        fetchProfile(1);
+        //fetchProfile(1);
     }, []);
 
     // Track scroll offset
@@ -343,23 +344,23 @@ const ProfileScreen = () => {
     const renderItem = ({ item }) => {
         return (
             <PostCards
-                //name={item.name}
-                //time={item.time}
-                //profileImage={item.profileImage}
-                //postText={item.postText}
-                //postImage={item.postImage}
-                name={profile.name}
-                time={dayjs(item.createdAt).fromNow()}
-                profileImage={profile.profilepic}
-                postText={item.caption}
-                postImage={item.postpic}
-                ownerId={profile._id}
-                postId={item._id}
-                likesCount={item.likesCount}
-                commentsCount={item.commentsCount}
-                isLiked={item.isLiked}
-                isCommented={item.isCommented}
-                isMine={item.isMine}
+                name={item.name}
+                time={item.time}
+                profileImage={item.profileImage}
+                postText={item.postText}
+                postImage={item.postImage}
+                //name={profile.name}
+                //time={dayjs(item.createdAt).fromNow()}
+                //profileImage={profile.profilepic}
+                //postText={item.caption}
+                //postImage={item.postpic}
+                //ownerId={profile._id}
+                //postId={item._id}
+                //likesCount={item.likesCount}
+                //commentsCount={item.commentsCount}
+                //isLiked={item.isLiked}
+                //isCommented={item.isCommented}
+                //isMine={item.isMine}
             />
         );
     };
@@ -374,10 +375,10 @@ const ProfileScreen = () => {
                 <View style={{ flex: 1 }}>
                     <AnimatedFlatList
                         ref={flatListRef}
-                        data={profile.posts}
-                        keyExtractor={(item) => item._id}
-                        //data={data}
-                        //keyExtractor={(item) => item.id}
+                        //data={profile.posts}
+                        //keyExtractor={(item) => item._id}
+                        data={data}
+                        keyExtractor={(item) => item.id}
                         renderItem={renderItem}
                         onScroll={handleScroll}
                         scrollEventThrottle={16}
@@ -385,23 +386,23 @@ const ProfileScreen = () => {
                         contentContainerStyle={{ paddingTop: headerHeight }}
 
                         // to run loadmore function when end is reached for infinite scrolling
-                        onEndReached={loadMore}
-                        onEndReachedThreshold={0.5}
+                        //onEndReached={loadMore}
+                        //onEndReachedThreshold={0.5}
 
                         // this makes navbar sticky
-                        ListHeaderComponent={() => (
-                            <View>
-                                <ProfileCard
-                                    name={profile.name}
-                                    email={profile.email}
-                                    profileImage={profile.profilepic}
-                                    bio={profile.bio}
-                                />
-                            </View>
-                        )}
+                        //ListHeaderComponent={() => (
+                        //    <View>
+                        //        <ProfileCard
+                        //            name={profile.name}
+                        //            email={profile.email}
+                        //            profileImage={profile.profilepic}
+                        //            bio={profile.bio}
+                        //        />
+                        //    </View>
+                        //)}
 
                         // to display loading as footer
-                        ListFooterComponent={loading && <ActivityIndicator />}
+                        //ListFooterComponent={loading && <ActivityIndicator />}
                         showsVerticalScrollIndicator={false}
                     />
                 </View>

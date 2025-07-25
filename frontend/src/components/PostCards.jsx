@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import baseURL from '../assets/config';
 
 const { width, height } = Dimensions.get('window');
 
@@ -26,6 +27,7 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, pos
     }
 
     const toggleLike = async () => {
+        return;
         try{
 
             const authToken = await AsyncStorage.getItem('authToken');
@@ -34,7 +36,7 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, pos
                 return;
             }
 
-            const response = await axios.post('http://10.0.2.2:4167/post/like', {
+            const response = await axios.post(`${baseURL}/post/like`, {
                 postId
             }, {
                 headers: {

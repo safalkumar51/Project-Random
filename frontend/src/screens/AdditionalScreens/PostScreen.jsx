@@ -11,6 +11,7 @@ import axios from 'axios'
 import { useNavigation } from '@react-navigation/native'
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import baseURL from '../../assets/config'
 
 dayjs.extend(relativeTime);
 
@@ -245,7 +246,7 @@ const PostScreen = ({ route }) => {
                 navigation.replace("LoginScreen");
                 return;
             }
-            const response = await axios.get(`http://10.0.2.2:4167/post?page=${page}&postId=${postId}`, {
+            const response = await axios.get(`${ baseURL }/post?page=${page}&postId=${postId}`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                 }
@@ -264,7 +265,6 @@ const PostScreen = ({ route }) => {
                         }
                     });
                 }
-                console.log(response.data);
 
                 setPageNumber(page);
                 setHasMore(page < totalPages);
@@ -295,7 +295,7 @@ const PostScreen = ({ route }) => {
 
             await fetchPost(1);;
         }
-        loadData();
+        //loadData();
         setPostLoading(false);
 
     }, [postId]);
@@ -303,11 +303,12 @@ const PostScreen = ({ route }) => {
     // if user reaches end to flatlist loadmore
     const loadMore = () => {
         if (!loading && hasMore) {
-            fetchPost(pageNumber + 1);
+            //fetchPost(pageNumber + 1);
         }
     };
 
     const sendMessage = async () => {
+        return;
         if (text.trim() !== "") {
             try {
 
@@ -317,7 +318,7 @@ const PostScreen = ({ route }) => {
                     return;
                 }
 
-                const response = await axios.post('http://10.0.2.2:4167/post/comment', {
+                const response = await axios.post(`${ baseURL }/post/comment`, {
                     postId,
                     text
                 }, {
@@ -350,20 +351,20 @@ const PostScreen = ({ route }) => {
     const renderItem = ({ item }) => {
         return (
             <CommentCard
-                //name={item.name}
-                //profileImage={item.profileImage}
-                //time={item.time}
-                //comment={item.comment}
-                //likes={item.likes}
-                name={item.commentOwner.name}
-                profileImage={item.commentOwner.profilepic}
-                time={dayjs(item.createdAt).fromNow()}
-                comment={item.text}
-                commentId={item._id}
-                commentOwnerId={item.commentOwner?._id}
-                commentLikesCount={item.commentLikesCount}
-                isCommentLiked={item.isCommentLiked}
-                isCommentMine={item.isCommentMine}
+                name={item.name}
+                profileImage={item.profileImage}
+                time={item.time}
+                comment={item.comment}
+                likes={item.likes}
+                //name={item.commentOwner.name}
+                //profileImage={item.commentOwner.profilepic}
+                //time={dayjs(item.createdAt).fromNow()}
+                //comment={item.text}
+                //commentId={item._id}
+                //commentOwnerId={item.commentOwner?._id}
+                //commentLikesCount={item.commentLikesCount}
+                //isCommentLiked={item.isCommentLiked}
+                //isCommentMine={item.isCommentMine}
             />
         )
     }
@@ -382,49 +383,49 @@ const PostScreen = ({ route }) => {
                         />
                         <View style={{ flex: 1 }}>
                             <AnimatedFlatList
-                                //data={data}
-                                //keyExtractor={(item) => item.id}
-                                data={post.comments}
-                                keyExtractor={(item) => item._id}
+                                data={data}
+                                keyExtractor={(item) => item.id}
+                                //data={post.comments}
+                                //keyExtractor={(item) => item._id}
                                 renderItem={renderItem}
 
                                 onScroll={handleScroll}
                                 scrollEventThrottle={16}
 
                                 // to run loadmore function when end is reached for infinite scrolling
-                                onEndReached={loadMore}
-                                onEndReachedThreshold={0.5}
+                                //onEndReached={loadMore}
+                                //onEndReachedThreshold={0.5}
 
                                 // this makes navbar sticky
-                                ListHeaderComponent={() => (
-                                    <View>
-                                        {postLoading ? (
-                                            <ActivityIndicator size="large" />
-                                        ) : (
-                                            <>
-                                                <PostCards
-                                                    name={post.owner?.name}
-                                                    profileImage={post.owner?.profilepic}
-                                                    time={dayjs(post.createdAt).fromNow()}
-                                                    postText={post.caption}
-                                                    postImage={post.postpic}
-                                                    ownerId={post.owner?._id}
-                                                    postId={post._id}
-                                                    likesCount={post.likesCount}
-                                                    commentsCount={post.commentsCount}
-                                                    isLiked={post.isLiked}
-                                                    isCommented={post.isCommented}
-                                                    isMine={post.isMine}
-                                                />
-                                            </>
-                                        )}
-                                    </View>
-                                )}
+                                //ListHeaderComponent={() => (
+                                //    <View>
+                                //        {postLoading ? (
+                                //            <ActivityIndicator size="large" />
+                                //        ) : (
+                                //            <>
+                                //                <PostCards
+                                //                    name={post.owner?.name}
+                                //                    profileImage={post.owner?.profilepic}
+                                //                    time={dayjs(post.createdAt).fromNow()}
+                                //                    postText={post.caption}
+                                //                    postImage={post.postpic}
+                                //                    ownerId={post.owner?._id}
+                                //                    postId={post._id}
+                                //                    likesCount={post.likesCount}
+                                //                    commentsCount={post.commentsCount}
+                                //                    isLiked={post.isLiked}
+                                //                    isCommented={post.isCommented}
+                                //                    isMine={post.isMine}
+                                //                />
+                                //            </>
+                                //        )}
+                                //    </View>
+                                //)}
 
                                 contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: 80 }}
 
                                 // to display loading as footer
-                                ListFooterComponent={loading && <ActivityIndicator />}
+                                //ListFooterComponent={loading && <ActivityIndicator />}
                                 showsVerticalScrollIndicator={false}
                             />
                             <View style={styles.inputRow}>
