@@ -1,6 +1,7 @@
 import React from 'react';
 import { Animated, StyleSheet, Text, View, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from './BackButton';
 
 const { width } = Dimensions.get('window');
 
@@ -17,7 +18,7 @@ const SharedHeader = ({ scrollY, title = '', leftComponent = null }) => {
                 }
             ]}
         >
-            {leftComponent}
+            <BackButton />
             <Text style={styles.headerText}>{title}</Text>
         </Animated.View>
     );

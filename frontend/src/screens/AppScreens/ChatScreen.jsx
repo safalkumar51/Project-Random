@@ -5,7 +5,7 @@ import {
     Alert,
 } from 'react-native';
 import SharedHeader from '../../components/SharedHeader';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import BackButton from '../../components/BackButton';
 import ChatCard from '../../components/ChatCard';
 
@@ -116,7 +116,7 @@ const ChatScreen = ({ route }) => {
         return () => {
             socket.off('receive_chat', handleRequest);
         }
-    }, []);
+    }, [otherId]);
 
     // if user reaches end to flatlist loadmore
     const loadMore = () => {
@@ -183,54 +183,55 @@ const ChatScreen = ({ route }) => {
     };
 
     return (
-        <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={90}
-        >
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <View style={styles.innerContainer}>
-                    <SharedHeader
-                        scrollY={headerTranslateY}
-                        title={name}
-                        leftComponent={<BackButton />}
-                    />
-
-                    <AnimatedFlatList
-                        //data={data}
-                        //keyExtractor={(item) => item.id}
-                        data={chats}
-                        keyExtractor={(item) => item._id}
-                        renderItem={renderItem}
-                        onScroll={handleScroll}
-                        scrollEventThrottle={16}
-
-                        // to run loadmore function when end is reached for infinite scrolling
-                        onEndReached={loadMore}
-                        onEndReachedThreshold={0.5}
-
-                        // to display loading as footer
-                        ListFooterComponent={loading && <ActivityIndicator />}
-                        showsVerticalScrollIndicator={false}
-
-                        contentContainerStyle={styles.messagesContainer}
-                    />
-
-                    <View style={styles.inputRow}>
-                        <TextInput
-                            style={styles.input}
-                            value={text}
-                            onChangeText={setText}
-                            placeholder="Type a message"
-                            placeholderTextColor="#888"
+        <SafeAreaView style={{ flex: 1 }}>
+            <KeyboardAvoidingView
+                style={styles.container}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                keyboardVerticalOffset={90}
+            >
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <View style={styles.innerContainer}>
+                        <SharedHeader
+                            scrollY={headerTranslateY}
+                            title={name}
                         />
-                        <TouchableOpacity style={styles.buttonContainer} onPress={sendMessage}>
-                            <Text style={styles.buttonText}>SEND</Text>
-                        </TouchableOpacity>
+                        <View style={{ flex: 1 }}>
+                            <AnimatedFlatList
+                                //data={data}
+                                //keyExtractor={(item) => item.id}
+                                data={chats}
+                                keyExtractor={(item) => item._id}
+                                renderItem={renderItem}
+                                onScroll={handleScroll}
+                                scrollEventThrottle={16}
+
+                                // to run loadmore function when end is reached for infinite scrolling
+                                onEndReached={loadMore}
+                                onEndReachedThreshold={0.5}
+
+                                // to display loading as footer
+                                ListFooterComponent={loading && <ActivityIndicator />}
+                                showsVerticalScrollIndicator={false}
+
+                                contentContainerStyle={styles.messagesContainer}
+                            />
+                        </View>
+                        <View style={styles.inputRow}>
+                            <TextInput
+                                style={styles.input}
+                                value={text}
+                                onChangeText={setText}
+                                placeholder="Type a message"
+                                placeholderTextColor="#888"
+                            />
+                            <TouchableOpacity style={styles.buttonContainer} onPress={sendMessage}>
+                                <Text style={styles.buttonText}>SEND</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </View>
-            </TouchableWithoutFeedback>
-        </KeyboardAvoidingView>
+                </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 };
 
@@ -241,21 +242,25 @@ const styles = StyleSheet.create({
     },
     innerContainer: {
         flex: 1,
-        padding: 10,
+        //padding: 10,
+        margin: 5,
     },
     messagesContainer: {
-        paddingBottom: 20,
+        paddingBottom: 60,
         paddingTop: 60
     },
     inputRow: {
+        position: 'absolute',
+        bottom: 5, // ⬅️ Distance from the bottom
+        left: 10,   // ⬅️ Optional: distance from left
+        right: 10,  // ⬅️ Optional: distance from right
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: 8,
         paddingHorizontal: 10,
         backgroundColor: '#fff',
-        borderTopWidth: 1,
-        borderColor: '#ccc',
         borderRadius: 25,
+        elevation: 7
     },
     input: {
         flex: 1,

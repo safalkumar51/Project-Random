@@ -16,15 +16,8 @@ const likeSchema = mongoose.Schema({
         enum: ['like'],
         default: 'like'
     },
-    status: {
-        type: String,
-        enum: ['active', 'removed'],
-        default: 'active'
-    },
-    timestamp: {
-        type: Date,
-        default: Date.now
-    }
+},{
+    timestamps: true
 });
 
 likeSchema.pre('save', function(next) {

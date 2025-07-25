@@ -1,40 +1,43 @@
-const Like = require('../../models/like.model');
+const likeModel = require('../../models/like.model');
+const postModel = require('../../models/post.model');
+const userModel = require('../../models/user.model');
 
 const likeUnlikePost = async (req, res) => {
     try {
-        const userId = req.userId;
+
         const { postId } = req.body;
 
-        if (!postId) {
-            return res.status(400).json({ success: false, message: 'Post ID is required' });
+        const user = await userModel.findOne({ _id: req.userId }).select('token');
+        if (!user || user.token !== req.userToken) {
+            return res.status(404).json({
+                success: false,
+                message: 'Log In Required!'
+            });
+        }
+
+        const post = await postModel.findOne({ _id: postId });
+
+        if (!postId || !post) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid Request'
+            });
         }
 
         // Check if like document exists for user and post
-        let existingLike = await Like.findOne({ user: userId, post: postId });
+        let existingLike = await likeModel.findOne({ user: req.userId, post: postId });
 
         if (existingLike) {
-            if (existingLike.status === 'active') {
-                // Unlike the post (soft delete)
-                existingLike.status = 'removed';
-                await existingLike.save();
-                return res.status(200).json({ success: true, message: 'Post unliked' });
-            } else {
-                // Reactivate the like
-                existingLike.status = 'active';
-                existingLike.timestamp = Date.now();
-                await existingLike.save();
-                return res.status(200).json({ success: true, message: 'Post liked' });
-            }
+            // Unlike the post
+            await likeModel.findOneAndDelete({ user: req.userId, post: postId });
+            return res.status(200).json({ success: true, message: 'Post unliked' });
         } else {
             // Create new like document
-            const newLike = new Like({
-                user: userId,
-                post: postId,
-                type: 'like', // fixed type as per user request
-                status: 'active',
-                timestamp: Date.now()
-            });
-            await newLike.save();
+            await likeModel.create({
+                user: user._id,
+                post: post._id,
+            })
+
             return res.status(200).json({ success: true, message: 'Post liked' });
         }
     } catch (error) {
@@ -43,4 +46,4 @@ const likeUnlikePost = async (req, res) => {
     }
 };
 
-module.exports = { likeUnlikePost };
+module.exports = likeUnlikePost;

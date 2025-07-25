@@ -315,7 +315,7 @@ const OtherProfileScreen = ({ route }) => {
 
             await fetchProfile(1);
         }
-        //loadData();
+        loadData();
         setProfileLoading(false);
     }, [otherId, status, requestId]);
 
@@ -362,16 +362,23 @@ const OtherProfileScreen = ({ route }) => {
     const renderItem = ({ item }) => {
         return (
             <PostCards
-                name={item.name}
-                time={item.time}
-                profileImage={item.profileImage}
-                postText={item.postText}
-                postImage={item.postImage}
-            //name={item.owner.name}
-            //time={dayjs(item.createdAt).fromNow()}
-            //profileImage={item.owner.profilepic}
-            //postText={item.caption}
-            //postImage={item.postpic}
+                //name={item.name}
+                //time={item.time}
+                //profileImage={item.profileImage}
+                //postText={item.postText}
+                //postImage={item.postImage}
+                name={profile.name}
+                time={dayjs(item.createdAt).fromNow()}
+                profileImage={profile.profilepic}
+                postText={item.caption}
+                postImage={item.postpic}
+                ownerId={profile._id}
+                postId={item._id}
+                likesCount={item.likesCount}
+                commentsCount={item.commentsCount}
+                isLiked={item.isLiked}
+                isCommented={item.isCommented}
+                isMine={item.isMine}
             />
         );
     };
@@ -382,14 +389,13 @@ const OtherProfileScreen = ({ route }) => {
                 <SharedHeader
                     scrollY={headerTranslateY}
                     title="Profile"
-                    leftComponent={<BackButton />}
                 />
                 <View style={{ flex: 1 }}>
                     <AnimatedFlatList
-                        //data={profile.posts}
-                        //keyExtractor={(item) => item._id}
-                        data={data}
-                        keyExtractor={(item) => item.id}
+                        data={profile.posts}
+                        keyExtractor={(item) => item._id}
+                        //data={data}
+                        //keyExtractor={(item) => item.id}
                         renderItem={renderItem}
 
                         onScroll={handleScroll}
@@ -398,33 +404,32 @@ const OtherProfileScreen = ({ route }) => {
                         contentContainerStyle={{ paddingTop: headerHeight }}
 
                         // to run loadmore function when end is reached for infinite scrolling
-                        //onEndReached={loadMore}
-                        //onEndReachedThreshold={0.5}
+                        onEndReached={loadMore}
+                        onEndReachedThreshold={0.5}
 
                         // this makes navbar sticky
-                        //ListHeaderComponent={() => (
-                        //    <View>
-                        //        {profileLoading ? (
-                        //            <ActivityIndicator size="large" />
-                        //        ) : (
-                        //            <>
-                        //                <ProfileCard
-                        //                    name={profile.name}
-                        //                    email={profile.email}
-                        //                    profileImage={profile.profilepic}
-                        //                    bio={profile.bio}
-                        //                    status={status}
-                        //                />
-                        //                <StatusCard
-                        //                    status={status}
-                        //                    requestId={requestId}
-                        //                    senderId={otherId}
-                        //                />
-                        //            </>
-                        //        )}
-                        //    </View>
-                        //)}
-                        //stickyHeaderIndices={[]}
+                        ListHeaderComponent={() => (
+                            <View>
+                                {profileLoading ? (
+                                    <ActivityIndicator size="large" />
+                                ) : (
+                                    <>
+                                        <ProfileCard
+                                            name={profile.name}
+                                            email={profile.email}
+                                            profileImage={profile.profilepic}
+                                            bio={profile.bio}
+                                            status={status}
+                                        />
+                                        <StatusCard
+                                            status={status}
+                                            requestId={requestId}
+                                            senderId={otherId}
+                                        />
+                                    </>
+                                )}
+                            </View>
+                        )}
 
                         // to display loading as footer
                         ListFooterComponent={loading && <ActivityIndicator />}

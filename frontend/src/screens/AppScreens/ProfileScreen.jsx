@@ -348,12 +348,18 @@ const ProfileScreen = () => {
                 //profileImage={item.profileImage}
                 //postText={item.postText}
                 //postImage={item.postImage}
-                name={item.owner.name}
+                name={profile.name}
                 time={dayjs(item.createdAt).fromNow()}
-                profileImage={item.owner.profilepic}
+                profileImage={profile.profilepic}
                 postText={item.caption}
                 postImage={item.postpic}
-                ownerId={item.owner._id}
+                ownerId={profile._id}
+                postId={item._id}
+                likesCount={item.likesCount}
+                commentsCount={item.commentsCount}
+                isLiked={item.isLiked}
+                isCommented={item.isCommented}
+                isMine={item.isMine}
             />
         );
     };
