@@ -15,7 +15,6 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
     }
 
     const connectHandler = async () => {
-        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -50,7 +49,6 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
     }
 
     const removeHandler = async () => {
-        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {

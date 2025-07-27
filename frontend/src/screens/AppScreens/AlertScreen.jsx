@@ -212,7 +212,7 @@ const AlertScreen = () => {
                 if (lastScrollY.current > 0) {
                     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
                 } else {
-                    //fetchRequests(1);
+                    fetchRequests(1);
                 }
             }
         })
@@ -228,7 +228,7 @@ const AlertScreen = () => {
         socket.off('receive_request', handleRequest); // prevent duplicates
         socket.on('receive_request', handleRequest);
 
-        //fetchRequests(1);
+        fetchRequests(1);
 
         return () => {
             socket.off('receive_request', handleRequest);
@@ -268,23 +268,23 @@ const AlertScreen = () => {
     // if user reaches end to flatlist loadmore
     const loadMore = () => {
         if (!loading && hasMore) {
-            //fetchRequests(pageNumber + 1);
+            fetchRequests(pageNumber + 1);
         }
     };
 
     const renderItem = ({ item }) => {
         return (
             <ActivityCard
-                name={item.name}
-                profileImage={item.profileImage}
-                time={item.time}
-                status={item.status}
-                //name={item.from.name}
-                //profileImage={item.from.profilepic}
-                //time={dayjs(item.createdAt).fromNow()}
+                //name={item.name}
+                //profileImage={item.profileImage}
+                //time={item.time}
                 //status={item.status}
-                //requestId={item._id}
-                //senderId={item.from._id}
+                name={item.from.name}
+                profileImage={item.from.profilepic}
+                time={dayjs(item.createdAt).fromNow()}
+                status={item.status}
+                requestId={item._id}
+                senderId={item.from._id}
             />
         );
     }
@@ -297,23 +297,23 @@ const AlertScreen = () => {
                 <View style={{ flex: 1 }}>
                     <AnimatedFlatList
                         ref={flatListRef}
-                        //data={requests}
-                        //keyExtractor={(item) => item._id}
-                        data={usersData}
-                        keyExtractor={(item) => item.id}
+                        data={requests}
+                        keyExtractor={(item) => item._id}
+                        //data={usersData}
+                        //keyExtractor={(item) => item.id}
                         renderItem={renderItem}
                         onScroll={handleScroll}
                         scrollEventThrottle={16}
                         contentContainerStyle={{ paddingTop: headerHeight }}
 
                         // to run loadmore function when end is reached for infinite scrolling
-                        //onEndReached={loadMore}
-                        //onEndReachedThreshold={0.5}
+                        onEndReached={loadMore}
+                        onEndReachedThreshold={0.5}
 
 
 
                         // to display loading as footer
-                        //ListFooterComponent={loading && <ActivityIndicator />}
+                        ListFooterComponent={loading && <ActivityIndicator />}
                         showsVerticalScrollIndicator={false}
                     />
                 </View>

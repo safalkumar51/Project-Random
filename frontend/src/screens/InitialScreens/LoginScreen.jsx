@@ -15,7 +15,6 @@ const LoginScreen = ({ navigation }) => {
     const [password, setPassword] = useState();
 
     const signInHandler = async () => {
-        return navigation.navigate("MainTab");
         if (!email || !password) {
             Alert.alert("All fields are mandatory.");
             return;

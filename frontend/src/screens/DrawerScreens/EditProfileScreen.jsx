@@ -45,7 +45,6 @@ const EditProfileScreen = () => {
     };
 
     const changeProfilePhotoHandler = async (image) => {
-        return;
         try{
 
             const authToken = await AsyncStorage.getItem('authToken');
@@ -97,7 +96,6 @@ const EditProfileScreen = () => {
     }
 
     const editProfileHandler = async () => {
-        return;
         if (!name.trim()) {
             Alert.alert("Name field can't be empty");
             return;
@@ -141,7 +139,6 @@ const EditProfileScreen = () => {
     }
 
     const changePasswordHandler = async () => {
-        return;
         if (!password || !newPassword || !confirmPassword) {
             Alert.alert("All fields are required!");
             return;

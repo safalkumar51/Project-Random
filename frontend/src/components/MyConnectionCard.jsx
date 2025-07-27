@@ -15,7 +15,6 @@ const MyConnectionCard = ({ name, profileImage, time, senderId }) => {
     }
 
     const removeHandler = async () => {
-        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {

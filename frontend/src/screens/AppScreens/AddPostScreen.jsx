@@ -62,7 +62,6 @@ const AddPostScreen = () => {
     };
 
     const submitHandler = async () => {
-        return;
         try {
 
             const authToken = await AsyncStorage.getItem('authToken');

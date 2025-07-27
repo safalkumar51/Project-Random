@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
+import baseURL from '../assets/config';
 
-export const socket = io('http://10.0.2.2:4167', {
+export const socket = io(`${baseURL}`, {
     transports: ['websocket'],
     autoConnect: false,
 });

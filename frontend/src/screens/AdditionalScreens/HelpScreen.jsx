@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, Dimensions, TouchableOpacity } from 'react-native';
 import BackButton from '../../components/BackButton';
 
 const { width, height } = Dimensions.get('window');
 
 const HelpScreen = () => {
-    const [problem, setProblem] =useState()
+    const [problem, setProblem] =useState();
+
+    const submitHandler = () => {
+        return;
+    }
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.header}>
@@ -31,7 +36,7 @@ const HelpScreen = () => {
                 maxLength={300}
             />
             <TouchableOpacity style={styles.submitBtn}>
-                <Text style={styles.submitText}>Submit</Text>
+                <Text style={styles.submitText} onPress={submitHandler}>Start</Text>
             </TouchableOpacity>
         </ScrollView>
     );

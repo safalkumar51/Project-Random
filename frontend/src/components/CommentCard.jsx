@@ -20,7 +20,6 @@ const CommentCard = ({ name, profileImage, time, comment, commentLikesCount, com
     }
 
     const toggleLike = async () => {
-        return;
         try {
 
             const authToken = await AsyncStorage.getItem('authToken');

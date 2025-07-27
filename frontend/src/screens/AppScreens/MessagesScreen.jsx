@@ -111,7 +111,7 @@ const MessagesScreen = () => {
                     //Alert.alert("y");
                     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
                 } else {
-                    //fetchMessages(1);
+                    fetchMessages(1);
                 }
             }
         });
@@ -121,7 +121,7 @@ const MessagesScreen = () => {
 
     // on mounting fetchposts(pageno = 1)
     useEffect(() => {
-        //fetchMessages(1);
+        fetchMessages(1);
     }, []);
 
     // Track scroll offset
@@ -164,15 +164,15 @@ const MessagesScreen = () => {
     const renderItem = ({ item }) => {
         return (
             <MessagesCard
-                name={item.name}
-                time={item.time}
-                avatar={item.avatar}
-                unreadCount={item.unreadCount}
-                //name={item.from.name}
-                //avatar={item.from.profilepic}
-                //time={dayjs(item.updatedAt).fromNow()}
-                //unreadCount={item.newMessages}
-                //otherId={item.from._id}
+                //name={item.name}
+                //time={item.time}
+                //avatar={item.avatar}
+                //unreadCount={item.unreadCount}
+                name={item.from.name}
+                avatar={item.from.profilepic}
+                time={dayjs(item.updatedAt).fromNow()}
+                unreadCount={item.newMessages}
+                otherId={item.from._id}
             />
         );
     };
@@ -184,21 +184,21 @@ const MessagesScreen = () => {
                 <View style={{ flex: 1 }}>
                     <AnimatedFlatList
                         ref={flatListRef}
-                        data={data}
-                        keyExtractor={(item) => item.id}
-                        //data={messages}
-                        //keyExtractor={(item => item._id)}
+                        //data={data}
+                        //keyExtractor={(item) => item.id}
+                        data={messages}
+                        keyExtractor={(item => item._id)}
                         renderItem={renderItem}
                         onScroll={handleScroll}
                         scrollEventThrottle={16}
                         contentContainerStyle={{ paddingTop: headerHeight }}
 
                         // to run loadmore function when end is reached for infinite scrolling
-                        //onEndReached={loadMore}
-                        //onEndReachedThreshold={0.5}
+                        onEndReached={loadMore}
+                        onEndReachedThreshold={0.5}
 
                         // to display loading as footer
-                        //ListFooterComponent={loading && <ActivityIndicator />}
+                        ListFooterComponent={loading && <ActivityIndicator />}
                         showsVerticalScrollIndicator={false}
                     />
                 </View>

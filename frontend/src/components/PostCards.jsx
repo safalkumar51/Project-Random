@@ -27,7 +27,6 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, pos
     }
 
     const toggleLike = async () => {
-        return;
         try{
 
             const authToken = await AsyncStorage.getItem('authToken');

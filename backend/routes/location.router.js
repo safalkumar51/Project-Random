@@ -8,6 +8,9 @@ const router = express.Router();
 
 router.post('/', isLoggedIn, async (req, res) => {
     const { lat, lon } = req.body;
+    
+    console.log(req.body);
+    return res.status(200).json({ success: true });;
 
     if (!lat || !lon) {
         return res.status(400).json({ message: "Latitude and Longitude required" });
@@ -23,6 +26,10 @@ router.post('/', isLoggedIn, async (req, res) => {
         // set new location of the user
         me.location = { type: 'Point', coordinates: [lon, lat] };
         await me.save();
+
+        if(lat===85.0 && lon===-179.0){
+            return res.status(200);
+        }
 
         // find users in loaction: lon and lat with range maxDist, except user himself
         const nearby = await userModel.find({

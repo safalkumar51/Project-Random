@@ -12,7 +12,6 @@ const StatusCard = ({status, requestId, senderId}) => {
     const navigation = useNavigation();
 
     const connectHandler = async () => {
-        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -47,7 +46,6 @@ const StatusCard = ({status, requestId, senderId}) => {
     }
 
     const removeHandler = async () => {
-        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
