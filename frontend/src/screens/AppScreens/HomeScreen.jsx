@@ -8,6 +8,8 @@ import NavBar from '../../components/NavBar';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { initSocket, socket } from '../../utils/socket';
+import baseURL from '../../assets/config';
 import { useDispatch, useSelector } from 'react-redux';
 import { addFeedPosts } from '../../redux/slices/feedSlice';
 
@@ -42,10 +44,9 @@ const HomeScreen = () => {
                 return;
             }
 
-            const response = await axios.get(
-                `http://10.138.91.124:4167/user/home?page=${page}`,
-                {
-                    headers: { Authorization: `Bearer ${authToken}` },
+            const response = await axios.get(`${ baseURL }/user/home?page=${page}`, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
                 }
             );
 
@@ -85,7 +86,17 @@ const HomeScreen = () => {
     }, [navigation, isFocused]);
 
     useEffect(() => {
+        const connectSocket = async () => {
+            const authToken = await AsyncStorage.getItem('authToken');
+            initSocket(authToken);
+        }
+        connectSocket();
         fetchPosts(1);
+
+        return () => {
+            socket.disconnect(); // ✅ disconnects only on unmount
+            console.log('Socket disconnected on component unmount');
+        };
     }, []);
 
     const handleScroll = (event) => {
@@ -122,21 +133,30 @@ const HomeScreen = () => {
         }
     };
 
-    const renderItem = ({ item }) => (
-        <PostCards
-            from="feed"
-            postId={item._id}
-            isLiked={item.isLiked}
-            likeCount={item.likeCount}
-            isCommented={item.isCommented}
-            commentCount={item.commentCount}
-            name={item.owner?.name}
-            time={dayjs(item.createdAt).fromNow()}
-            profileImage={item.owner?.profilepic}
-            postText={item.caption}
-            postImage={item.postpic}
-        />
-    );
+    const renderItem = ({ item }) => {
+        return (
+            <PostCards
+                name={item.name}
+                time={item.time}
+                profileImage={item.profileImage}
+                postText={item.postText}
+                postImage={item.postImage}
+                //name={item.owner?.name}
+                //time={dayjs(item.createdAt).fromNow()}
+                //profileImage={item.owner?.profilepic}
+                //postText={item.caption}
+                //postImage={item.postpic}
+                //ownerId={item.owner?._id}
+                //postId={item._id}
+                //likesCount={item.likesCount}
+                //commentsCount={item.commentsCount}
+                //isLiked={item.isLiked}
+                //isCommented={item.isCommented}
+                //isMine={item.isMine}
+            />
+        );
+    };
+
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
@@ -145,17 +165,21 @@ const HomeScreen = () => {
                 <View style={{ flex: 1 }}>
                     <AnimatedFlatList
                         ref={flatListRef}
-                        data={posts}
-                        keyExtractor={(item) => item._id}
+                        data={data}
+                        keyExtractor={(item) => item.id}
+                        //data={posts}
+                        //keyExtractor={(item) => item._id}
                         renderItem={renderItem}
                         onScroll={handleScroll}
                         scrollEventThrottle={16}
                         contentContainerStyle={{ paddingTop: headerHeight }}
-                        onEndReached={loadMore}
-                        onEndReachedThreshold={0.5}
-                        ListFooterComponent={
-                            loading.current && <ActivityIndicator />
-                        }
+
+                        // to run loadmore function when end is reached for infinite scrolling
+                        //onEndReached={loadMore}
+                        //onEndReachedThreshold={0.5}
+
+                        // to display loading as footer
+                        //ListFooterComponent={loading && <ActivityIndicator />}
                         showsVerticalScrollIndicator={false}
                     />
                 </View>

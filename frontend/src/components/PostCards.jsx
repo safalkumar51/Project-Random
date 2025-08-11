@@ -1,29 +1,27 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, Dimensions } from 'react-native';
-import React from 'react';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Dimensions, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import baseURL from '../assets/config';
+
+const { width, height } = Dimensions.get('window');
 import { useDispatch } from 'react-redux'; 
 import { toggleFeedLike, toggleFeedComment } from '../redux/slices/feedSlice';
 import { toggleLike, toggleComment } from '../redux/slices/myProfileSlice';
 import { toggleOtherLike, toggleOtherComment } from '../redux/slices/otherProfileSlice'; 
 const { width } = Dimensions.get('window');
 
-const PostCards = ({
-  name,
-  time,
-  profileImage,
-  postText,
-  postImage,
-  ownerId,
-  liked,
-  likeCount,
-  commented,
-  commentCount,
-  postId,
-  from = 'feed',
-}) => {
-  const navigation = useNavigation();
-  const dispatch = useDispatch(); 
+const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, postId, likesCount, commentsCount, isLiked, isCommented, isMine }) => {
+    const navigation = useNavigation();
+    
+    const [liked, setLiked] = useState(false);
+    const [likeCount, setLikeCount] = useState(0);
+    const [commented, setCommented] = useState(false);
+    const [commentCount, setCommentCount] = useState(0);
+    const [mine, setMine] = useState(false);
 
   const getProfileHandler = () => {
     navigation.navigate("OtherProfileScreen", {
@@ -33,21 +31,54 @@ const PostCards = ({
     });
   };
 
-  const getPostHandler = () => {
-    // could navigate to detailed post screen
-  };
+    const getPostHandler = () => {
+        navigation.navigate("PostScreen", {postId});
+    }
 
-  const handleLike = () => {
-    if (from === 'feed') dispatch(toggleFeedLike(postId));
-    else if (from === 'myProfile') dispatch(toggleLike(postId));
-    else if (from === 'otherProfile') dispatch(toggleOtherLike(postId));
-  };
+    const toggleLike = async () => {
+        return;
+        try{
 
-  const handleComment = () => {
-    if (from === 'feed') dispatch(toggleFeedComment(postId));
-    else if (from === 'myProfile') dispatch(toggleComment({ _id: postId }));
-    else if (from === 'otherProfile') dispatch(toggleOtherComment({ _id: postId }));
-  };
+            const authToken = await AsyncStorage.getItem('authToken');
+            if (!authToken) {
+                navigation.replace("LoginScreen");
+                return;
+            }
+
+            const response = await axios.post(`${baseURL}/post/like`, {
+                postId
+            }, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                }
+            });
+
+            if (response.data.success) {
+
+                //Alert.alert(response.data.message);
+                setLiked(!liked);
+                setLikeCount(prev => liked ? prev - 1 : prev + 1);
+
+            } else {
+                console.error(response.data.message);
+                if (response.data.message === 'Log In Required!') {
+                    await AsyncStorage.removeItem('authToken');
+                    navigation.replace("LoginScreen");
+                }
+            }
+
+        } catch(err){
+            console.error('Error like/unlike post:', err);
+        }
+    };
+    
+    useEffect(() => {
+        setLikeCount(likesCount);
+        setCommentCount(commentsCount);
+        setLiked(isLiked);
+        setCommented(isCommented);
+        setMine(isMine);
+    }, [])
 
   return (
     <View style={styles.shadowWrapper}>

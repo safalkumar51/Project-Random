@@ -3,6 +3,7 @@ import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import baseURL from '../assets/config';
 import { useDispatch } from 'react-redux';
 import { setOtherProfileStatus } from '../redux/slices/otherProfileSlice'; // NEW
 
@@ -13,6 +14,7 @@ const StatusCard = ({ status, requestId, senderId }) => {
     const dispatch = useDispatch();
 
     const connectHandler = async () => {
+        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -20,7 +22,7 @@ const StatusCard = ({ status, requestId, senderId }) => {
                 return;
             }
 
-            const response = await axios.post('http://10.0.2.2:4167/connection/accept', {
+            const response = await axios.post(`${ baseURL }/connection/accept`, {
                 requestId,
                 senderId
             }, {
@@ -48,6 +50,7 @@ const StatusCard = ({ status, requestId, senderId }) => {
     };
 
     const removeHandler = async () => {
+        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -55,7 +58,7 @@ const StatusCard = ({ status, requestId, senderId }) => {
                 return;
             }
 
-            const response = await axios.post('http://10.0.2.2:4167/connection/reject', {
+            const response = await axios.post(`${ baseURL } /connection/reject`, {
                 requestId,
                 senderId
             }, {

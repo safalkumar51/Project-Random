@@ -3,6 +3,7 @@ import React from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import baseURL from '../assets/config';
 import { useDispatch } from 'react-redux';
 import { removeConnection } from '../redux/slices/connectionsSlice';
 import { setOtherProfileStatus } from '../redux/slices/otherProfileSlice'; // NEW import
@@ -18,6 +19,7 @@ const MyConnectionCard = ({ name, profileImage, time, senderId }) => {
     };
 
     const removeHandler = async () => {
+        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -25,7 +27,7 @@ const MyConnectionCard = ({ name, profileImage, time, senderId }) => {
                 return;
             }
 
-            const response = await axios.post('http://10.0.2.2:4167/connection/remove', {
+            const response = await axios.post(`${baseURL}/connection/remove`, {
                 senderId
             }, {
                 headers: {

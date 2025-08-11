@@ -15,6 +15,8 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { socket } from '../../utils/socket';
+import baseURL from '../../assets/config';
 import { useSelector, useDispatch } from 'react-redux';
 import { addRequests } from '../../redux/slices/requestsSlice';
 
@@ -50,14 +52,11 @@ const AlertScreen = () => {
         return;
       }
 
-      const response = await axios.get(
-        `http://10.138.91.124:4167/connection/requests?page=${page}`,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
+            const response = await axios.get(`${ baseURL }/connection/requests?page=${page}`, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                }
+            });
 
       if (response.data.success) {
         dispatch(addRequests({ page, data: response.data.requests }));
@@ -92,9 +91,22 @@ const AlertScreen = () => {
     return reload;
   }, [navigation, isFocused]);
 
-  useEffect(() => {
-    fetchRequests(1);
-  }, []);
+    // on mounting fetchrequests(pageno = 1)
+    useEffect(() => {
+        const handleRequest = (data) => {
+            Alert.alert("run");
+        };
+        socket.off('receive_request', handleRequest); // prevent duplicates
+        socket.on('receive_request', handleRequest);
+
+        //fetchRequests(1);
+
+        return () => {
+            socket.off('receive_request', handleRequest);
+        }
+    }, []);
+
+    // Track scroll offset
 
   const handleScroll = (event) => {
     const currentY = event.nativeEvent.contentOffset.y;

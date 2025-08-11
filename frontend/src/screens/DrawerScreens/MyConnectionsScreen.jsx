@@ -1,11 +1,6 @@
-import {
-  ActivityIndicator,
-  StyleSheet,
-  View,
-  Animated,
-  FlatList,
-} from 'react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View, Dimensions, Animated, FlatList, Alert } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
+
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +11,8 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import MyConnectionCard from '../../components/MyConnectionCard';
 import BackButton from '../../components/BackButton';
 import SharedHeader from '../../components/SharedHeader';
+import { socket } from '../../utils/socket';
+import baseURL from '../../assets/config';
 import { useDispatch, useSelector } from 'react-redux';
 import { addConnections } from '../../redux/slices/connectionsSlice';
 
@@ -42,12 +39,11 @@ const MyConnectionsScreen = () => {
         return;
       }
 
-      const response = await axios.get(
-        `http://10.138.91.124:4167/connection?page=${page}`,
-        {
-          headers: { Authorization: `Bearer ${authToken}` },
-        }
-      );
+            const response = await axios.get(`${ baseURL }/connection?page=${page}`, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                }
+            });
 
       if (response.data.success) {
         dispatch(addConnections({ page, connections: response.data.connections }));
@@ -68,9 +64,20 @@ const MyConnectionsScreen = () => {
     loading.current = false;
   };
 
-  useEffect(() => {
-    fetchConnections(1);
-  }, []);
+    // on mounting fetchrequests(pageno = 1)
+    useEffect(() => {
+        const handleConnection = (data) => {
+            Alert.alert("run");
+        };
+        socket.off('receive_connection', handleConnection); // prevent duplicates
+        socket.on('receive_connection', handleConnection);
+
+        //fetchConnections(1);
+
+        return () => {
+            socket.off('receive_connection', handleConnection);
+        }
+    }, []);
 
   const loadMore = () => {
     if (!loading.current && hasMore.current && pageNumber.current) {
@@ -110,41 +117,54 @@ const MyConnectionsScreen = () => {
 
   const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
-  const renderItem = ({ item }) => (
-    <MyConnectionCard
-      name={item.from?.name}
-      profileImage={item.from?.profilepic}
-      time={dayjs(item.updatedAt).fromNow()}
-      senderId={item.from?._id}
-    />
-  );
+    const renderItem = ({ item }) => {
 
-  return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.main}>
-        <SharedHeader
-          scrollY={headerTranslateY}
-          title="My Connections"
-          leftComponent={<BackButton />}
-        />
-        <View style={{ flex: 1 }}>
-          <AnimatedFlatList
-            data={connections}
-            keyExtractor={(item) => item._id}
-            renderItem={renderItem}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-            contentContainerStyle={{ paddingTop: headerHeight }}
-            onEndReached={loadMore}
-            onEndReachedThreshold={0.5}
-            ListFooterComponent={loading.current && <ActivityIndicator />}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
-      </View>
-    </SafeAreaView>
-  );
-};
+        return (
+            <MyConnectionCard
+                //name={item.from.name}
+                //profileImage={item.from.profilepic}
+                //time={dayjs(item.updatedAt).fromNow()}
+                //senderId={item.from._id}
+                name={item.name}
+                profileImage={item.profileImage}
+                time={item.time}
+            />
+        );
+    }
+    return (
+        <SafeAreaView style={{ flex: 1 }}>
+            <View style={styles.main}>
+                <SharedHeader
+                    scrollY={headerTranslateY}
+                    title="My Connections"
+                    leftComponent={<BackButton />}
+                />
+                <View style={{ flex: 1 }}>
+                    <AnimatedFlatList
+                        //data={connections}
+                        //keyExtractor={(item) => item._id}
+                        data={usersData}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderItem}
+
+                        onScroll={handleScroll}
+                        scrollEventThrottle={16}
+
+                        contentContainerStyle={{ paddingTop: headerHeight }}
+
+                        // to run loadmore function when end is reached for infinite scrolling
+                        //onEndReached={loadMore}
+                        //onEndReachedThreshold={0.5}
+
+                        // to display loading as footer
+                        //ListFooterComponent={loading && <ActivityIndicator />}
+                        showsVerticalScrollIndicator={false}
+                    />
+                </View>
+            </View>
+        </SafeAreaView>
+    )
+}
 
 export default MyConnectionsScreen;
 

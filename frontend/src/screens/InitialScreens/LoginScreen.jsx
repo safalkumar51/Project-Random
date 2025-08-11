@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import FormButton from '../../components/FormButton';
 import FormInput from '../../components/FormInput';
+import baseURL from '../../assets/config';
 
 const LoginScreen = ({ navigation }) => {
 
@@ -31,7 +32,7 @@ const LoginScreen = ({ navigation }) => {
         }
 
         try {
-            const response = await axios.post('http://10.138.91.124:4167/user/signin/otp', {
+            const response = await axios.post(`${ baseURL }/user/signin/otp`, {
                 email,
                 password,
             });

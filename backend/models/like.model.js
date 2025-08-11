@@ -11,10 +11,17 @@ const likeSchema = mongoose.Schema({
         ref: 'Post',
         required: true
     },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
+    type: {
+        type: String,
+        enum: ['like'],
+        default: 'like'
+    },
+},{
+    timestamps: true
+});
+
+likeSchema.pre('save', function(next) {
+    next();
 });
 
 module.exports = mongoose.model('Like', likeSchema);

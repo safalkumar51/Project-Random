@@ -1,27 +1,27 @@
 const mongoose = require('mongoose');
 
-const commentSchema = mongoose.Schema({
+const CommentLikeSchema = mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    post: {
+    comment: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Post',
         required: true
     },
-    text: {
+    type: {
         type: String,
-        required: true,
-        trim: true
+        enum: ['like'],
+        default: 'like'
     },
 },{
     timestamps: true
 });
 
-commentSchema.pre('save', function(next) {
+CommentLikeSchema.pre('save', function(next) {
     next();
 });
 
-module.exports = mongoose.model('Comment', commentSchema);
+module.exports = mongoose.model('CommentLike', CommentLikeSchema);

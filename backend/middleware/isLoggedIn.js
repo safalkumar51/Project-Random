@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 
 const isLoggedIn = async (req, res, next) => {
 
@@ -18,7 +19,7 @@ const isLoggedIn = async (req, res, next) => {
         const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
 
         req.userToken = authToken;
-        req.userId = decoded.id;
+        req.userId = mongoose.Types.ObjectId.createFromHexString(decoded.id);
 
         next();
 

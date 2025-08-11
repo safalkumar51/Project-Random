@@ -4,7 +4,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import HomeScreen from '../screens/AppScreens/HomeScreen';
-import ChatStackNavigator from './ChatStackNavigator';
+import MessagesScreen from '../screens/AppScreens/MessagesScreen';
 import ProfileScreen from '../screens/AppScreens/ProfileScreen';
 import AlertScreen from '../screens/AppScreens/AlertScreen';
 
@@ -28,7 +28,7 @@ const MainTabNavigator = () => {
             },
         })}>
             <Tab.Screen name="Home" component={HomeScreen} />
-            <Tab.Screen name="Chat" component={ChatStackNavigator} />
+            <Tab.Screen name="Chat" component={MessagesScreen} />
             <Tab.Screen name="Activity" component={AlertScreen} />
             <Tab.Screen name="Profile" component={ProfileScreen} />
 

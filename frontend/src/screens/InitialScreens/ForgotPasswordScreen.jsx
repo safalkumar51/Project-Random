@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import FormInput from '../../components/FormInput';
 import FormButton from '../../components/FormButton';
+import baseURL from '../../assets/config';
 
 const ForgotPasswordScreen = ({ navigation }) => {
     const [email, setEmail] = useState();
@@ -24,7 +25,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         }
 
         try {
-            const response = await axios.post('http://10.0.2.2:4167/user/forgotpassword/otp', {
+            const response = await axios.post(`${ baseURL }/user/forgotpassword/otp`, {
                 email,
             });
 

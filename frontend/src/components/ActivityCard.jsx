@@ -3,6 +3,7 @@ import React from 'react';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import baseURL from '../assets/config';
 import { useDispatch } from 'react-redux';
 import { removeRequest, updateRequestStatus } from '../redux/slices/requestsSlice';
 import { setOtherProfileStatus } from '../redux/slices/otherProfileSlice'; // NEW import
@@ -18,6 +19,7 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
     };
 
     const connectHandler = async () => {
+        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -25,11 +27,13 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
                 return;
             }
 
-            const response = await axios.post('http://10.0.2.2:4167/connection/accept', {
-                requestId,
-                senderId
-            }, {
-                headers: { Authorization: `Bearer ${authToken}` },
+            const response = await axios.post(`${baseURL}/connection/accept`, {
+                    requestId,
+                    senderId
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${authToken}`,
+                    }
             });
 
             if (response.data.success) {
@@ -54,6 +58,7 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
     };
 
     const removeHandler = async () => {
+        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -61,11 +66,13 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
                 return;
             }
 
-            const response = await axios.post('http://10.0.2.2:4167/connection/reject', {
-                requestId,
-                senderId
-            }, {
-                headers: { Authorization: `Bearer ${authToken}` },
+            const response = await axios.post(`${baseURL}/connection/reject`, {
+                    requestId,
+                    senderId
+                },{
+                    headers: {
+                        Authorization: `Bearer ${authToken}`,
+                    }
             });
 
             if (response.data.success) {

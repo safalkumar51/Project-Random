@@ -29,6 +29,8 @@ import {
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import baseURL from '../../assets/config';
+
 dayjs.extend(relativeTime);
 
 const OtherProfileScreen = ({ route }) => {
@@ -50,55 +52,76 @@ const OtherProfileScreen = ({ route }) => {
   const fetchProfile = async (pageNo) => {
     if (pageNo !== 1 && (loading || !hasMore)) return;
 
-    dispatch(setOtherProfileLoading(true));
+        setLoading(true);
+        try {
+            //console.error("Fetched Error");
+            const authToken = await AsyncStorage.getItem('authToken');
 
-    try {
-      const authToken = await AsyncStorage.getItem('authToken');
-      if (!authToken) return navigation.replace('LoginScreen');
+            if (!authToken) {
+                navigation.replace("LoginScreen");
+                return;
+            }
 
-      const url =
-        status === 'connected'
-          ? 'http://10.0.2.2:4167/connection/profile'
-          : 'http://10.0.2.2:4167/connection/requestprofile';
+            if (status === 'connected') {
+                const response = await axios.get(`${ baseURL }/connection/profile`, {
+                    headers: {
+                        Authorization: `Bearer ${authToken}`,
+                    }, params: {
+                        page,
+                        otherId
+                    }
+                });
+                if (response.data.success) {
+                    if (page === 1) {
+                        setProfile(response.data.profile);
+                        setTotalPages(response.data.totalPages);
+                    } else {
+                        setProfile(prev => {
+                            if (!prev) return response.data.profile; // fallback
+                            return {
+                                ...prev,
+                                posts: [...prev.posts, ...response.data.profile.posts]
+                            }
+                        });
+                    }
 
-      const params =
-        status === 'connected'
-          ? { otherId, page: pageNo }
-          : { otherId };
+                    setPageNumber(page);
+                    setHasMore(page < totalPages);
+                }
+                else {
+                    console.error(response.data.message);
+                    if (response.data.message === 'Log In Required!') {
+                        await AsyncStorage.removeItem('authToken');
+                        navigation.replace("LoginScreen");
+                    }
+                }
+                //Alert.alert(response.data.profile.name);
 
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${authToken}` },
-        params,
-      });
+            } else {
+                const response = await axios.get(`${ baseURL }/connection/requestprofile`, {
+                    headers: {
+                        Authorization: `Bearer ${authToken}`,
+                    }, params: {
+                        otherId
+                    }
+                });
+                if (response.data.success) {
+                    setProfile(response.data.profile);
+                    setHasMore(false);
+                }
+                else {
+                    console.error(response.data.message);
+                    if (response.data.message === 'Log In Required!') {
+                        await AsyncStorage.removeItem('authToken');
+                        navigation.replace("LoginScreen");
+                    }
+                }
+                //Alert.alert(response.data.profile.name);
+            }
 
-      if (response.data.success) {
-        if (pageNo === 1) {
-          dispatch(
-            setOtherProfile({
-              ...response.data.profile,
-              totalPages: response.data.totalPages,
-            })
-          );
-        } else {
-          dispatch(
-            addOtherPosts({
-              page: pageNo,
-              posts: response.data.profile.posts,
-            })
-          );
+        } catch (err) {
+            console.error('Error fetching others profile:', err);
         }
-      } else {
-        if (response.data.message === 'Log In Required!') {
-          await AsyncStorage.removeItem('authToken');
-          navigation.replace('LoginScreen');
-        } else {
-          dispatch(setOtherProfileError(response.data.message));
-        }
-      }
-    } catch (err) {
-      dispatch(setOtherProfileError('Error fetching profile'));
-      console.error(err);
-    }
 
     dispatch(setOtherProfileLoading(false));
   };
@@ -138,71 +161,89 @@ const OtherProfileScreen = ({ route }) => {
     lastScrollY.current = currentY;
   };
 
-  const renderItem = ({ item }) => (
-    <PostCards
-      from="otherProfile"
-      postId={item._id}
-      isLiked={item.isLiked}
-      likeCount={item.likeCount}
-      isCommented={item.isCommented}
-      commentCount={item.commentCount}
-      name={item.owner?.name}
-      time={dayjs(item.createdAt).fromNow()}
-      profileImage={item.owner?.profilepic}
-      postText={item.caption}
-      postImage={item.postpic}
-      ownerId={item.owner?._id}
-    />
-  );
+    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
-  const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+    const renderItem = ({ item }) => {
+        return (
+            <PostCards
+                name={item.name}
+                time={item.time}
+                profileImage={item.profileImage}
+                postText={item.postText}
+                postImage={item.postImage}
+                //name={profile.name}
+                //time={dayjs(item.createdAt).fromNow()}
+                //profileImage={profile.profilepic}
+                //postText={item.caption}
+                //postImage={item.postpic}
+                //ownerId={profile._id}
+                //postId={item._id}
+                //likesCount={item.likesCount}
+                //commentsCount={item.commentsCount}
+                //isLiked={item.isLiked}
+                //isCommented={item.isCommented}
+                //isMine={item.isMine}
+            />
+        );
+    };
 
-  return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.main}>
-        <SharedHeader
-          scrollY={headerTranslateY}
-          title="Profile"
-          leftComponent={<BackButton />}
-        />
-        <View style={{ flex: 1 }}>
-          <AnimatedFlatList
-            data={posts}
-            keyExtractor={(item) => item._id}
-            renderItem={renderItem}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-            contentContainerStyle={{ paddingTop: headerHeight }}
-            onEndReached={loadMore}
-            onEndReachedThreshold={0.5}
-            ListHeaderComponent={() =>
-              profile ? (
-                <>
-                  <ProfileCard
-                    name={profile.name}
-                    email={profile.email}
-                    profileImage={profile.profilepic}
-                    bio={profile.bio}
-                    status={status}
-                  />
-                  <StatusCard
-                    status={status}
-                    requestId={requestId}
-                    senderId={otherId}
-                  />
-                </>
-              ) : (
-                <ActivityIndicator size="large" />
-              )
-            }
-            ListFooterComponent={loading && <ActivityIndicator />}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
-      </View>
-    </SafeAreaView>
-  );
-};
+    return (
+        <SafeAreaView style={{ flex: 1 }}>
+            <View style={styles.main}>
+                <SharedHeader
+                    scrollY={headerTranslateY}
+                    title="Profile"
+                />
+                <View style={{ flex: 1 }}>
+                    <AnimatedFlatList
+                        //data={profile.posts}
+                        //keyExtractor={(item) => item._id}
+                        data={data}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderItem}
+
+                        onScroll={handleScroll}
+                        scrollEventThrottle={16}
+
+                        contentContainerStyle={{ paddingTop: headerHeight }}
+
+                        // to run loadmore function when end is reached for infinite scrolling
+                        //onEndReached={loadMore}
+                        //onEndReachedThreshold={0.5}
+
+                        // this makes navbar sticky
+                        //ListHeaderComponent={() => (
+                        //    <View>
+                        //        {profileLoading ? (
+                        //            <ActivityIndicator size="large" />
+                        //        ) : (
+                        //            <>
+                        //                <ProfileCard
+                        //                    name={profile.name}
+                        //                    email={profile.email}
+                        //                    profileImage={profile.profilepic}
+                        //                    bio={profile.bio}
+                        //                    status={status}
+                        //                />
+                        //                <StatusCard
+                        //                    status={status}
+                        //                    requestId={requestId}
+                        //                    senderId={otherId}
+                        //                />
+                        //            </>
+                        //        )}
+                        //    </View>
+                        //)}
+
+                        // to display loading as footer
+                        //ListFooterComponent={loading && <ActivityIndicator />}
+                        showsVerticalScrollIndicator={false}
+                    />
+                </View>
+            </View>
+        </SafeAreaView>
+    )
+}
 
 export default OtherProfileScreen;
 

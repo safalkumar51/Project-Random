@@ -3,6 +3,8 @@ import React, { useEffect } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import { socket } from '../../utils/socket';
+import baseURL from '../../assets/config';
 
 const LogOutScreen = () => {
     const navigation = useNavigation();
@@ -15,7 +17,7 @@ const LogOutScreen = () => {
                     return;
                 }
 
-                const response = await axios.post('http://10.138.91.124:4167/user/signout', {}, {
+                const response = await axios.post(`${ baseURL }/user/signout`, {}, {
                     headers: {
                         Authorization: `Bearer ${authToken}`,
                     }

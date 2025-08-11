@@ -6,6 +6,7 @@ import axios from 'axios';
 import FormInput from '../../components/FormInput';
 import FormButton from '../../components/FormButton';
 import setToken from '../../utils/setAuthToken';
+import baseURL from '../../assets/config';
 
 const OTP_LENGTH = 6;
 
@@ -58,7 +59,7 @@ const OtpScreen = ({ navigation, route }) => {
 
             if (password !== confirmPassword) {
                 Alert.alert(
-                    "Sign Up Failed!!",
+                    "Change Password Failed!!",
                     "Enter Password Carefully!"
                 );
                 return;
@@ -71,7 +72,7 @@ const OtpScreen = ({ navigation, route }) => {
 
             try {
 
-                const response = await axios.post('http://10.0.2.2:4167/user/forgotpassword/verify', {
+                const response = await axios.post(`${ baseURL }/user/forgotpassword/verify`, {
                     email,
                     password,
                     otp
@@ -101,7 +102,7 @@ const OtpScreen = ({ navigation, route }) => {
 
             try{
 
-                const response = await axios.post('http://10.0.2.2:4167/user/signup/verify', {
+                const response = await axios.post(`${ baseURL }/user/signup/verify`, {
                     email,
                     otp
                 })
@@ -129,7 +130,7 @@ const OtpScreen = ({ navigation, route }) => {
 
             try {
 
-                const response = await axios.post('http://10.138.91.124:4167/user/signin/verify', {
+                const response = await axios.post(`${ baseURL }/user/signin/verify`, {
                     email,
                     otp
                 })

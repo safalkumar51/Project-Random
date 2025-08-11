@@ -14,6 +14,7 @@ import NavBar from '../../components/NavBar';
 import PostCards from '../../components/PostCards';
 import ProfileCard from '../../components/ProfileCard';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
+import baseURL from '../../assets/config';
 import { useSelector, useDispatch } from 'react-redux';
 import {
     setMyProfile,
@@ -51,11 +52,10 @@ const ProfileScreen = () => {
                 navigation.replace('LoginScreen');
                 return;
             }
-            
-            const response = await axios.get(
-                `http://10.138.91.124:4167/user/profile?page=${page}`,
-                {
-                    headers: { Authorization: `Bearer ${authToken}` },
+
+            const response = await axios.get(`${ baseURL }/user/profile?page=${page}`, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
                 }
             );
             
@@ -133,24 +133,32 @@ const ProfileScreen = () => {
         }
     };
 
-    const renderItem = ({ item }) => (
-        <PostCards
-            from="myProfile"
-            postId={item._id}
-            isLiked={item.isLiked}
-            likeCount={item.likeCount}
-            isCommented={item.isCommented}
-            commentCount={item.commentCount}
-            name={item.owner?.name || user?.name}
-            time={item.createdAt}
-            profileImage={item.owner?.profilepic || user?.profileImage}
-            postText={item.caption}
-            postImage={item.postpic}
-            ownerId={item.owner?._id || user?._id}
-        />
-    );
 
-    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+
+    const renderItem = ({ item }) => {
+        return (
+            <PostCards
+                name={item.name}
+                time={item.time}
+                profileImage={item.profileImage}
+                postText={item.postText}
+                postImage={item.postImage}
+                //name={profile.name}
+                //time={dayjs(item.createdAt).fromNow()}
+                //profileImage={profile.profilepic}
+                //postText={item.caption}
+                //postImage={item.postpic}
+                //ownerId={profile._id}
+                //postId={item._id}
+                //likesCount={item.likesCount}
+                //commentsCount={item.commentsCount}
+                //isLiked={item.isLiked}
+                //isCommented={item.isCommented}
+                //isMine={item.isMine}
+            />
+        );
+    };
+
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
