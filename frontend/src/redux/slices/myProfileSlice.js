@@ -2,7 +2,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  posts: [],
+  profile: {posts:[]},
   loading: false,
   error: null,
 };
@@ -15,11 +15,11 @@ const myProfileSlice = createSlice({
       state.posts = action.payload;
     },
     addMyProfilePosts: (state, action) => {
-      const { page, posts } = action.payload;
+      const { page, profile } = action.payload;
       if (page === 1) {
-        state.posts = posts;
+        state.profile = profile;
       } else {
-        state.posts = [...state.posts, ...posts];
+        state.profile.posts = [...state.profile.posts, ...profile.posts];
       }
     },
     addSingleMyProfilePost: (state, action) => {
@@ -53,6 +53,10 @@ const myProfileSlice = createSlice({
         post.commentCount = Math.max((post.commentCount || 0) + delta, 0);
       }
     },
+    setMyProfileLoading: (state, action) => {
+      const loading = action.payload;
+      state.loading = loading;
+    }
   },
 });
 
@@ -63,6 +67,7 @@ export const {
   removeMyProfilePost,
   toggleMyProfileLike,
   toggleMyProfileComment,
+  setMyProfileLoading,
 } = myProfileSlice.actions;
 
 export default myProfileSlice.reducer;

@@ -26,14 +26,15 @@ const MyConnectionsScreen = () => {
   const connections = useSelector((state) => state.connections.connections);
   const dispatch = useDispatch();
 
-  const [pageNumber, setPageNumber] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const pageNumber = useRef(1);
+  const loading = useRef(false);
+  const hasMore = useRef(true);
+  const totalPages = useRef();
 
   const fetchConnections = async (page) => {
-    if (page !== 1 && (loading || !hasMore)) return;
+    if (page !== 1 && (loading.current || !hasMore.current)) return;
 
-    setLoading(true);
+    loading.current = true;
     try {
       const authToken = await AsyncStorage.getItem('authToken');
       if (!authToken) {
@@ -42,7 +43,7 @@ const MyConnectionsScreen = () => {
       }
 
       const response = await axios.get(
-        `http://10.0.2.2:4167/connection?page=${page}`,
+        `http://10.138.91.124:4167/connection?page=${page}`,
         {
           headers: { Authorization: `Bearer ${authToken}` },
         }
@@ -51,11 +52,10 @@ const MyConnectionsScreen = () => {
       if (response.data.success) {
         dispatch(addConnections({ page, connections: response.data.connections }));
         if (page === 1) {
-          setHasMore(response.data.totalPages > 1);
-        } else {
-          setHasMore(page < response.data.totalPages);
+          totalPages.current = response.data.totalPages;
         }
-        setPageNumber(page);
+        hasMore.current = (page < totalPages.current);
+        pageNumber.current = page;
       } else {
         if (response.data.message === 'Log In Required!') {
           await AsyncStorage.removeItem('authToken');
@@ -65,7 +65,7 @@ const MyConnectionsScreen = () => {
     } catch (err) {
       console.log('Error fetching connections:', err);
     }
-    setLoading(false);
+    loading.current = false;
   };
 
   useEffect(() => {
@@ -73,8 +73,8 @@ const MyConnectionsScreen = () => {
   }, []);
 
   const loadMore = () => {
-    if (!loading && hasMore) {
-      fetchConnections(pageNumber + 1);
+    if (!loading.current && hasMore.current && pageNumber.current) {
+      fetchConnections(pageNumber.current + 1);
     }
   };
 
@@ -137,7 +137,7 @@ const MyConnectionsScreen = () => {
             contentContainerStyle={{ paddingTop: headerHeight }}
             onEndReached={loadMore}
             onEndReachedThreshold={0.5}
-            ListFooterComponent={loading && <ActivityIndicator />}
+            ListFooterComponent={loading.current && <ActivityIndicator />}
             showsVerticalScrollIndicator={false}
           />
         </View>

@@ -17,7 +17,7 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
-import { addMessages, clearMessages } from '../../redux/slices/chatSlice';
+import { addMessages } from '../../redux/slices/chatSlice';
 import SharedHeader from '../../components/SharedHeader';
 
 dayjs.extend(relativeTime);
@@ -27,11 +27,12 @@ const MessagesScreen = () => {
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
 
-  const messages = useSelector((state) => state.chat.messages);
+  const messages = useSelector((state) => state.messages.messages);
 
-  const [pageNumber, setPageNumber] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const pageNumber = useRef(1);
+  const loading = useRef(false);
+  const hasMore = useRef(true);
+  const totalPages = useRef();
 
   const headerHeight = 60;
   const headerTranslateY = useRef(new Animated.Value(0)).current;
@@ -39,9 +40,9 @@ const MessagesScreen = () => {
   const scrollDirection = useRef('up');
 
   const fetchMessages = async (page) => {
-    if (page !== 1 && (loading || !hasMore)) return;
+    if (page !== 1 && (loading.current || !hasMore.current)) return;
 
-    setLoading(true);
+    loading.current = true;
     try {
       const authToken = await AsyncStorage.getItem('authToken');
       if (!authToken) {
@@ -50,14 +51,17 @@ const MessagesScreen = () => {
       }
 
       const response = await axios.get(
-        `http://10.0.2.2:4167/messages?page=${page}`,
+        `http://10.138.91.124:4167/messages?page=${page}`,
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
 
       if (response.data.success) {
         dispatch(addMessages({ page, data: response.data.messages }));
-        setHasMore(page < response.data.totalPages);
-        setPageNumber(page);
+        if(page===1){
+          totalPages.current = response.data.totalPages;
+        }
+        hasMore.current = (page < totalPages.current);
+        pageNumber.current = page;
       } else {
         if (response.data.message === 'Log In Required!') {
           await AsyncStorage.removeItem('authToken');
@@ -67,19 +71,18 @@ const MessagesScreen = () => {
     } catch (err) {
       console.log('Error fetching messages:', err);
     }
-    setLoading(false);
+    loading.current = false;
   };
 
   useEffect(() => {
+    console.log(messages);
     fetchMessages(1);
-    return () => {
-      dispatch(clearMessages());
-    };
+    console.log(messages);
   }, []);
 
   const loadMore = () => {
-    if (!loading && hasMore) {
-      fetchMessages(pageNumber + 1);
+    if (!loading.current && hasMore.current && pageNumber.current) {
+      fetchMessages(pageNumber.current + 1);
     }
   };
 
@@ -159,7 +162,7 @@ const MessagesScreen = () => {
             contentContainerStyle={{ paddingTop: headerHeight }}
             onEndReached={loadMore}
             onEndReachedThreshold={0.5}
-            ListFooterComponent={loading && <ActivityIndicator />}
+            ListFooterComponent={loading.current && <ActivityIndicator />}
             showsVerticalScrollIndicator={false}
           />
         </View>

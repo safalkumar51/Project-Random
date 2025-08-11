@@ -129,7 +129,7 @@ const OtpScreen = ({ navigation, route }) => {
 
             try {
 
-                const response = await axios.post('http://10.0.2.2:4167/user/signin/verify', {
+                const response = await axios.post('http://10.138.91.124:4167/user/signin/verify', {
                     email,
                     otp
                 })

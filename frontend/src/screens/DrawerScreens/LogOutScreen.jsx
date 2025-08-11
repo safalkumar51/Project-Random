@@ -15,7 +15,7 @@ const LogOutScreen = () => {
                     return;
                 }
 
-                const response = await axios.post('http://10.0.2.2:4167/user/signout', {}, {
+                const response = await axios.post('http://10.138.91.124:4167/user/signout', {}, {
                     headers: {
                         Authorization: `Bearer ${authToken}`,
                     }
@@ -37,7 +37,7 @@ const LogOutScreen = () => {
             }
         }
 
-        //logout();
+        logout();
     }, []);
 
     return null;

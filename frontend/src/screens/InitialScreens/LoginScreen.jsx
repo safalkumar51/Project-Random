@@ -14,7 +14,7 @@ const LoginScreen = ({ navigation }) => {
     const [password, setPassword] = useState();
 
     const signInHandler = async () => {
-        return navigation.navigate("MainTab");
+        //return navigation.navigate("MainTab");
         if (!email || !password) {
             Alert.alert("All fields are mandatory.");
             return;
@@ -31,7 +31,7 @@ const LoginScreen = ({ navigation }) => {
         }
 
         try {
-            const response = await axios.post('http://10.0.2.2:4167/user/signin/otp', {
+            const response = await axios.post('http://10.138.91.124:4167/user/signin/otp', {
                 email,
                 password,
             });

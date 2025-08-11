@@ -22,9 +22,6 @@ const messagesSlice = createSlice({
     removeMessage: (state, action) => {
       state.messages = state.messages.filter((msg) => msg._id !== action.payload);
     },
-    clearMessages: (state) => {
-      state.messages = [];
-    },
   },
 });
 
@@ -32,7 +29,6 @@ export const {
   addMessages,
   addSingleMessageToFront,
   removeMessage,
-  clearMessages,
 } = messagesSlice.actions;
 
 export default messagesSlice.reducer;

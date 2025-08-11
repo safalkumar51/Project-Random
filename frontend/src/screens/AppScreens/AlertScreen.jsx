@@ -33,15 +33,16 @@ const AlertScreen = () => {
 
   const requests = useSelector((state) => state.requests.requests);
   const dispatch = useDispatch();
-  const [pageNumber, setPageNumber] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [totalPages, setTotalPages] = useState();
+
+  const pageNumber = useRef(0);
+  const loading = useRef(false);
+  const hasMore = useRef(true);
+  const totalPages = useRef();
 
   const fetchRequests = async (page) => {
-    if (loading || !hasMore) return;
+    if (loading.current || !hasMore.current) return;
 
-    setLoading(true);
+    loading.current = true;
     try {
       const authToken = await AsyncStorage.getItem('authToken');
       if (!authToken) {
@@ -50,7 +51,7 @@ const AlertScreen = () => {
       }
 
       const response = await axios.get(
-        `http://10.0.2.2:4167/connection/requests?page=${page}`,
+        `http://10.138.91.124:4167/connection/requests?page=${page}`,
         {
           headers: {
             Authorization: `Bearer ${authToken}`,
@@ -61,10 +62,10 @@ const AlertScreen = () => {
       if (response.data.success) {
         dispatch(addRequests({ page, data: response.data.requests }));
         if (page === 1) {
-          setTotalPages(response.data.totalPages);
+          totalPages.current = response.data.totalPages;
         }
-        setPageNumber(page);
-        setHasMore(page < response.data.totalPages);
+        pageNumber.current= page;
+        hasMore.current = (page < totalPages.current);
       } else {
         if (response.data.message === 'Log In Required!') {
           await AsyncStorage.removeItem('authToken');
@@ -75,7 +76,7 @@ const AlertScreen = () => {
       console.log('Error fetching requests:', err);
     }
 
-    setLoading(false);
+    loading.current = false;
   };
 
   useEffect(() => {
@@ -123,8 +124,8 @@ const AlertScreen = () => {
   const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
   const loadMore = () => {
-    if (!loading && hasMore) {
-      fetchRequests(pageNumber + 1);
+    if (!loading.current && hasMore.current && pageNumber.current) {
+      fetchRequests(pageNumber.current + 1);
     }
   };
 
@@ -154,7 +155,7 @@ const AlertScreen = () => {
             contentContainerStyle={{ paddingTop: headerHeight }}
             onEndReached={loadMore}
             onEndReachedThreshold={0.5}
-            ListFooterComponent={loading && <ActivityIndicator />}
+            ListFooterComponent={loading.current && <ActivityIndicator />}
             showsVerticalScrollIndicator={false}
           />
         </View>
