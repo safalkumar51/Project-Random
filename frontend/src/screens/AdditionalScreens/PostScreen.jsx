@@ -1,281 +1,113 @@
-import { ActivityIndicator, FlatList, StyleSheet, View, Animated } from 'react-native'
-import React, { useRef } from 'react'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { ActivityIndicator, FlatList, StyleSheet, View, Animated } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import CommentCard from '../../components/CommentCard'
-import PostCards from '../../components/PostCards'
-import BackButton from '../../components/BackButton'
-import SharedHeader from '../../components/SharedHeader'
+import CommentCard from '../../components/CommentCard';
+import PostCards from '../../components/PostCards';
+import BackButton from '../../components/BackButton';
+import SharedHeader from '../../components/SharedHeader';
 
-const post = {
-    name: "Monkey D. Luffy",
-    profileImage: "https://i.pinimg.com/1200x/bb/d4/4b/bbd44b37f18e40a01543b8b4721b1cce.jpg",
-    time: "2 days ago",
-    postImage: "https://i.pinimg.com/1200x/7e/4e/72/7e4e7217eb5b18979b114ad6e7d9822a.jpg",
-    postText: "The One Piece is real!",
-
-};
-
-const data = [
-    {
-        id: '1',
-        name: 'Bruce Wayne',
-        time: '10 hours ago',
-        profileImage: 'https://cdna.artstation.com/p/assets/images/images/030/009/410/large/sourav-paul-bati1.jpg?1599316606',
-        comment: 'I am vengeance!',
-        likes: ['user1', 'user2', 'user3', 'user4'],
-    },
-    {
-        id: '2',
-        name: 'Clark Kent',
-        time: '5 hours ago',
-        profileImage: 'https://www.superherodb.com/pictures2/portraits/10/050/791.jpg',
-        comment: 'Hope is everything.',
-        likes: ['user2', 'user5', 'user6'],
-    },
-    {
-        id: '3',
-        name: 'Tony Stark',
-        time: '2 hours ago',
-        profileImage: 'https://i.pinimg.com/736x/e0/ff/bf/e0ffbff6c52085427eaef2594b26f119.jpg',
-        comment: 'I am Iron Man.',
-        likes: ['user1', 'user3'],
-    },
-    {
-        id: '4',
-        name: 'Steve Rogers',
-        time: '8 hours ago',
-        profileImage: 'https://i.pinimg.com/736x/30/60/c2/3060c2116b5a55023b04437ee05490af.jpg',
-        comment: 'I can do this all day.',
-        likes: ['user4'],
-    },
-    {
-        id: '5',
-        name: 'Natasha Romanoff',
-        time: '12 mins ago',
-        profileImage: 'https://i.pinimg.com/736x/d3/0d/ff/d30dffb3277d7da9f27c272a7d784326.jpg',
-        comment: 'At some point, we all have to choose.',
-        likes: ['user2', 'user6', 'user9'],
-    },
-    {
-        id: '6',
-        name: 'Thor Odinson',
-        time: '30 mins ago',
-        profileImage: 'https://i.pinimg.com/736x/f4/56/5d/f4565d865bcdef4af6b2b1c1f04529ca.jpg',
-        comment: 'Bring me THANOS!',
-        likes: ['user1', 'user2'],
-    },
-    {
-        id: '7',
-        name: 'Peter Parker',
-        time: '1 hour ago',
-        profileImage: 'https://i.pinimg.com/736x/0f/f4/73/0ff47389fe04e8e6246b4f41bd299b0d.jpg',
-        comment: 'With great power...',
-        likes: ['user8'],
-    },
-    {
-        id: '8',
-        name: 'Wanda Maximoff',
-        time: '20 mins ago',
-        profileImage: 'https://i.pinimg.com/736x/e0/02/c4/e002c46a325767040c8b1feec73df024.jpg',
-        comment: 'I just want my kids back.',
-        likes: ['user1', 'user4', 'user5'],
-    },
-    {
-        id: '9',
-        name: 'Vision',
-        time: '3 hours ago',
-        profileImage: 'https://i.pinimg.com/736x/ef/0c/23/ef0c23f162162c8b661213613c862de8.jpg',
-        comment: 'What is grief, if not love persevering?',
-        likes: ['user1'],
-    },
-    {
-        id: '10',
-        name: 'Loki Laufeyson',
-        time: '6 hours ago',
-        profileImage: 'https://i.pinimg.com/736x/dd/4e/b2/dd4eb2a6132e206b5f5e9c6d9a525958.jpg',
-        comment: 'I am burdened with glorious purpose.',
-        likes: ['user2', 'user3'],
-    },
-    {
-        id: '11',
-        name: 'Jon Snow',
-        time: '4 hours ago',
-        profileImage: 'https://i.pinimg.com/736x/55/f4/15/55f415c77008b7bd569206532202931b.jpg',
-        comment: 'The North remembers.',
-        likes: [],
-    },
-    {
-        id: '12',
-        name: 'Daenerys Targaryen',
-        time: '2 hours ago',
-        profileImage: 'https://i.pinimg.com/736x/2e/50/54/2e5054746883b8654595adfa7db06419.jpg',
-        comment: 'Dracarys!',
-        likes: ['user9', 'user10'],
-    },
-    {
-        id: '13',
-        name: 'Arya Stark',
-        time: '30 mins ago',
-        profileImage: 'https://upload.wikimedia.org/wikipedia/en/3/39/Arya_Stark-Maisie_Williams.jpg',
-        comment: 'A girl has no name.',
-        likes: ['user3'],
-    },
-    {
-        id: '14',
-        name: 'Deadpool',
-        time: '45 mins ago',
-        profileImage: 'https://i.pinimg.com/736x/b3/68/84/b36884c348bcc6e69ca0aaa6601dd765.jpg',
-        comment: 'Fourth wall? Never heard of it.',
-        likes: ['user1', 'user4'],
-    },
-    {
-        id: '15',
-        name: 'Wade Wilson',
-        time: '9 hours ago',
-        profileImage: 'https://i.pinimg.com/736x/f7/9b/78/f79b78e29fe162e3c782558a1c5458ef.jpg',
-        comment: 'Maximum effort!',
-        likes: [],
-    },
-    {
-        id: '16',
-        name: 'Barry Allen',
-        time: '50 mins ago',
-        profileImage: 'https://i.pinimg.com/736x/ec/ff/e4/ecffe48bf69e6e85fb38e179c9c3848b.jpg',
-        comment: 'Run, Barry, Run!',
-        likes: ['user2'],
-    },
-    {
-        id: '17',
-        name: 'Wonder Women',
-        time: '2 hours ago',
-        profileImage: 'https://i.pinimg.com/736x/02/90/ae/0290aea6560790707ab220d535728fb9.jpg',
-        comment: 'I will fight for those who cannot fight for themselves.',
-        likes: ['user5', 'user7'],
-    },
-    {
-        id: '18',
-        name: 'Thomas shelby',
-        time: '3 hours ago',
-        profileImage: 'https://i.pinimg.com/736x/c2/5a/e4/c25ae4d3f7858e110b39a321aa0ad6bb.jpg',
-        comment: 'By the order of Fuking Peaky Bliners',
-        likes: ['user1', 'user2', 'user3'],
-    },
-    {
-        id: '19',
-        name: 'Logan',
-        time: '1 day ago',
-        profileImage: 'https://i.pinimg.com/736x/9d/9b/bd/9d9bbdad3424dafa43964c820626d22c.jpg',
-        comment: 'Don’t be what they made you.',
-        likes: ['user9'],
-    },
-    {
-        id: '20',
-        name: 'Professor Snape',
-        time: '2 days ago',
-        profileImage: 'https://i.pinimg.com/736x/99/ee/9a/99ee9a992d6b566c90ea6ee0cd7e9c23.jpg',
-        comment: '"Always."',
-        likes: ['user2', 'user4'],
-    }
-];
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  clearSinglePost,
+  toggleLike,
+  toggleComment,
+} from '../../redux/slices/singlePostSlice';
 
 const PostScreen = () => {
-    const headerHeight = 60;
-    const headerTranslateY = useRef(new Animated.Value(0)).current;
-    const lastScrollY = useRef(0);
-    const scrollDirection = useRef('up');
-    const insets = useSafeAreaInsets();
+  const headerHeight = 60;
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
+  const lastScrollY = useRef(0);
+  const scrollDirection = useRef('up');
+  const insets = useSafeAreaInsets();
 
-    const handleScroll = (event) => {
-        const currentY = event.nativeEvent.contentOffset.y;
-        if(currentY>lastScrollY.current){
-            if(scrollDirection.current !== 'down' && currentY > 60){
-                Animated.timing(headerTranslateY, {
-                    toValue: -headerHeight - insets.top,
-                    duration: 200,
-                    useNativeDriver: true,
-                }).start();
-                scrollDirection.current = 'down';
-            }
-        } else{
-            if(scrollDirection.current !== 'up'){
-                Animated.timing(headerTranslateY, {
-                    toValue: 0,
-                    duration: 200,
-                    useNativeDriver: true,
-                }).start();
-                scrollDirection.current = 'up';
-            }
-        }
+  const dispatch = useDispatch();
+  const post = useSelector((state) => state.singlePost.post);
 
-        lastScrollY.current = currentY;
+  const handleScroll = (event) => {
+    const currentY = event.nativeEvent.contentOffset.y;
+    if (currentY > lastScrollY.current) {
+      if (scrollDirection.current !== 'down' && currentY > 60) {
+        Animated.timing(headerTranslateY, {
+          toValue: -headerHeight - insets.top,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+        scrollDirection.current = 'down';
+      }
+    } else {
+      if (scrollDirection.current !== 'up') {
+        Animated.timing(headerTranslateY, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+        scrollDirection.current = 'up';
+      }
     }
+    lastScrollY.current = currentY;
+  };
 
-    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      dispatch(clearSinglePost());
+    };
+  }, [dispatch]);
 
-    const renderItem = ({ item }) => {
-        return (
-            <CommentCard
-                name={item.name}
-                profileImage={item.profileImage}
-                time={item.time}
-                comment={item.comment}
-                likes={item.likes}
-            />
-        )
-    }
-    return (
-        <SafeAreaView style={{ flex: 1 }}>
-            <View style={styles.main}>
-                <SharedHeader
-                    scrollY={headerTranslateY}
-                    title="Post"
-                    leftComponent={<BackButton />}
-                />
-                <View style={{ flex: 1 }}>
-                    <AnimatedFlatList
-                        data={data}
-                        keyExtractor={(item) => item.id}
-                        renderItem={renderItem}
+  const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
-                        onScroll={handleScroll}
-                        scrollEventThrottle={16}
+  const renderItem = ({ item }) => <CommentCard {...item} />;
 
-                        // to run loadmore function when end is reached for infinite scrolling
-                        //onEndReached={loadMore}
-                        //onEndReachedThreshold={0.5}
+  if (!post) return null; // wait until post is loaded
 
-                        // this makes navbar sticky
-                        ListHeaderComponent={() => (
-                            <View>
-                                <PostCards
-                                    name={post.name}
-                                    profileImage={post.profileImage}
-                                    time={post.time}
-                                    postText={post.postText}
-                                    postImage={post.postImage}
-                                    ownerId={post.ownerId}
-                                />
-                            </View>
-                        )}
-                        
-                        contentContainerStyle={{ paddingTop: headerHeight }}
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.main}>
+        <SharedHeader
+          scrollY={headerTranslateY}
+          title="Post"
+          leftComponent={<BackButton />}
+        />
+        <View style={{ flex: 1 }}>
+          <AnimatedFlatList
+            data={post.comments || []}
+            keyExtractor={(item, index) => item._id || index.toString()}
+            renderItem={renderItem}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            contentContainerStyle={{ paddingTop: headerHeight }}
+            ListHeaderComponent={() => (
+              <PostCards
+                from="singlePost"
+                postId={post._id}
+                isLiked={post.isLiked}
+                likeCount={post.likeCount}
+                isCommented={post.isCommented}
+                commentCount={post.commentCount}
+                name={post.owner?.name}
+                profileImage={post.owner?.profilepic}
+                time={post.createdAt}
+                postText={post.caption}
+                postImage={post.postpic}
+                onLikePress={() => dispatch(toggleLike())}
+                onCommentPress={() => dispatch(toggleComment())}
+              />
+            )}
+            ListFooterComponent={<ActivityIndicator />}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+};
 
-                        // to display loading as footer
-                        ListFooterComponent={/*loading && */<ActivityIndicator />}
-                        showsVerticalScrollIndicator={false}
-                    />
-                </View>
-            </View>
-        </SafeAreaView>
-    )
-}
-
-export default PostScreen
+export default PostScreen;
 
 const styles = StyleSheet.create({
-    main: {
-        flex: 1,
-        position: 'relative'
-    },
-})
+  main: {
+    flex: 1,
+    position: 'relative',
+  },
+});

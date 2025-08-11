@@ -1,14 +1,16 @@
-import { Alert, StyleSheet, Text, TouchableOpacity, View, Dimensions } from 'react-native'
-import React from 'react'
-
+import { Alert, StyleSheet, Text, TouchableOpacity, View, Dimensions } from 'react-native';
+import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
+import { setOtherProfileStatus } from '../redux/slices/otherProfileSlice'; // NEW
 
 const { width } = Dimensions.get('window');
 
-const StatusCard = ({status, requestId, senderId}) => {
+const StatusCard = ({ status, requestId, senderId }) => {
     const navigation = useNavigation();
+    const dispatch = useDispatch();
 
     const connectHandler = async () => {
         try {
@@ -28,8 +30,10 @@ const StatusCard = ({status, requestId, senderId}) => {
             });
 
             if (response.data.success) {
-
                 Alert.alert(response.data.message);
+
+                // 🔹 Update status instantly in profile view
+                dispatch(setOtherProfileStatus("connected"));
 
             } else {
                 console.error(response.data.message);
@@ -38,11 +42,10 @@ const StatusCard = ({status, requestId, senderId}) => {
                     navigation.replace("LoginScreen");
                 }
             }
-
         } catch (err) {
             console.error('Error connecting:', err);
         }
-    }
+    };
 
     const removeHandler = async () => {
         try {
@@ -62,8 +65,10 @@ const StatusCard = ({status, requestId, senderId}) => {
             });
 
             if (response.data.success) {
-
                 Alert.alert(response.data.message);
+
+                // 🔹 Update status instantly in profile view
+                dispatch(setOtherProfileStatus("none"));
 
             } else {
                 console.error(response.data.message);
@@ -72,11 +77,10 @@ const StatusCard = ({status, requestId, senderId}) => {
                     navigation.replace("LoginScreen");
                 }
             }
-
         } catch (err) {
             console.log('Error rejecting:', err);
         }
-    }
+    };
 
     return (
         <View style={styles.card}>
@@ -99,10 +103,10 @@ const StatusCard = ({status, requestId, senderId}) => {
                 </View>
             )}
         </View>
-    )
-}
+    );
+};
 
-export default StatusCard
+export default StatusCard;
 
 const styles = StyleSheet.create({
     card: {
@@ -124,8 +128,8 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         borderRadius: 20,
         backgroundColor: '#e0e0e0',
-        marginLeft: 10, // Prevent overlap
-        flexShrink: 0,  // Prevent shrinking
+        marginLeft: 10,
+        flexShrink: 0,
     },
     statusText: {
         fontSize: 25,
@@ -133,11 +137,11 @@ const styles = StyleSheet.create({
         textTransform: 'capitalize',
     },
     requested: {
-        color: '#4f7cf0', // Light Blue
+        color: '#4f7cf0',
         fontWeight: 600
     },
     connected: {
-        color: '#2e7d32', // Green
+        color: '#2e7d32',
         fontWeight: 600
     },
     container: {
@@ -173,4 +177,4 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 15,
     },
-})
+});

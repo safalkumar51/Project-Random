@@ -3,15 +3,19 @@ import React from 'react';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch } from 'react-redux';
+import { removeRequest, updateRequestStatus } from '../redux/slices/requestsSlice';
+import { setOtherProfileStatus } from '../redux/slices/otherProfileSlice'; // NEW import
 
 const { width } = Dimensions.get('window');
 
 const ActivityCard = ({ name, profileImage, status, time, requestId, senderId }) => {
     const navigation = useNavigation();
+    const dispatch = useDispatch();
 
     const getProfileHandler = () => {
-        navigation.navigate("OtherProfileScreen", {status: status, otherId: senderId, requestId: requestId});
-    }
+        navigation.navigate("OtherProfileScreen", { status: status, otherId: senderId, requestId: requestId });
+    };
 
     const connectHandler = async () => {
         try {
@@ -22,18 +26,21 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
             }
 
             const response = await axios.post('http://10.0.2.2:4167/connection/accept', {
-                    requestId,
-                    senderId
-                }, {
-                    headers: {
-                        Authorization: `Bearer ${authToken}`,
-                    }
+                requestId,
+                senderId
+            }, {
+                headers: { Authorization: `Bearer ${authToken}` },
             });
 
             if (response.data.success) {
-
                 Alert.alert(response.data.message);
-                
+
+                // Update requests slice
+                dispatch(updateRequestStatus({ _id: requestId, status: "connected" }));
+
+                // Sync with otherProfileSlice if the profile is open later
+                dispatch(setOtherProfileStatus("connected"));
+
             } else {
                 console.error(response.data.message);
                 if (response.data.message === 'Log In Required!') {
@@ -41,11 +48,10 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
                     navigation.replace("LoginScreen");
                 }
             }
-
         } catch (err) {
             console.error('Error connecting:', err);
         }
-    }
+    };
 
     const removeHandler = async () => {
         try {
@@ -56,17 +62,20 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
             }
 
             const response = await axios.post('http://10.0.2.2:4167/connection/reject', {
-                    requestId,
-                    senderId
-                },{
-                    headers: {
-                        Authorization: `Bearer ${authToken}`,
-                    }
+                requestId,
+                senderId
+            }, {
+                headers: { Authorization: `Bearer ${authToken}` },
             });
 
             if (response.data.success) {
-
                 Alert.alert(response.data.message);
+
+                // Remove from requests slice
+                dispatch(removeRequest(requestId));
+
+                // Sync with otherProfileSlice if the profile is open later
+                dispatch(setOtherProfileStatus("none"));
 
             } else {
                 console.error(response.data.message);
@@ -75,11 +84,10 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
                     navigation.replace("LoginScreen");
                 }
             }
-
         } catch (err) {
             console.log('Error rejecting:', err);
         }
-    }
+    };
 
     return (
         <View style={styles.card}>
@@ -139,7 +147,7 @@ const styles = StyleSheet.create({
     userInfo: {
         flexDirection: 'row',
         alignItems: 'center',
-        flex: 1, // Allow it to take available space
+        flex: 1,
     },
     avatar: {
         width: 48,
@@ -167,8 +175,8 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         borderRadius: 20,
         backgroundColor: '#e0e0e0',
-        marginLeft: 10, // Prevent overlap
-        flexShrink: 0,  // Prevent shrinking
+        marginLeft: 10,
+        flexShrink: 0,
     },
     statusText: {
         fontSize: 14,
@@ -176,12 +184,12 @@ const styles = StyleSheet.create({
         textTransform: 'capitalize',
     },
     requested: {
-        color: '#4f7cf0', // Light Blue
-        fontWeight: 600
+        color: '#4f7cf0',
+        fontWeight: '600',
     },
     connected: {
-        color: '#2e7d32', // Green
-        fontWeight: 600
+        color: '#2e7d32',
+        fontWeight: '600',
     },
     lower: {
         flexDirection: 'row',
