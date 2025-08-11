@@ -17,6 +17,7 @@ const userDelete = require('../controllers/user.controllers/user.delete');
 const userEditProfile = require('../controllers/user.controllers/user.editProfile');
 const userChangeProfilePhoto = require('../controllers/user.controllers/user.changeProfilePhoto');
 const userChangePassword = require('../controllers/user.controllers/user.changePassword');
+const userHelp = require('../controllers/user.controllers/user.help');
 
 const router = express.Router();
 
@@ -38,6 +39,7 @@ router.post('/editprofile', isLoggedIn, userEditProfile);
 router.post('/changeprofilephoto', isLoggedIn, upload.single("profilepic"), userChangeProfilePhoto);
 router.post('/changepassword', isLoggedIn, userChangePassword);
 router.post('/signout', isLoggedIn, userSignOut);
+router.post('/help', isLoggedIn, userHelp);
 router.post('/delete', userDelete);
 
 module.exports = router;

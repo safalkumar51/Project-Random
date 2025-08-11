@@ -5,10 +5,46 @@ import BackButton from '../../components/BackButton';
 const { width, height } = Dimensions.get('window');
 
 const HelpScreen = () => {
-    const [problem, setProblem] =useState();
+    const [problem, setProblem] = useState();
 
-    const submitHandler = () => {
-        return;
+    const submitHandler = async () => {
+        try {
+
+            const authToken = await AsyncStorege.getItem('authToken');
+
+            if (!authToken) {
+                navigation.replace("LoginScreen");
+                return;
+            }
+
+            if (!problem) {
+                Alert.alert("Problem field can't be empty");
+                return;
+            }
+
+            const response = await axios.post(`${baseURL}/help`, {
+                problem
+            }, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                }
+            });
+
+            if (response.data.success) {
+
+                Alert.alert(response.data.message);
+
+            } else {
+                console.error(response.data.message);
+                if (response.data.message === 'Log In Required!') {
+                    await AsyncStorage.removeItem('authToken');
+                    navigation.replace("LoginScreen");
+                }
+            }
+
+        } catch (err) {
+            console.error('Error sending problem:', err);
+        }
     }
 
     return (
@@ -36,7 +72,7 @@ const HelpScreen = () => {
                 maxLength={300}
             />
             <TouchableOpacity style={styles.submitBtn}>
-                <Text style={styles.submitText} onPress={submitHandler}>Start</Text>
+                <Text style={styles.submitText} onPress={submitHandler}>Submit</Text>
             </TouchableOpacity>
         </ScrollView>
     );
