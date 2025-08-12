@@ -1,133 +1,130 @@
 import { ActivityIndicator, StyleSheet, Text, View, Dimensions, Animated, FlatList, Alert } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux';
 
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
 
 import MyConnectionCard from '../../components/MyConnectionCard';
-import BackButton from '../../components/BackButton';
 import SharedHeader from '../../components/SharedHeader';
 import { socket } from '../../utils/socket';
 import baseURL from '../../assets/config';
-import { useDispatch, useSelector } from 'react-redux';
-import { addConnections } from '../../redux/slices/connectionsSlice';
+import { addConnection, addConnections } from '../../redux/slices/connectionsSlice';
+
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
 
 const MyConnectionsScreen = () => {
-  const navigation = useNavigation();
-  const connections = useSelector((state) => state.connections.connections);
-  const dispatch = useDispatch();
+    const navigation = useNavigation();
+    const connections = useSelector((state) => state.connections.connections);
+    const dispatch = useDispatch();
 
-  const pageNumber = useRef(1);
-  const loading = useRef(false);
-  const hasMore = useRef(true);
-  const totalPages = useRef();
+    const pageNumber = useRef(1);
+    const loading = useRef(false);
+    const hasMore = useRef(true);
+    const totalPages = useRef();
 
-  const fetchConnections = async (page) => {
-    if (page !== 1 && (loading.current || !hasMore.current)) return;
+    const fetchConnections = async (page) => {
+        if (page !== 1 && (loading.current || !hasMore.current)) return;
 
-    loading.current = true;
-    try {
-      const authToken = await AsyncStorage.getItem('authToken');
-      if (!authToken) {
-        navigation.replace('LoginScreen');
-        return;
-      }
+        loading.current = true;
+        try {
+            const authToken = await AsyncStorage.getItem('authToken');
+            if (!authToken) {
+                navigation.replace('LoginScreen');
+                return;
+            }
 
-            const response = await axios.get(`${ baseURL }/connection?page=${page}`, {
+            const response = await axios.get(`${baseURL}/connection?page=${page}`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                 }
             });
 
-      if (response.data.success) {
-        dispatch(addConnections({ page, connections: response.data.connections }));
-        if (page === 1) {
-          totalPages.current = response.data.totalPages;
+            if (response.data.success) {
+                dispatch(addConnections({ page, connections: response.data.connections }));
+                if (page === 1) {
+                    totalPages.current = response.data.totalPages;
+                }
+                hasMore.current = (page < totalPages.current);
+                pageNumber.current = page;
+            } else {
+                if (response.data.message === 'Log In Required!') {
+                    await AsyncStorage.removeItem('authToken');
+                    navigation.replace('LoginScreen');
+                }
+            }
+        } catch (err) {
+            console.log('Error fetching connections:', err);
         }
-        hasMore.current = (page < totalPages.current);
-        pageNumber.current = page;
-      } else {
-        if (response.data.message === 'Log In Required!') {
-          await AsyncStorage.removeItem('authToken');
-          navigation.replace('LoginScreen');
-        }
-      }
-    } catch (err) {
-      console.log('Error fetching connections:', err);
-    }
-    loading.current = false;
-  };
+        loading.current = false;
+    };
 
     // on mounting fetchrequests(pageno = 1)
     useEffect(() => {
         const handleConnection = (data) => {
-            Alert.alert("run");
+            dispatch(addConnection(data));
         };
         socket.off('receive_connection', handleConnection); // prevent duplicates
         socket.on('receive_connection', handleConnection);
 
-        //fetchConnections(1);
+        fetchConnections(1);
 
         return () => {
             socket.off('receive_connection', handleConnection);
         }
     }, []);
 
-  const loadMore = () => {
-    if (!loading.current && hasMore.current && pageNumber.current) {
-      fetchConnections(pageNumber.current + 1);
-    }
-  };
+    const loadMore = () => {
+        if (!loading.current && hasMore.current && pageNumber.current) {
+            fetchConnections(pageNumber.current + 1);
+        }
+    };
 
-  const headerHeight = 60;
-  const headerTranslateY = useRef(new Animated.Value(0)).current;
-  const lastScrollY = useRef(0);
-  const scrollDirection = useRef('up');
-  const insets = useSafeAreaInsets();
+    const headerHeight = 60;
+    const headerTranslateY = useRef(new Animated.Value(0)).current;
+    const lastScrollY = useRef(0);
+    const scrollDirection = useRef('up');
+    const insets = useSafeAreaInsets();
 
-  const handleScroll = (event) => {
-    const currentY = event.nativeEvent.contentOffset.y;
-    if (currentY > lastScrollY.current) {
-      if (scrollDirection.current !== 'down' && currentY > 60) {
-        Animated.timing(headerTranslateY, {
-          toValue: -headerHeight - insets.top,
-          duration: 200,
-          useNativeDriver: true,
-        }).start();
-        scrollDirection.current = 'down';
-      }
-    } else {
-      if (scrollDirection.current !== 'up') {
-        Animated.timing(headerTranslateY, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }).start();
-        scrollDirection.current = 'up';
-      }
-    }
-    lastScrollY.current = currentY;
-  };
+    const handleScroll = (event) => {
+        const currentY = event.nativeEvent.contentOffset.y;
+        if (currentY > lastScrollY.current) {
+            if (scrollDirection.current !== 'down' && currentY > 60) {
+                Animated.timing(headerTranslateY, {
+                    toValue: -headerHeight - insets.top,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'down';
+            }
+        } else {
+            if (scrollDirection.current !== 'up') {
+                Animated.timing(headerTranslateY, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'up';
+            }
+        }
+        lastScrollY.current = currentY;
+    };
 
-  const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
     const renderItem = ({ item }) => {
 
         return (
             <MyConnectionCard
-                //name={item.from.name}
-                //profileImage={item.from.profilepic}
-                //time={dayjs(item.updatedAt).fromNow()}
-                //senderId={item.from._id}
-                name={item.name}
-                profileImage={item.profileImage}
-                time={item.time}
+                name={item.from.name}
+                profileImage={item.from.profilepic}
+                time={dayjs(item.updatedAt).fromNow()}
+                senderId={item.from._id}
             />
         );
     }
@@ -137,14 +134,11 @@ const MyConnectionsScreen = () => {
                 <SharedHeader
                     scrollY={headerTranslateY}
                     title="My Connections"
-                    leftComponent={<BackButton />}
                 />
                 <View style={{ flex: 1 }}>
                     <AnimatedFlatList
-                        //data={connections}
-                        //keyExtractor={(item) => item._id}
-                        data={usersData}
-                        keyExtractor={(item) => item.id}
+                        data={connections}
+                        keyExtractor={(item) => item._id}
                         renderItem={renderItem}
 
                         onScroll={handleScroll}
@@ -153,11 +147,11 @@ const MyConnectionsScreen = () => {
                         contentContainerStyle={{ paddingTop: headerHeight }}
 
                         // to run loadmore function when end is reached for infinite scrolling
-                        //onEndReached={loadMore}
-                        //onEndReachedThreshold={0.5}
+                        onEndReached={loadMore}
+                        onEndReachedThreshold={0.5}
 
                         // to display loading as footer
-                        //ListFooterComponent={loading && <ActivityIndicator />}
+                        ListFooterComponent={loading.current && <ActivityIndicator />}
                         showsVerticalScrollIndicator={false}
                     />
                 </View>
@@ -169,8 +163,8 @@ const MyConnectionsScreen = () => {
 export default MyConnectionsScreen;
 
 const styles = StyleSheet.create({
-  main: {
-    flex: 1,
-    position: 'relative',
-  },
+    main: {
+        flex: 1,
+        position: 'relative',
+    },
 });

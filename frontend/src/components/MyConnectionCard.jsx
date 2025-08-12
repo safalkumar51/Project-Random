@@ -19,7 +19,6 @@ const MyConnectionCard = ({ name, profileImage, time, senderId }) => {
     };
 
     const removeHandler = async () => {
-        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -40,7 +39,7 @@ const MyConnectionCard = ({ name, profileImage, time, senderId }) => {
 
                 // Update Redux
                 dispatch(removeConnection(senderId));
-                dispatch(setOtherProfileStatus("none")); // Instant sync for profile view
+                //dispatch(setOtherProfileStatus("none")); // Instant sync for profile view
 
             } else {
                 console.error(response.data.message);

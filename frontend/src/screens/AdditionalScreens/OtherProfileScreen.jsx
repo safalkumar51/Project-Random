@@ -1,9 +1,9 @@
 import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  View,
-  Animated,
+    ActivityIndicator,
+    FlatList,
+    StyleSheet,
+    View,
+    Animated,
 } from 'react-native';
 import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -18,41 +18,45 @@ import ProfileCard from '../../components/ProfileCard';
 import StatusCard from '../../components/StatusCard';
 import BackButton from '../../components/BackButton';
 import SharedHeader from '../../components/SharedHeader';
+import baseURL from '../../assets/config';
 
 import {
-  setOtherProfile,
-  addOtherPosts,
-  clearOtherProfile,
-  setOtherProfileLoading,
-  setOtherProfileError,
+    setOtherProfile,
+    addOtherProfilePosts,
+    clearOtherProfile,
+    setOtherProfileLoading,
+    setOtherProfileError,
 } from '../../redux/slices/otherProfileSlice';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import baseURL from '../../assets/config';
 
 dayjs.extend(relativeTime);
 
 const OtherProfileScreen = ({ route }) => {
-  const navigation = useNavigation();
-  const dispatch = useDispatch();
-  const insets = useSafeAreaInsets();
+    const navigation = useNavigation();
+    const insets = useSafeAreaInsets();
 
-  const { status = '', otherId = '', requestId = '' } = route.params;
+    const { status = '', otherId = '', requestId = '' } = route.params;
 
-  const { user: profile, posts, loading, hasMore, page } = useSelector(
-    (state) => state.otherProfile
-  );
+    const profile = useSelector((state) => state.otherProfile.profile);
+    const dispatch = useDispatch();
 
-  const headerHeight = 60;
-  const headerTranslateY = useRef(new Animated.Value(0)).current;
-  const lastScrollY = useRef(0);
-  const scrollDirection = useRef('up');
+    const headerHeight = 60;
+    const headerTranslateY = useRef(new Animated.Value(0)).current;
+    const lastScrollY = useRef(0);
+    const scrollDirection = useRef('up');
 
-  const fetchProfile = async (pageNo) => {
-    if (pageNo !== 1 && (loading || !hasMore)) return;
+    const pageNumber = useRef(0);
+    const loading = useRef(false);
+    const hasMore = useRef(true);
+    const totalPages = useRef();
+    const profileLoading = useRef(false);
 
-        setLoading(true);
+    const fetchProfile = async (page) => {
+        if (page !== 1 && (loading.current || !hasMore.current)) return;
+
+        loading.current = true;
         try {
             //console.error("Fetched Error");
             const authToken = await AsyncStorage.getItem('authToken');
@@ -63,7 +67,7 @@ const OtherProfileScreen = ({ route }) => {
             }
 
             if (status === 'connected') {
-                const response = await axios.get(`${ baseURL }/connection/profile`, {
+                const response = await axios.get(`${baseURL}/connection/profile`, {
                     headers: {
                         Authorization: `Bearer ${authToken}`,
                     }, params: {
@@ -73,20 +77,12 @@ const OtherProfileScreen = ({ route }) => {
                 });
                 if (response.data.success) {
                     if (page === 1) {
-                        setProfile(response.data.profile);
-                        setTotalPages(response.data.totalPages);
-                    } else {
-                        setProfile(prev => {
-                            if (!prev) return response.data.profile; // fallback
-                            return {
-                                ...prev,
-                                posts: [...prev.posts, ...response.data.profile.posts]
-                            }
-                        });
+                        totalPages.current = response.data.totalPages;
                     }
 
-                    setPageNumber(page);
-                    setHasMore(page < totalPages);
+                    dispatch(addOtherProfilePosts({page, profile: response.data.profile}))
+                    pageNumber.current = page;
+                    hasMore.current = page < totalPages.current
                 }
                 else {
                     console.error(response.data.message);
@@ -95,10 +91,9 @@ const OtherProfileScreen = ({ route }) => {
                         navigation.replace("LoginScreen");
                     }
                 }
-                //Alert.alert(response.data.profile.name);
 
             } else {
-                const response = await axios.get(`${ baseURL }/connection/requestprofile`, {
+                const response = await axios.get(`${baseURL}/connection/requestprofile`, {
                     headers: {
                         Authorization: `Bearer ${authToken}`,
                     }, params: {
@@ -106,8 +101,10 @@ const OtherProfileScreen = ({ route }) => {
                     }
                 });
                 if (response.data.success) {
-                    setProfile(response.data.profile);
-                    setHasMore(false);
+                    dispatch(addOtherProfilePosts({ page, profile: response.data.profile }));
+                    totalPages.current = 1;
+                    pageNumber.current = page;
+                    hasMore.current = page < totalPages.current;
                 }
                 else {
                     console.error(response.data.message);
@@ -116,73 +113,76 @@ const OtherProfileScreen = ({ route }) => {
                         navigation.replace("LoginScreen");
                     }
                 }
-                //Alert.alert(response.data.profile.name);
             }
 
         } catch (err) {
             console.error('Error fetching others profile:', err);
         }
 
-    dispatch(setOtherProfileLoading(false));
-  };
+        loading.current = false;
+    };
 
-  useEffect(() => {
-    dispatch(clearOtherProfile());
-    fetchProfile(1);
-  }, [otherId, status, requestId]);
+    useEffect(() => {
+        profileLoading.current = true;
+        const loadData = async () => {
+            dispatch(clearOtherProfile());
+            pageNumber.current = 0;
+            loading.current = false;
+            hasMore.current = true;
+            totalPages.current = undefined;
+            fetchProfile(1);
+        }
+        loadData();
+        profileLoading.current = false;
+    }, [otherId, status, requestId]);
 
-  const loadMore = () => {
-    if (!loading && hasMore) {
-      fetchProfile(page + 1);
-    }
-  };
+    const loadMore = () => {
+        if (!loading.current && hasMore.current && pageNumber.current) {
+            fetchProfile(page + 1);
+        }
+    };
 
-  const handleScroll = (event) => {
-    const currentY = event.nativeEvent.contentOffset.y;
-    if (currentY > lastScrollY.current) {
-      if (scrollDirection.current !== 'down' && currentY > 60) {
-        Animated.timing(headerTranslateY, {
-          toValue: -headerHeight - insets.top,
-          duration: 200,
-          useNativeDriver: true,
-        }).start();
-        scrollDirection.current = 'down';
-      }
-    } else {
-      if (scrollDirection.current !== 'up') {
-        Animated.timing(headerTranslateY, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }).start();
-        scrollDirection.current = 'up';
-      }
-    }
-    lastScrollY.current = currentY;
-  };
+    const handleScroll = (event) => {
+        const currentY = event.nativeEvent.contentOffset.y;
+        if (currentY > lastScrollY.current) {
+            if (scrollDirection.current !== 'down' && currentY > 60) {
+                Animated.timing(headerTranslateY, {
+                    toValue: -headerHeight - insets.top,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'down';
+            }
+        } else {
+            if (scrollDirection.current !== 'up') {
+                Animated.timing(headerTranslateY, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'up';
+            }
+        }
+        lastScrollY.current = currentY;
+    };
 
     const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
     const renderItem = ({ item }) => {
         return (
             <PostCards
-                name={item.name}
-                time={item.time}
-                profileImage={item.profileImage}
-                postText={item.postText}
-                postImage={item.postImage}
-                //name={profile.name}
-                //time={dayjs(item.createdAt).fromNow()}
-                //profileImage={profile.profilepic}
-                //postText={item.caption}
-                //postImage={item.postpic}
-                //ownerId={profile._id}
-                //postId={item._id}
-                //likesCount={item.likesCount}
-                //commentsCount={item.commentsCount}
-                //isLiked={item.isLiked}
-                //isCommented={item.isCommented}
-                //isMine={item.isMine}
+                name={profile.name}
+                time={dayjs(item.createdAt).fromNow()}
+                profileImage={profile.profilepic}
+                postText={item.caption}
+                postImage={item.postpic}
+                ownerId={profile._id}
+                postId={item._id}
+                likesCount={item.likesCount}
+                commentsCount={item.commentsCount}
+                isLiked={item.isLiked}
+                isCommented={item.isCommented}
+                isMine={item.isMine}
             />
         );
     };
@@ -196,10 +196,8 @@ const OtherProfileScreen = ({ route }) => {
                 />
                 <View style={{ flex: 1 }}>
                     <AnimatedFlatList
-                        //data={profile.posts}
-                        //keyExtractor={(item) => item._id}
-                        data={data}
-                        keyExtractor={(item) => item.id}
+                        data={profile.posts}
+                        keyExtractor={(item) => item._id}
                         renderItem={renderItem}
 
                         onScroll={handleScroll}
@@ -208,35 +206,35 @@ const OtherProfileScreen = ({ route }) => {
                         contentContainerStyle={{ paddingTop: headerHeight }}
 
                         // to run loadmore function when end is reached for infinite scrolling
-                        //onEndReached={loadMore}
-                        //onEndReachedThreshold={0.5}
+                        onEndReached={loadMore}
+                        onEndReachedThreshold={0.5}
 
                         // this makes navbar sticky
-                        //ListHeaderComponent={() => (
-                        //    <View>
-                        //        {profileLoading ? (
-                        //            <ActivityIndicator size="large" />
-                        //        ) : (
-                        //            <>
-                        //                <ProfileCard
-                        //                    name={profile.name}
-                        //                    email={profile.email}
-                        //                    profileImage={profile.profilepic}
-                        //                    bio={profile.bio}
-                        //                    status={status}
-                        //                />
-                        //                <StatusCard
-                        //                    status={status}
-                        //                    requestId={requestId}
-                        //                    senderId={otherId}
-                        //                />
-                        //            </>
-                        //        )}
-                        //    </View>
-                        //)}
+                        ListHeaderComponent={() => (
+                            <View>
+                                {profileLoading.current ? (
+                                    <ActivityIndicator size="large" />
+                                ) : (
+                                    <>
+                                        <ProfileCard
+                                            name={profile.name}
+                                            email={profile.email}
+                                            profileImage={profile.profilepic}
+                                            bio={profile.bio}
+                                            status={status}
+                                        />
+                                        <StatusCard
+                                            status={status}
+                                            requestId={requestId}
+                                            senderId={otherId}
+                                        />
+                                    </>
+                                )}
+                            </View>
+                        )}
 
                         // to display loading as footer
-                        //ListFooterComponent={loading && <ActivityIndicator />}
+                        ListFooterComponent={loading.current && !profileLoading.current && <ActivityIndicator />}
                         showsVerticalScrollIndicator={false}
                     />
                 </View>
@@ -248,8 +246,8 @@ const OtherProfileScreen = ({ route }) => {
 export default OtherProfileScreen;
 
 const styles = StyleSheet.create({
-  main: {
-    flex: 1,
-    position: 'relative',
-  },
+    main: {
+        flex: 1,
+        position: 'relative',
+    },
 });

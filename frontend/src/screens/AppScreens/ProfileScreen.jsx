@@ -7,20 +7,24 @@ import {
     Alert,
 } from 'react-native';
 import React, { useEffect, useRef } from 'react';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useSelector, useDispatch } from 'react-redux';
+
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import NavBar from '../../components/NavBar';
 import PostCards from '../../components/PostCards';
 import ProfileCard from '../../components/ProfileCard';
-import { useIsFocused, useNavigation } from '@react-navigation/native';
 import baseURL from '../../assets/config';
-import { useSelector, useDispatch } from 'react-redux';
-import {
-    setMyProfile,
-    addMyProfilePosts,
-    setMyProfileError,
-} from '../../redux/slices/myProfileSlice';
+import { setMyProfile, addMyProfilePosts, setMyProfileError } from '../../redux/slices/myProfileSlice';
+
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
+
 
 const ProfileScreen = () => {
     const navigation = useNavigation();
@@ -57,14 +61,13 @@ const ProfileScreen = () => {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                 }
-            );
+            });
             
             if (response.data.success) {
                 
                 const profileData = response.data.profile;
 
                 if (page === 1) {
-                    //dispatch(setMyProfile(profileData));
                     totalPages.current = response.data.totalPages;
                 }
                 
@@ -127,6 +130,8 @@ const ProfileScreen = () => {
         lastScrollY.current = currentY;
     };
 
+    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+
     const loadMore = () => {
         if (!loading.current && hasMore.current && pageNumber.current) {
             fetchProfile(pageNumber.current + 1);
@@ -138,23 +143,18 @@ const ProfileScreen = () => {
     const renderItem = ({ item }) => {
         return (
             <PostCards
-                name={item.name}
-                time={item.time}
-                profileImage={item.profileImage}
-                postText={item.postText}
-                postImage={item.postImage}
-                //name={profile.name}
-                //time={dayjs(item.createdAt).fromNow()}
-                //profileImage={profile.profilepic}
-                //postText={item.caption}
-                //postImage={item.postpic}
-                //ownerId={profile._id}
-                //postId={item._id}
-                //likesCount={item.likesCount}
-                //commentsCount={item.commentsCount}
-                //isLiked={item.isLiked}
-                //isCommented={item.isCommented}
-                //isMine={item.isMine}
+                name={profile.name}
+                time={dayjs(item.createdAt).fromNow()}
+                profileImage={profile.profilepic}
+                postText={item.caption}
+                postImage={item.postpic}
+                ownerId={profile._id}
+                postId={item._id}
+                likesCount={item.likesCount}
+                commentsCount={item.commentsCount}
+                isLiked={item.isLiked}
+                isCommented={item.isCommented}
+                isMine={item.isMine}
             />
         );
     };

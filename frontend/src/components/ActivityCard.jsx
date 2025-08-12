@@ -1,12 +1,13 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View, Dimensions, Alert } from 'react-native';
 import React from 'react';
-import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import baseURL from '../assets/config';
 import { useDispatch } from 'react-redux';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+
+import baseURL from '../assets/config';
 import { removeRequest, updateRequestStatus } from '../redux/slices/requestsSlice';
-import { setOtherProfileStatus } from '../redux/slices/otherProfileSlice'; // NEW import
 
 const { width } = Dimensions.get('window');
 
@@ -19,7 +20,6 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
     };
 
     const connectHandler = async () => {
-        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -43,7 +43,7 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
                 dispatch(updateRequestStatus({ _id: requestId, status: "connected" }));
 
                 // Sync with otherProfileSlice if the profile is open later
-                dispatch(setOtherProfileStatus("connected"));
+                //dispatch(setOtherProfileStatus("connected"));
 
             } else {
                 console.error(response.data.message);
@@ -58,7 +58,6 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
     };
 
     const removeHandler = async () => {
-        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -76,13 +75,11 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
             });
 
             if (response.data.success) {
-                Alert.alert(response.data.message);
-
                 // Remove from requests slice
-                dispatch(removeRequest(requestId));
+                dispatch(removeRequest({_id: requestId}));
 
                 // Sync with otherProfileSlice if the profile is open later
-                dispatch(setOtherProfileStatus("none"));
+                //dispatch(setOtherProfileStatus("none"));
 
             } else {
                 console.error(response.data.message);

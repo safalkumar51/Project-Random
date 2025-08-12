@@ -23,7 +23,13 @@ const connectionAccept = async (req, res) => {
         const sender = await userModel.findOne({ _id: senderId }).select('_id');
 
         // Ensure both requests exist
-        let myWay = await friendRequestModel.findOne({ from: req.userId, to: senderId });
+        let myWay = await friendRequestModel.findOne({ from: req.userId, to: senderId })
+            .select('from updatedAt')
+            .populate({
+                path: 'from',
+                select: 'name profilepic'
+            });
+            
         let otherWay = await friendRequestModel.findOne({ from: senderId, to: req.userId });
 
         if (!sender || !myWay || !otherWay) {

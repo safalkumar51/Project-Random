@@ -4,23 +4,22 @@ import {
     TouchableOpacity,
     Alert,
 } from 'react-native';
-import SharedHeader from '../../components/SharedHeader';
+import { useDispatch, useSelector } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import axios from 'axios';
+
+import SharedHeader from '../../components/SharedHeader';
 import BackButton from '../../components/BackButton';
 import ChatCard from '../../components/ChatCard';
+import { socket } from '../../utils/socket';
+import baseURL from '../../assets/config';
+import { addMessages, addSingleMessage, clearMessages } from '../../redux/slices/chatSlice';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { socket } from '../../utils/socket';
-import baseURL from '../../assets/config';
 
 dayjs.extend(relativeTime);
-import { useDispatch, useSelector } from 'react-redux';
-import { addMessages, addSingleMessage, clearMessages } from '../../redux/slices/chatSlice';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 
 const ChatScreen = ({ route }) => {
     const headerHeight = 60;
@@ -30,15 +29,15 @@ const ChatScreen = ({ route }) => {
     const insets = useSafeAreaInsets();
 
     const { otherId, name, avatar, userId } = route.params;
-  const dispatch = useDispatch();
-  const messages = useSelector((state) => state.chat.messages);
+    const dispatch = useDispatch();
+    const chats = useSelector((state) => state.chat.messages);
 
-    const [chats, setChats] = useState([]);
     const [text, setText] = useState('');
-    const [pageNumber, setPageNumber] = useState(1);
-    const [loading, setLoading] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
-    const [totalPages, setTotalPages] = useState();
+
+    const pageNumber = useRef(1);
+    const loading = useRef(false);
+    const hasMore = useRef(true);
+    const totalPages = useRef();
 
 
     const handleScroll = (event) => {
@@ -69,9 +68,9 @@ const ChatScreen = ({ route }) => {
     const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
     const fetchChats = async (page) => {
-        if (page !== 1 && (loading || !hasMore)) return;
+        if (page !== 1 && (loading.current || !hasMore.current)) return;
 
-        setLoading(true);
+        loading.current = true;
         try {
 
             const authToken = await AsyncStorage.getItem('authToken');
@@ -80,22 +79,19 @@ const ChatScreen = ({ route }) => {
                 return;
             }
 
-            const response = await axios.get(`${ baseURL }/chat?page=${page}&otherId=${otherId}`, {
+            const response = await axios.get(`${baseURL}/chat?page=${page}&otherId=${otherId}`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                 }
             });
 
             if (response.data.success) {
-
+                dispatch(addMessages({page, data: response.data.chats}))
                 if (page === 1) {
-                    setChats(response.data.chats);
-                    setTotalPages(response.data.totalPages);
-                } else {
-                    setChats(prev => [...prev, ...response.data.chats]);
+                    totalPages.current = response.data.totalPages;
                 }
-                setPageNumber(page);
-                setHasMore(page < totalPages);
+                pageNumber.current = page;
+                hasMore.current = page < totalPages.current
             }
             else {
                 console.log(response.data.message);
@@ -109,7 +105,7 @@ const ChatScreen = ({ route }) => {
             console.log('Error fetching requests:', err);
         }
 
-        setLoading(false);
+        loading.current = false;
     }
 
     useEffect(() => {
@@ -118,7 +114,7 @@ const ChatScreen = ({ route }) => {
         };
         socket.off('receive_chat', handleRequest); // prevent duplicates
         socket.on('receive_chat', handleRequest);
-        //fetchChats(1);
+        fetchChats(1);
 
         return () => {
             socket.off('receive_chat', handleRequest);
@@ -127,13 +123,12 @@ const ChatScreen = ({ route }) => {
 
     // if user reaches end to flatlist loadmore
     const loadMore = () => {
-        if (!loading && hasMore) {
-            //fetchChats(pageNumber + 1);
+        if (!loading.current && hasMore.current && pageNumber.current) {
+            fetchChats(pageNumber.current + 1);
         }
     };
 
     const sendMessage = async () => {
-        return;
         if (text.trim() !== "") {
             try {
 
@@ -143,7 +138,7 @@ const ChatScreen = ({ route }) => {
                     return;
                 }
 
-                const response = await axios.post(`${ baseURL }/chat/send`, {
+                const response = await axios.post(`${baseURL}/chat/send`, {
                     otherId,
                     message: text
                 }, {
@@ -176,16 +171,11 @@ const ChatScreen = ({ route }) => {
     const renderItem = ({ item }) => {
         return (
             <ChatCard
-                otherId={'2'}
-                id={item.id}
-                avatar={item.avatar}
-                message={item.text}
-                time={item.timestamp}
-                //otherId={otherId}
-                //id={`${item.from}`}
-                //avatar={avatar}
-                //message={item.message}
-                //time={dayjs(item.createdAt).fromNow()}
+                otherId={otherId}
+                id={`${item.from}`}
+                avatar={avatar}
+                message={item.message}
+                time={dayjs(item.createdAt).fromNow()}
             />
         );
     };
@@ -205,20 +195,18 @@ const ChatScreen = ({ route }) => {
                         />
                         <View style={{ flex: 1 }}>
                             <AnimatedFlatList
-                                data={data}
-                                keyExtractor={(item) => item.id}
-                                //data={chats}
-                                //keyExtractor={(item) => item._id}
+                                data={chats}
+                                keyExtractor={(item) => item._id}
                                 renderItem={renderItem}
                                 onScroll={handleScroll}
                                 scrollEventThrottle={16}
 
                                 // to run loadmore function when end is reached for infinite scrolling
-                                //onEndReached={loadMore}
-                                //onEndReachedThreshold={0.5}
+                                onEndReached={loadMore}
+                                onEndReachedThreshold={0.5}
 
                                 // to display loading as footer
-                                //ListFooterComponent={loading && <ActivityIndicator />}
+                                ListFooterComponent={loading.current && <ActivityIndicator />}
                                 showsVerticalScrollIndicator={false}
 
                                 contentContainerStyle={styles.messagesContainer}

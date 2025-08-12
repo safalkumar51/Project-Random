@@ -52,9 +52,18 @@ router.post('/', isLoggedIn, async (req, res) => {
                     friendRequestModel.create({ from: other._id, to: me._id })
                 ]);
 
+                const [myWayPopulated, otherWayPopulated] = await Promise.all([
+                    friendRequestModel.findById(myWay._id)
+                        .select('from status createdAt')
+                        .populate('from', 'name profilepic'),
+                    friendRequestModel.findById(otherWay._id)
+                        .select('from status createdAt')
+                        .populate('from', 'name profilepic')
+                ]);
+
                 const io = req.app.get('io');
-                io.to(me._id.toString()).emit('receive_request', otherWay);
-                io.to(other._id.toString()).emit('receive_request', myWay);
+                io.to(me._id.toString()).emit('receive_request', otherWayPopulated);
+                io.to(other._id.toString()).emit('receive_request', myWayPopulated);
             }
         }
 
