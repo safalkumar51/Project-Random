@@ -27,6 +27,7 @@ router.post('/', isLoggedIn, async (req, res) => {
         // find users in loaction: lon and lat with range maxDist, except user himself
         const nearby = await userModel.find({
             _id: { $ne: req.userId }, // to exclude the user
+            'location.coordinates': { $exists: true }, //added so that Mongo can use the partial index
             location: {
                 // $near is used to search nearby
                 $near: {

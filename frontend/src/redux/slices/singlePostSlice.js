@@ -51,31 +51,25 @@ const singlePostSlice = createSlice({
             );
         },
 
-        // make this ONLY flip the flag to avoid double-counting with addCommentToFront
-        toggleComment: (state) => {
-            if (!state.post) return;
-            state.post.isCommented = !state.post.isCommented;
-        },
-
-        addCommentToFront: (state, action) => {
-            if (!state.post) return;
+        addComment: (state, action) => {
             const newComment = action.payload;
-            if (!Array.isArray(state.post.comments)) {
-                state.post.comments = [];
-            }
+            if (!Array.isArray(state.post?.comments)) return;
             state.post.comments.unshift(newComment);
-            state.post.commentCount = (state.post.commentCount || 0) + 1;
+            state.post.commentsCount = (state.post.commentsCount || 0) + 1;
             state.post.isCommented = true;
         },
 
         toggleCommentLike: (state, action) => {
             const commentId = action.payload;
-            if (!(state.post && Array.isArray(state.post.comments))) return;
-            const idx = state.post.comments.findIndex(c => c._id === commentId);
-            if (idx === -1) return;
-            const comment = state.post.comments[idx];
-            comment.isLiked = !comment.isLiked;
-            comment.likes = Math.max((comment.likes || 0) + (comment.isLiked ? 1 : -1), 0);
+            if (!Array.isArray(state.post?.comments)) return;
+
+            const comment = state.post.comments.find(c => c._id === commentId);
+
+            if (comment) {
+                const wasLiked = comment.isCommentLiked;
+                comment.isCommentLiked = !wasLiked;
+                comment.commentLikesCount = (comment.commentLikesCount || 0) + (wasLiked ? -1 : 1);
+            }
         },
     },
 });
@@ -88,8 +82,7 @@ export const {
     setSinglePostLoading,
     setSinglePostError,
     toggleLike,
-    toggleComment,
-    addCommentToFront,
+    addComment,
     toggleCommentLike,
 } = singlePostSlice.actions;
 

@@ -4,7 +4,6 @@ const userModel = require('../../models/user.model');
 
 const likeUnlikeComment = async (req, res) => {
     try {
-
         const { commentId } = req.body;
 
         const user = await userModel.findOne({ _id: req.userId }).select('token');
