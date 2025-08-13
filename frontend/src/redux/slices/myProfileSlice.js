@@ -22,9 +22,9 @@ const myProfileSlice = createSlice({
                 state.profile.posts = [...state.profile.posts, ...profile.posts];
             }
         },
-        addSingleMyProfilePost: (state, action) => {
+        addSinglePostMyProfile: (state, action) => {
             const newPost = action.payload;
-            state.posts.unshift(newPost);
+            state.profile.posts.unshift(newPost);
         },
         removeMyProfilePost: (state, action) => {
             state.posts = state.posts.filter(post => post._id !== action.payload);
@@ -63,7 +63,7 @@ const myProfileSlice = createSlice({
 export const {
     setMyProfilePosts,
     addMyProfilePosts,
-    addSingleMyProfilePost,
+    addSinglePostMyProfile,
     removeMyProfilePost,
     toggleMyProfileLike,
     toggleMyProfileComment,

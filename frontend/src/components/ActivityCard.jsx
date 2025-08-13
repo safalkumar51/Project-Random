@@ -8,10 +8,11 @@ import axios from 'axios';
 
 import baseURL from '../assets/config';
 import { removeRequest, updateRequestStatus } from '../redux/slices/requestsSlice';
+import { addConnection } from '../redux/slices/connectionsSlice';
 
 const { width } = Dimensions.get('window');
 
-const ActivityCard = ({ name, profileImage, status, time, requestId, senderId }) => {
+const ActivityCard = ({ name, profileImage, status, time, updatedAt, requestId, senderId }) => {
     const navigation = useNavigation();
     const dispatch = useDispatch();
 
@@ -37,10 +38,8 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
             });
 
             if (response.data.success) {
-                Alert.alert(response.data.message);
-
                 // Update requests slice
-                dispatch(updateRequestStatus({ _id: requestId, status: "connected" }));
+                dispatch(updateRequestStatus({ _id: requestId, status: response.data.status }));
 
                 // Sync with otherProfileSlice if the profile is open later
                 //dispatch(setOtherProfileStatus("connected"));

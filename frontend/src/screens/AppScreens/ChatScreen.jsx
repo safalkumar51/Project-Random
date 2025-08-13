@@ -110,7 +110,7 @@ const ChatScreen = ({ route }) => {
 
     useEffect(() => {
         const handleRequest = (chat) => {
-            setChats(prev => [...prev, chat]);
+            dispatch(addSingleMessage(chat));
         };
         socket.off('receive_chat', handleRequest); // prevent duplicates
         socket.on('receive_chat', handleRequest);
@@ -148,10 +148,7 @@ const ChatScreen = ({ route }) => {
                 });
 
                 if (response.data.success) {
-
-                    Alert.alert(response.data.message);
-                    setChats((prev) => [...prev, response.data.chat]);
-
+                    dispatch(addSingleMessage(response.data.chat));
                 } else {
                     console.error(response.data.message);
                     if (response.data.message === 'Log In Required!') {
@@ -198,6 +195,7 @@ const ChatScreen = ({ route }) => {
                                 data={chats}
                                 keyExtractor={(item) => item._id}
                                 renderItem={renderItem}
+                                inverted
                                 onScroll={handleScroll}
                                 scrollEventThrottle={16}
 

@@ -21,8 +21,9 @@ const connectionsSlice = createSlice({
       }
     },
     removeConnection: (state, action) => {
+      const { _id } = action.payload
       state.connections = state.connections.filter(
-        (conn) => conn._id !== action.payload
+        (conn) => conn._id !== _id
       );
     },
   },

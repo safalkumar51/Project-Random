@@ -9,8 +9,10 @@ import {
     Platform
 } from 'react-native';
 import React, { useRef, useState } from 'react';
-import BackButton from '../../components/BackButton';
-import ScreenWrapper from '../../components/ScreenWrapper';
+
+import { useDispatch } from 'react-redux';
+
+
 import RichTextEditor from '../../components/RichTextEditor';
 import Icons from 'react-native-vector-icons/FontAwesome6';
 import ImagePicker from 'react-native-image-crop-picker';
@@ -18,8 +20,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+
 import SharedHeader from '../../components/SharedHeader';
 import baseURL from '../../assets/config';
+import { addSinglePostMyProfile } from '../../redux/slices/myProfileSlice';
+import { addSinglePostFeed } from '../../redux/slices/feedSlice';
 
 const AddPostScreen = () => {
 
@@ -29,32 +34,56 @@ const AddPostScreen = () => {
     const editorRef = useRef(null);
     const [selectedMedia, setSelectedMedia] = useState(null);
 
+    const dispatch = useDispatch();
+
+    const loading = useRef(false);
+
+    // A shared handler to validate and set the image
+    const handleImageValidation = (image) => {
+        if (image.width < image.height) {
+            Alert.alert(
+                'Invalid Aspect Ratio',
+                'Image width must be greater than or equal to its height. Please try again.',
+                [{ text: 'OK' }]
+            );
+            return; // Stop processing if invalid
+        }
+
+        setSelectedMedia({ path: image.path, mime: image.mime });
+    };
+
+    const cropperOptions = {
+        //width: 1200, // A suggested starting width
+        //height: 1200, // A suggested starting height to create a 1:1 box
+        cropping: true,
+        freeStyleCropEnabled: true,
+        hideBottomControls: true,
+        compressImageQuality: 1,      // Max quality (min compression)
+        compressImageFormat: 'PNG',   // Lossless format
+    };
+
     const chooseFromGallery = () => {
-        ImagePicker.openPicker({
-            width: 300,
-            height: 300,
-            cropping: true,
-        }).then(image => {
-            setSelectedMedia({ path: image.path, mime: image.mime });
-        });
+        ImagePicker.openPicker(cropperOptions)
+            .then(image => {
+                handleImageValidation(image);
+            })
+            .catch(err => {
+                if (err.code !== 'E_PICKER_CANCELLED') {
+                    console.log('Gallery Picker Error: ', err);
+                }
+            });
     };
 
     const takePhotoFromCamera = () => {
-        ImagePicker.openCamera({
-            compressImageMaxHeight: 300,
-            compressImageMaxWidth: 300,
-            cropping: true,
-        }).then(image => {
-            setSelectedMedia({ path: image.path, mime: image.mime });
-        });
-    };
-
-    const chooseVideoFromGallery = () => {
-        ImagePicker.openPicker({
-            mediaType: 'video',
-        }).then(video => {
-            setSelectedMedia({ path: video.path, mime: video.mime });
-        });
+        ImagePicker.openCamera(cropperOptions)
+            .then(image => {
+                handleImageValidation(image);
+            })
+            .catch(err => {
+                if (err.code !== 'E_PICKER_CANCELLED') {
+                    console.log('Camera Picker Error: ', err);
+                }
+            });
     };
 
     const removeMedia = () => {
@@ -62,9 +91,8 @@ const AddPostScreen = () => {
     };
 
     const submitHandler = async () => {
-        return;
+        loading.current = true;
         try {
-
             const authToken = await AsyncStorage.getItem('authToken');
 
             if (!authToken) {
@@ -107,6 +135,8 @@ const AddPostScreen = () => {
 
             if (response.data.success) {
                 Alert.alert("Post uploaded!");
+                dispatch(addSinglePostMyProfile(response.data.post));
+                dispatch(addSinglePostFeed(response.data.post));
                 navigation.goBack();
             } else {
                 console.error(response.data.message);
@@ -117,8 +147,9 @@ const AddPostScreen = () => {
             }
 
         } catch(err){
-            console.error(err);
+            console.error("Add Post Error: ", err);
         }
+        loading.current = false;;
     };
 
     return (
@@ -127,7 +158,6 @@ const AddPostScreen = () => {
                 <SharedHeader
                     scrollY= {0}
                     title="Create Post"
-                    leftComponent={<BackButton />}
                 />
 
                 <ScrollView

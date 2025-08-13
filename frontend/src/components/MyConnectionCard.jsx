@@ -10,7 +10,7 @@ import { setOtherProfileStatus } from '../redux/slices/otherProfileSlice'; // NE
 
 const { width } = Dimensions.get('window');
 
-const MyConnectionCard = ({ name, profileImage, time, senderId }) => {
+const MyConnectionCard = ({ name, profileImage, time, senderId, requestId }) => {
     const navigation = useNavigation();
     const dispatch = useDispatch();
 
@@ -38,7 +38,7 @@ const MyConnectionCard = ({ name, profileImage, time, senderId }) => {
                 Alert.alert(response.data.message);
 
                 // Update Redux
-                dispatch(removeConnection(senderId));
+                dispatch(removeConnection({_id: requestId}));
                 //dispatch(setOtherProfileStatus("none")); // Instant sync for profile view
 
             } else {

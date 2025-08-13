@@ -26,6 +26,7 @@ const getPostWithComments = async (req, res) => {
                     from: 'users',
                     localField: 'owner',
                     foreignField: '_id',
+                    as: 'owner',
                     pipeline: [
                         {
                             $project: {
@@ -33,13 +34,16 @@ const getPostWithComments = async (req, res) => {
                                 name: 1,
                                 profilepic: 1,
                             }
+                        },
+                        {
+                            $addFields: {
+                                owner: {
+                                    $first: '$owner',
+                                }
+                            }
                         }
                     ],
-                    as: 'owner',
                 },
-            },
-            {
-                $unwind: '$owner' // Access owner.name, owner.profilepic directly
             },
             {
                 $lookup: {
@@ -67,6 +71,7 @@ const getPostWithComments = async (req, res) => {
                                 from: 'users',
                                 localField: 'user',
                                 foreignField: '_id',
+                                as: 'commentOwner',
                                 pipeline: [
                                     {
                                         $project: {
@@ -74,13 +79,17 @@ const getPostWithComments = async (req, res) => {
                                             name: 1,
                                             profilepic: 1,
                                         }
+                                    },
+                                    {
+                                        $addFields: {
+                                            commentOwner: {
+                                                $first: '$commentOwner',
+                                            }
+                                        }
                                     }
                                 ],
-                                as: 'commentOwner',
+                                
                             }
-                        },
-                        {
-                            $unwind: '$commentOwner'
                         },
                         {
                             $lookup: {

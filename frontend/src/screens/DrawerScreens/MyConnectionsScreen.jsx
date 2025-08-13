@@ -12,6 +12,7 @@ import SharedHeader from '../../components/SharedHeader';
 import { socket } from '../../utils/socket';
 import baseURL from '../../assets/config';
 import { addConnection, addConnections } from '../../redux/slices/connectionsSlice';
+import { updateRequestStatus } from '../../redux/slices/requestsSlice';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -68,6 +69,7 @@ const MyConnectionsScreen = () => {
     useEffect(() => {
         const handleConnection = (data) => {
             dispatch(addConnection(data));
+            dispatch(updateRequestStatus({ _id: data._id, status: data.status }));
         };
         socket.off('receive_connection', handleConnection); // prevent duplicates
         socket.on('receive_connection', handleConnection);
@@ -125,6 +127,7 @@ const MyConnectionsScreen = () => {
                 profileImage={item.from.profilepic}
                 time={dayjs(item.updatedAt).fromNow()}
                 senderId={item.from._id}
+                requestId={item._id}
             />
         );
     }

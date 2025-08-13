@@ -18,7 +18,7 @@ const chatSlice = createSlice({
         },
 
         addSingleMessage: (state, action) => {
-            state.messages.push(action.payload);
+            state.messages.unshift(action.payload);
         },
 
         removeMessage: (state, action) => {

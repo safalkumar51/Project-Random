@@ -90,6 +90,7 @@ const userHomeFeed = async (req, res) => {
                     from: "users",
                     localField: 'owner',
                     foreignField: '_id',
+                    as: "owner",
                     pipeline: [
                         {
                             $project: {
@@ -97,12 +98,18 @@ const userHomeFeed = async (req, res) => {
                                 name: 1,
                                 profilepic: 1,
                             }
+                        },
+                        {
+                            $addFields: {
+                                owner: {
+                                    $first: '$owner',
+                                }
+                            }
                         }
                     ],
-                    as: "owner"
+                    
                 }
             },
-            { $unwind: "$owner" }, 
             {
                 $lookup: {
                     from: "likes",

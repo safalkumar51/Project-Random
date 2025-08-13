@@ -22,7 +22,7 @@ const feedSlice = createSlice({
       }
     },
 
-    addSingleFeedPost: (state, action) => {
+    addSinglePostFeed: (state, action) => {
       const newPost = action.payload;
       state.posts.unshift(newPost);
     },
@@ -64,7 +64,7 @@ const feedSlice = createSlice({
 export const {
   setFeedPosts,
   addFeedPosts,
-  addSingleFeedPost,
+  addSinglePostFeed,
   removeFeedPost,
   toggleFeedLike,
   toggleFeedComment,
