@@ -34,13 +34,6 @@ const getPostWithComments = async (req, res) => {
                                 name: 1,
                                 profilepic: 1,
                             }
-                        },
-                        {
-                            $addFields: {
-                                owner: {
-                                    $first: '$owner',
-                                }
-                            }
                         }
                     ],
                 },
@@ -79,16 +72,8 @@ const getPostWithComments = async (req, res) => {
                                             name: 1,
                                             profilepic: 1,
                                         }
-                                    },
-                                    {
-                                        $addFields: {
-                                            commentOwner: {
-                                                $first: '$commentOwner',
-                                            }
-                                        }
                                     }
-                                ],
-                                
+                                ],  
                             }
                         },
                         {
@@ -104,12 +89,15 @@ const getPostWithComments = async (req, res) => {
                                 commentLikesCount: { $size: "$commentlikes" },
                                 isCommentLiked: {
                                     $in: [
-                                        req.userId,
+                                        user._id,
                                         { $map: { input: "$commentlikes", as: "cl", in: "$$cl.user" } }
                                     ]
                                 },
                                 isCommentMine: {
-                                    $eq: ["$commentOwner._id", req.userId]
+                                    $eq: ["$commentOwner._id", user._id]
+                                },
+                                commentOwner: {
+                                    $first: '$commentOwner',
                                 }
                             }
                         },
@@ -140,7 +128,7 @@ const getPostWithComments = async (req, res) => {
                         $cond: {
                             if: {
                                 $in: [
-                                    req.userId,
+                                    user._id,
                                     { $map: { input: "$likes", as: "like", in: "$$like.user" } }
                                 ]
                             },
@@ -152,8 +140,8 @@ const getPostWithComments = async (req, res) => {
                         $cond: {
                             if: {
                                 $in: [
-                                    req.userId,
-                                    { $map: { input: "$comments", as: "comment", in: "$$comment.user" } }
+                                    user._id,
+                                    { $map: { input: "$comments", as: "comment", in: "$$comment.commentOwner._id" } }
                                 ]
                             },
                             then: true,
@@ -162,10 +150,13 @@ const getPostWithComments = async (req, res) => {
                     },
                     isMine: {
                         $cond: {
-                            if: { $eq: ["$owner._id", req.userId] },
+                            if: { $eq: ["$owner._id", user._id] },
                             then: true,
                             else: false
                         }
+                    },
+                    owner: {
+                        $first: '$owner',
                     }
                 }
             },
@@ -189,6 +180,8 @@ const getPostWithComments = async (req, res) => {
         if (!postId || !post?.length) {
             return res.status(400).json({ success: false, message: 'Invalid Request' });
         }
+
+        console.log(post[0].owner);
 
         return res.status(200).json({
             success: true,

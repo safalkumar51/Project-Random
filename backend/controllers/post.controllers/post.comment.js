@@ -27,7 +27,51 @@ const addComment = async (req, res) => {
             text: text.trim(),
         });
 
-        return res.status(201).json({ success: true, message: 'Comment added', comment: newComment });
+        const comment = await commentModel.aggregate([
+            {
+                $match: { _id: newComment._id }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'user',
+                    foreignField: '_id',
+                    as: 'commentOwner',
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                                profilepic: 1,
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $addFields: {
+                    commentLikesCount: 0,
+                    isCommentLiked: false,
+                    isCommentMine: true,
+                    commentOwner: {
+                        $first: '$commentOwner',
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    text: 1,
+                    commentOwner: 1,
+                    createdAt: 1,
+                    isCommentMine: 1,
+                    isCommentLiked: 1,
+                    commentLikesCount: 1
+                }
+            }
+        ])
+
+        return res.status(201).json({ success: true, message: 'Comment added', comment: comment[0] });
 
     } catch (error) {
         console.error('Error adding comment:', error);

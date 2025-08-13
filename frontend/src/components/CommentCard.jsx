@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View, Dimensions, Image } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -7,19 +7,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import baseURL from '../assets/config';
 
-import { toggleCommentLike } from '../redux/slices/singlePostSlice'; 
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 const { width } = Dimensions.get('window');
 
-const CommentCard = ({ name, profileImage, time, comment, commentLikesCount, commentId, commentOwnerId, isCommentLiked, isCommentMine }) => {
+const CommentCard = ({ name, profileImage, createdAt, comment, commentLikesCount, commentId, commentOwnerId, isCommentLiked, isCommentMine, onToggleLike }) => {
     const navigation = useNavigation();
     const dispatch = useDispatch(); 
 
-    const [commentLiked, setCommentLiked] = useState(false);
-    const [commentLikeCount, setCommentLikeCount] = useState(0);
+    const time = useMemo(() => dayjs(createdAt).fromNow(), [createdAt]);
 
     const getProfileHandler = () => {
-        navigation.navigate("OtherProfileScreen", { status: "connected", otherId: ownerId, requestId: "" });
+        navigation.navigate("OtherProfileScreen", { status: "connected", otherId: commentOwnerId, requestId: "" });
     }
 
     const toggleLike = async () => {
@@ -41,8 +43,7 @@ const CommentCard = ({ name, profileImage, time, comment, commentLikesCount, com
 
             if (response.data.success) {
 
-                //Alert.alert(response.data.message);
-                dispatch(toggleCommentLike(commentId));
+                onToggleLike(commentId);
 
             } else {
                 console.error(response.data.message);
@@ -56,12 +57,6 @@ const CommentCard = ({ name, profileImage, time, comment, commentLikesCount, com
             console.error('Error like/unlike comment:', err);
         }
     };
-    useEffect(() => {
-
-        setCommentLiked(isCommentLiked);
-        setCommentLikeCount(commentLikesCount);
-
-    },[])
 
     return (
         <View style={styles.card}>
@@ -76,12 +71,12 @@ const CommentCard = ({ name, profileImage, time, comment, commentLikesCount, com
 
                 <TouchableOpacity style={styles.interaction} onPress={toggleLike}>
                     <Icon
-                        name={commentLiked ? 'heart' : 'heart-o'}
+                        name={isCommentLiked ? 'heart' : 'heart-o'}
                         size={18}
-                        color={commentLiked ? 'red' : 'black'}
+                        color={isCommentLiked ? 'red' : 'black'}
                     />
-                    <Text style={[styles.interactionTxt, { color: commentLiked ? 'red' : '#333' }]}>
-                        {commentLikeCount > 0 ? `${commentLikeCount} Likes` : '0 Like'}
+                    <Text style={[styles.interactionTxt, { color: isCommentLiked ? 'red' : '#333' }]}>
+                        {commentLikesCount > 0 ? `${commentLikesCount} Likes` : '0 Like'}
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -93,7 +88,7 @@ const CommentCard = ({ name, profileImage, time, comment, commentLikesCount, com
     );
 };
 
-export default CommentCard;
+export default React.memo(CommentCard);
 
 const styles = StyleSheet.create({
     card: {

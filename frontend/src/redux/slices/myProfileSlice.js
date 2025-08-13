@@ -44,13 +44,14 @@ const myProfileSlice = createSlice({
             }
         },
         toggleMyProfileComment: (state, action) => {
-            const _id = action.payload;
-            const idx = state.posts.findIndex(p => p._id === _id);
-            if (idx !== -1) {
-                const post = state.posts[idx];
-                post.isCommented = !post.isCommented;
-                const delta = post.isCommented ? 1 : -1;
-                post.commentCount = Math.max((post.commentCount || 0) + delta, 0);
+            const postId = action.payload;
+            if (!Array.isArray(state.profile?.posts)) return;
+
+            const post = state.profile.posts.find(p => p._id === postId);
+
+            if (post) {
+                post.isCommented = true;
+                post.commentsCount = (post.commentsCount || 0) + 1;
             }
         },
         setMyProfileLoading: (state, action) => {

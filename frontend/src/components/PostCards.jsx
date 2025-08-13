@@ -10,11 +10,13 @@ import baseURL from '../assets/config';
 const { width, height } = Dimensions.get('window');
 import { useDispatch } from 'react-redux';
 import { toggleFeedLike, toggleFeedComment } from '../redux/slices/feedSlice';
-import { toggleLike, toggleComment } from '../redux/slices/myProfileSlice';
-import { toggleOtherLike, toggleOtherComment } from '../redux/slices/otherProfileSlice';
+import { toggleLike, toggleComment, toggleMyProfileLike } from '../redux/slices/myProfileSlice';
+import { toggleOtherLike, toggleOtherComment, toggleOtherProfileLike } from '../redux/slices/otherProfileSlice';
 
 const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, postId, likesCount, commentsCount, isLiked, isCommented, isMine }) => {
     const navigation = useNavigation();
+
+    const dispatch = useDispatch();
 
     const [liked, setLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(0);
@@ -53,7 +55,12 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, pos
 
             if (response.data.success) {
 
-                //Alert.alert(response.data.message);
+                dispatch(toggleFeedLike(postId));
+                if(isMine){
+                    dispatch(toggleMyProfileLike(postId));
+                } else{
+                    dispatch(toggleOtherProfileLike(postId));
+                }
                 setLiked(!liked);
                 setLikeCount(prev => liked ? prev - 1 : prev + 1);
 

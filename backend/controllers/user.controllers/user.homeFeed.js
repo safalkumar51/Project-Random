@@ -98,13 +98,6 @@ const userHomeFeed = async (req, res) => {
                                 name: 1,
                                 profilepic: 1,
                             }
-                        },
-                        {
-                            $addFields: {
-                                owner: {
-                                    $first: '$owner',
-                                }
-                            }
                         }
                     ],
                     
@@ -168,6 +161,9 @@ const userHomeFeed = async (req, res) => {
                             then: true,
                             else: false
                         }
+                    },
+                    owner: {
+                        $first: '$owner',
                     }
                 }
             },

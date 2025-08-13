@@ -1,5 +1,5 @@
 import { ActivityIndicator, FlatList, StyleSheet, View, Animated, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard, TextInput, TouchableOpacity, Text } from 'react-native'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,11 +15,16 @@ import {
     setSinglePost,
     clearSinglePost,
     toggleLike,
-    toggleComment,
+    toggleCommentLike,
+    addComment,
 } from '../../redux/slices/singlePostSlice';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { toggleFeedComment } from '../../redux/slices/feedSlice';
+import { toggleMyProfileComment } from '../../redux/slices/myProfileSlice';
+import { toggleOtherProfileComment } from '../../redux/slices/otherProfileSlice';
+
 
 dayjs.extend(relativeTime);
 
@@ -93,7 +98,7 @@ const PostScreen = ({ route }) => {
                 if (page === 1) {
                     totalPages.current = response.data.totalPages;
                 }
-
+                console.log(response.data.post);
                 dispatch(setSinglePost({ page, post: postData }));
                 pageNumber.current = page;
                 hasMore.current = page < totalPages.current;
@@ -133,6 +138,10 @@ const PostScreen = ({ route }) => {
         }
     };
 
+    const handleToggleLike = useCallback((commentId) => {
+        dispatch(toggleCommentLike(commentId));
+    }, [dispatch]);
+
     const sendComment = async () => {
         if (text.trim() !== "") {
             try {
@@ -153,9 +162,14 @@ const PostScreen = ({ route }) => {
                 });
 
                 if (response.data.success) {
-
-                    Alert.alert(response.data.message);
-                    dispatch(addComment())
+                    dispatch(addComment(response.data.comment));
+                    dispatch(toggleFeedComment(postId));
+                    console.log(post.isMine)
+                    if(post.isMine){
+                        dispatch(toggleMyProfileComment(postId));
+                    } else {
+                        dispatch(toggleOtherProfileComment(postId));
+                    }
 
                 } else {
                     console.error(response.data.message);
@@ -173,21 +187,54 @@ const PostScreen = ({ route }) => {
         }
     };
 
-    const renderItem = ({ item }) => {
+    const listHeader = useMemo(() => {
+        // Return null or a loading spinner if there's no post data yet
+        if (!post) {
+            return <ActivityIndicator size="large" />;
+        }
+
+        return (
+            <View>
+                {postLoading.current ? (
+                    <ActivityIndicator size="large" />
+                ) : (
+                    <>
+                        <PostCards
+                            name={post.owner?.name}
+                            profileImage={post.owner?.profilepic}
+                            time={dayjs(post.createdAt).fromNow()}
+                            postText={post.caption}
+                            postImage={post.postpic}
+                            ownerId={post.owner?._id}
+                            postId={post._id}
+                            likesCount={post.likesCount}
+                            commentsCount={post.commentsCount}
+                            isLiked={post.isLiked}
+                            isCommented={post.isCommented}
+                            isMine={post.isMine}
+                        />
+                    </>
+                )}
+            </View>
+        );
+    }, [post]);
+
+    const renderItem = useCallback(({ item }) => {
         return (
             <CommentCard
                 name={item.commentOwner.name}
                 profileImage={item.commentOwner.profilepic}
-                time={dayjs(item.createdAt).fromNow()}
+                createdAt={item.createdAt}
                 comment={item.text}
                 commentId={item._id}
                 commentOwnerId={item.commentOwner?._id}
                 commentLikesCount={item.commentLikesCount}
                 isCommentLiked={item.isCommentLiked}
                 isCommentMine={item.isCommentMine}
+                onToggleLike={handleToggleLike}
             />
         )
-    }
+    }, [handleToggleLike])
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <KeyboardAvoidingView
@@ -215,30 +262,7 @@ const PostScreen = ({ route }) => {
                                 onEndReachedThreshold={0.5}
 
                                 // this makes navbar sticky
-                                ListHeaderComponent={() => (
-                                    <View>
-                                        {postLoading.current ? (
-                                            <ActivityIndicator size="large" />
-                                        ) : (
-                                            <>
-                                                <PostCards
-                                                    name={post.owner?.name}
-                                                    profileImage={post.owner?.profilepic}
-                                                    time={dayjs(post.createdAt).fromNow()}
-                                                    postText={post.caption}
-                                                    postImage={post.postpic}
-                                                    ownerId={post.owner?._id}
-                                                    postId={post._id}
-                                                    likesCount={post.likesCount}
-                                                    commentsCount={post.commentsCount}
-                                                    isLiked={post.isLiked}
-                                                    isCommented={post.isCommented}
-                                                    isMine={post.isMine}
-                                                />
-                                            </>
-                                        )}
-                                    </View>
-                                )}
+                                ListHeaderComponent={listHeader}
 
                                 contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: 80 }}
 

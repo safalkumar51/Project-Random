@@ -76,13 +76,6 @@ const uploadPost = async (req, res) => {
                                 name: 1,
                                 profilepic: 1
                             }
-                        },
-                        {
-                            $addFields: {
-                                owner: {
-                                    $first: '$owner',
-                                }
-                            }
                         }
                     ],
                     
@@ -95,6 +88,9 @@ const uploadPost = async (req, res) => {
                     isLiked: false,
                     isCommented: false,
                     isMine: true,
+                    owner: {
+                        $first: '$owner',
+                    }
                 }
             },
             {
