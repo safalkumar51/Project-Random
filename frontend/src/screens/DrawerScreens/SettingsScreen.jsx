@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import BackButton from '../../components/BackButton';
+import TeamRandom from '../AdditionalScreens/TeamRandom';
 
 const SettingsScreen = () => {
     const navigation = useNavigation();
@@ -28,6 +29,8 @@ const SettingsScreen = () => {
             <Option label="Help" screen="Help & Support" />
             <Option label="Personal Details" screen="Personal Details" />
             <Option label="Terms & Conditions" screen="Terms" />
+             <Option label="Team Random" screen="TeamRandom" />
+            
         </View>
     );
 };

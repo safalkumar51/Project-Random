@@ -198,10 +198,14 @@ const EditProfileScreen = () => {
 
     const handleCamera = () => {
         ImageCropPicker.openCamera({
-            compressImageMaxHeight: 300,
-            compressImageMaxWidth: 300,
-            cropperToolbarTitle: 'Crop Image',
-            cropping: true,
+             width: 1200,                 
+            height: 1200,                 
+        cropping: true,             
+        freeStyleCropEnabled: false, 
+        hideBottomControls: true,    
+        cropperToolbarTitle: 'Crop Image',
+        compressImageQuality: 1,    
+        compressImageFormat: 'PNG', 
         }).then(image => {
             setImageUri({ path: image.path, mime: image.mime });
             changeProfilePhotoHandler(image);
@@ -215,10 +219,14 @@ const EditProfileScreen = () => {
 
     const handleGallery = () => {
         ImageCropPicker.openPicker({
-            compressImageMaxHeight: 300,
-            compressImageMaxWidth: 300,
-            cropperToolbarTitle: 'Crop Image',
-            cropping: true,
+            width: 1200,                 
+            height: 1200,                 
+        cropping: true,             
+        freeStyleCropEnabled: false, 
+        hideBottomControls: true,    
+        cropperToolbarTitle: 'Crop Image',
+        compressImageQuality: 1,    
+        compressImageFormat: 'PNG',  
         }).then(image => {
             setImageUri({ path: image.path, mime: image.mime });
             changeProfilePhotoHandler(image);

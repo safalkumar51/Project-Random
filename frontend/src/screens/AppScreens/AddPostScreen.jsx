@@ -6,14 +6,15 @@ import {
     TouchableOpacity,
     Image,
     Alert,
-    Platform
+    Platform,
+    TextInput
 } from 'react-native';
 import React, { useRef, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 
 
-import RichTextEditor from '../../components/RichTextEditor';
+// import RichTextEditor from '../../components/RichTextEditor';
 import Icons from 'react-native-vector-icons/FontAwesome6';
 import ImagePicker from 'react-native-image-crop-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -30,8 +31,11 @@ const AddPostScreen = () => {
 
     const navigation = useNavigation();
 
-    const bodyRef = useRef('');
-    const editorRef = useRef(null);
+    // const bodyRef = useRef('');
+    // const editorRef = useRef(null);
+   
+    const [bodyText , setBodyText] = useState('');
+
     const [selectedMedia, setSelectedMedia] = useState(null);
 
     const dispatch = useDispatch();
@@ -53,10 +57,10 @@ const AddPostScreen = () => {
     };
 
     const cropperOptions = {
-        //width: 1200, // A suggested starting width
-        //height: 1200, // A suggested starting height to create a 1:1 box
+        width: 1600, // A suggested starting width
+        height: 1200, // A suggested starting height to create a 1:1 box
         cropping: true,
-        freeStyleCropEnabled: true,
+        freeStyleCropEnabled: false,
         hideBottomControls: true,
         compressImageQuality: 1,      // Max quality (min compression)
         compressImageFormat: 'PNG',   // Lossless format
@@ -100,13 +104,13 @@ const AddPostScreen = () => {
                 return;
             }
 
-            if (!bodyRef.current.trim() && !selectedMedia) {
+            if (!bodyText.trim() && !selectedMedia) {
                 Alert.alert("Empty Post", "Please add some text or media.");
                 return;
             }
 
             const formData = new FormData();
-            formData.append('caption', bodyRef.current.trim());
+            formData.append('caption', bodyText.trim());
             
             if(selectedMedia){
                 const uriParts = selectedMedia.path.split('/');
@@ -164,12 +168,23 @@ const AddPostScreen = () => {
                     contentContainerStyle={{ paddingVertical: 80 }}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled">
+                    {/* removed richtexteditor */}
+
                     <View style={styles.textEditor}>
-                        <RichTextEditor
-                            editorRef={editorRef}
-                            onChange={body => (bodyRef.current = body)}
-                        />
+                     <TextInput
+                   
+                   style={styles.textInput}
+                   placeholder = "What's on your mind ...."
+                   placeholderTextColor = "gray"
+                   multiline
+                   value={bodyText}
+                   onChangeText = {setBodyText}
+
+                     />
+
                     </View>
+                    
+
 
                     {/* MEDIA PREVIEW */}
                     {selectedMedia && (
@@ -255,7 +270,8 @@ const styles = StyleSheet.create({
     },
     previewImage: {
         width: '95%',
-        height: 200,
+       // height: 200,
+       aspectRatio:16/12,
         borderRadius: 30,
     },
     removeButton: {
@@ -329,4 +345,15 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: 'gray',
     },
+    textInput:{
+        minHeight : 100,
+        borderWidth :1 ,
+        borderColor : "lightgray",
+        borderRadius : 10,
+        padding : 10,
+        fontSize : 16,
+        textAlignVertical  : 'top',
+        backgroundColor : '#f9f9f9',
+        marginBottom:20
+    }
 });

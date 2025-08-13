@@ -174,9 +174,11 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     PostImage: {
-        width: width,
-        maxHeight: width,
-        minHeight: width * 0.7
+        // width: width,
+        // maxHeight: width,
+        // minHeight: width * 0.7
+        width:width,
+        height:width * 3/4,
     },
     interactionWrapper: {
         flexDirection: 'row',
