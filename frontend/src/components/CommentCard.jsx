@@ -23,7 +23,6 @@ const CommentCard = ({ name, profileImage, time, comment, commentLikesCount, com
     }
 
     const toggleLike = async () => {
-        return;
         try {
 
             const authToken = await AsyncStorage.getItem('authToken');
@@ -43,8 +42,7 @@ const CommentCard = ({ name, profileImage, time, comment, commentLikesCount, com
             if (response.data.success) {
 
                 //Alert.alert(response.data.message);
-                setCommentLiked(!commentLiked);
-                setCommentLikeCount(prev => commentLiked ? prev - 1 : prev + 1);
+                dispatch(toggleCommentLike(commentId));
 
             } else {
                 console.error(response.data.message);

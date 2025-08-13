@@ -155,7 +155,7 @@ const PostScreen = ({ route }) => {
                 if (response.data.success) {
 
                     Alert.alert(response.data.message);
-                    //setChats((prev) => [...prev, response.data.chat]);
+                    dispatch(addComment())
 
                 } else {
                     console.error(response.data.message);

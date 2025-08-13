@@ -57,7 +57,7 @@ const singlePostSlice = createSlice({
             state.post.isCommented = !state.post.isCommented;
         },
 
-        addCommentToFront: (state, action) => {
+        addComment: (state, action) => {
             if (!state.post) return;
             const newComment = action.payload;
             if (!Array.isArray(state.post.comments)) {
@@ -70,12 +70,17 @@ const singlePostSlice = createSlice({
 
         toggleCommentLike: (state, action) => {
             const commentId = action.payload;
-            if (!(state.post && Array.isArray(state.post.comments))) return;
+            if (!Array.isArray(state.post?.comments)) return;
+
             const idx = state.post.comments.findIndex(c => c._id === commentId);
             if (idx === -1) return;
+
             const comment = state.post.comments[idx];
-            comment.isLiked = !comment.isLiked;
-            comment.likes = Math.max((comment.likes || 0) + (comment.isLiked ? 1 : -1), 0);
+            const wasLiked = comment.isLiked;
+
+            comment.isLiked = !wasLiked;
+            comment.likes = Math.max((comment.likes || 0) + (wasLiked ? -1 : 1), 0);
+
         },
     },
 });
