@@ -82,7 +82,7 @@ const connectionProfileGetter = async (req, res) => {
                                                 else: false
                                             }
                                         },
-                                        isMine: true
+                                        isMine: false
                                     }
                                 },
                                 {

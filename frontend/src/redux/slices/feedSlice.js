@@ -32,18 +32,15 @@ const feedSlice = createSlice({
         },
 
         toggleFeedLike: (state, action) => {
-            const _id = action.payload;
-            const idx = state.posts.findIndex(p => p._id === _id);
+            const postId = action.payload;
+            if (!Array.isArray(state.posts)) return;
 
-            if (idx !== -1) {
-                const post = state.posts[idx];
-                if (post.isLiked) {
-                    post.isLiked = false;
-                    post.likeCount = Math.max((post.likeCount || 0) - 1, 0);
-                } else {
-                    post.isLiked = true;
-                    post.likeCount = (post.likeCount || 0) + 1;
-                }
+            const post = state.posts.find(p => p._id == postId);
+
+            if (post) {
+                const wasLiked = post.isLiked;
+                post.isLiked = !wasLiked;
+                post.likesCount = (post.likesCount || 0) + (wasLiked ? -1 : 1);
             }
         },
 

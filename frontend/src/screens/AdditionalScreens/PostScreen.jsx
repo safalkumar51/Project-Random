@@ -2,7 +2,7 @@ import { ActivityIndicator, FlatList, StyleSheet, View, Animated, Alert, Keyboar
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { useDispatch, useSelector } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
 import { useNavigation } from '@react-navigation/native'
@@ -24,6 +24,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { toggleFeedComment } from '../../redux/slices/feedSlice';
 import { toggleMyProfileComment } from '../../redux/slices/myProfileSlice';
 import { toggleOtherProfileComment } from '../../redux/slices/otherProfileSlice';
+import CommentInput from '../../components/CommentInput';
 
 
 dayjs.extend(relativeTime);
@@ -38,9 +39,8 @@ const PostScreen = ({ route }) => {
     const scrollDirection = useRef('up');
     const insets = useSafeAreaInsets();
 
-    const post = useSelector((state) => state.singlePost.post);
+    const post = useSelector((state) => state.singlePost.post, shallowEqual);
     const dispatch = useDispatch();
-    const [text, setText] = useState('');
 
     const pageNumber = useRef(0);
     const loading = useRef(false);
@@ -48,7 +48,7 @@ const PostScreen = ({ route }) => {
     const totalPages = useRef();
     const postLoading = useRef(false);
 
-    const handleScroll = (event) => {
+    const handleScroll = useCallback((event) => {
         const currentY = event.nativeEvent.contentOffset.y;
         if (currentY > lastScrollY.current) {
             if (scrollDirection.current !== 'down' && currentY > 60) {
@@ -71,7 +71,7 @@ const PostScreen = ({ route }) => {
         }
 
         lastScrollY.current = currentY;
-    }
+    }, [headerHeight, insets.top])
 
     const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
@@ -98,7 +98,6 @@ const PostScreen = ({ route }) => {
                 if (page === 1) {
                     totalPages.current = response.data.totalPages;
                 }
-                console.log(response.data.post);
                 dispatch(setSinglePost({ page, post: postData }));
                 pageNumber.current = page;
                 hasMore.current = page < totalPages.current;
@@ -132,17 +131,18 @@ const PostScreen = ({ route }) => {
     }, [postId]);
 
     // if user reaches end to flatlist loadmore
-    const loadMore = () => {
+    const loadMore = useCallback(() => {
         if (!loading.current && hasMore.current && pageNumber.current) {
             fetchPost(pageNumber.current + 1);
         }
-    };
+    }, []);
 
-    const handleToggleLike = useCallback((commentId) => {
+    const handleToggleCommentLike = useCallback((commentId) => {
         dispatch(toggleCommentLike(commentId));
     }, [dispatch]);
 
-    const sendComment = async () => {
+    const sendComment = async (text) => {
+        console.log(text);
         if (text.trim() !== "") {
             try {
 
@@ -164,7 +164,6 @@ const PostScreen = ({ route }) => {
                 if (response.data.success) {
                     dispatch(addComment(response.data.comment));
                     dispatch(toggleFeedComment(postId));
-                    console.log(post.isMine)
                     if(post.isMine){
                         dispatch(toggleMyProfileComment(postId));
                     } else {
@@ -192,32 +191,31 @@ const PostScreen = ({ route }) => {
         if (!post) {
             return <ActivityIndicator size="large" />;
         }
+        if(postLoading.current){
+            return( <ActivityIndicator size="large" /> );
+        }
 
         return (
-            <View>
-                {postLoading.current ? (
-                    <ActivityIndicator size="large" />
-                ) : (
-                    <>
-                        <PostCards
-                            name={post.owner?.name}
-                            profileImage={post.owner?.profilepic}
-                            time={dayjs(post.createdAt).fromNow()}
-                            postText={post.caption}
-                            postImage={post.postpic}
-                            ownerId={post.owner?._id}
-                            postId={post._id}
-                            likesCount={post.likesCount}
-                            commentsCount={post.commentsCount}
-                            isLiked={post.isLiked}
-                            isCommented={post.isCommented}
-                            isMine={post.isMine}
-                        />
-                    </>
-                )}
-            </View>
+            <>
+                <PostCards
+                    name={post.owner?.name}
+                    profileImage={post.owner?.profilepic}
+                    createdAt={post.createdAt}
+                    postText={post.caption}
+                    postImage={post.postpic}
+                    ownerId={post.owner?._id}
+                    postId={post._id}
+                    likesCount={post.likesCount}
+                    commentsCount={post.commentsCount}
+                    isLiked={post.isLiked}
+                    isCommented={post.isCommented}
+                    isMine={post.isMine}
+                />
+            </>
         );
     }, [post]);
+
+    const keyExtractor = useCallback((item) => item._id, []);
 
     const renderItem = useCallback(({ item }) => {
         return (
@@ -231,10 +229,12 @@ const PostScreen = ({ route }) => {
                 commentLikesCount={item.commentLikesCount}
                 isCommentLiked={item.isCommentLiked}
                 isCommentMine={item.isCommentMine}
-                onToggleLike={handleToggleLike}
+                onToggleCommentLike={handleToggleCommentLike}
             />
         )
-    }, [handleToggleLike])
+    }, [handleToggleCommentLike])
+
+    console.log(post);
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <KeyboardAvoidingView
@@ -251,7 +251,7 @@ const PostScreen = ({ route }) => {
                         <View style={{ flex: 1 }}>
                             <AnimatedFlatList
                                 data={post?.comments}
-                                keyExtractor={(item) => item._id}
+                                keyExtractor={keyExtractor}
                                 renderItem={renderItem}
 
                                 onScroll={handleScroll}
@@ -270,18 +270,7 @@ const PostScreen = ({ route }) => {
                                 ListFooterComponent={loading.current && !postLoading.current && <ActivityIndicator />}
                                 showsVerticalScrollIndicator={false}
                             />
-                            <View style={styles.inputRow}>
-                                <TextInput
-                                    style={styles.input}
-                                    value={text}
-                                    onChangeText={setText}
-                                    placeholder="Write a comment"
-                                    placeholderTextColor="#888"
-                                />
-                                <TouchableOpacity style={styles.buttonContainer} onPress={sendComment}>
-                                    <Text style={styles.buttonText}>SEND</Text>
-                                </TouchableOpacity>
-                            </View>
+                            <CommentInput onSend={sendComment} />
                         </View>
                     </View>
                 </TouchableWithoutFeedback>
@@ -299,39 +288,5 @@ const styles = StyleSheet.create({
     },
     innerContainer: {
         flex: 1,
-    },
-    inputRow: {
-        position: 'absolute',
-        bottom: 5, // ⬅️ Distance from the bottom
-        left: 10,   // ⬅️ Optional: distance from left
-        right: 10,  // ⬅️ Optional: distance from right
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 8,
-        paddingHorizontal: 10,
-        backgroundColor: '#fff',
-        borderRadius: 25,
-        elevation: 7
-    },
-    input: {
-        flex: 1,
-        height: 40,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 20,
-        paddingHorizontal: 15,
-        marginRight: 10,
-        backgroundColor: '#f9f9f9',
-    },
-    buttonContainer: {
-        backgroundColor: "#0d76e6ff",
-        paddingVertical: 9,
-        paddingHorizontal: 12,
-        borderRadius: 10,
-    },
-    buttonText: {
-        color: "white",
-        fontSize: 17,
-        fontWeight: 500,
     },
 })

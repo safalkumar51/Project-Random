@@ -1,7 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View, Dimensions, Image } from 'react-native'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigation } from '@react-navigation/native';
-import { useDispatch } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -14,9 +13,8 @@ dayjs.extend(relativeTime);
 
 const { width } = Dimensions.get('window');
 
-const CommentCard = ({ name, profileImage, createdAt, comment, commentLikesCount, commentId, commentOwnerId, isCommentLiked, isCommentMine, onToggleLike }) => {
+const CommentCard = ({ name, profileImage, createdAt, comment, commentLikesCount, commentId, commentOwnerId, isCommentLiked, isCommentMine, onToggleCommentLike }) => {
     const navigation = useNavigation();
-    const dispatch = useDispatch(); 
 
     const time = useMemo(() => dayjs(createdAt).fromNow(), [createdAt]);
 
@@ -43,7 +41,7 @@ const CommentCard = ({ name, profileImage, createdAt, comment, commentLikesCount
 
             if (response.data.success) {
 
-                onToggleLike(commentId);
+                onToggleCommentLike(commentId);
 
             } else {
                 console.error(response.data.message);

@@ -86,6 +86,13 @@ const getPostWithComments = async (req, res) => {
                         },
                         {
                             $addFields: {
+                                commentOwner: {
+                                    $first: '$commentOwner',
+                                }
+                            }
+                        },
+                        {
+                            $addFields: {
                                 commentLikesCount: { $size: "$commentlikes" },
                                 isCommentLiked: {
                                     $in: [
@@ -95,9 +102,6 @@ const getPostWithComments = async (req, res) => {
                                 },
                                 isCommentMine: {
                                     $eq: ["$commentOwner._id", user._id]
-                                },
-                                commentOwner: {
-                                    $first: '$commentOwner',
                                 }
                             }
                         },
@@ -114,6 +118,13 @@ const getPostWithComments = async (req, res) => {
                         }
                     ],
                     as: 'comments',
+                }
+            },
+            {
+                $addFields: {
+                    owner: {
+                        $first: '$owner',
+                    }
                 }
             },
             {
@@ -155,9 +166,6 @@ const getPostWithComments = async (req, res) => {
                             else: false
                         }
                     },
-                    owner: {
-                        $first: '$owner',
-                    }
                 }
             },
             {
@@ -181,7 +189,7 @@ const getPostWithComments = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid Request' });
         }
 
-        console.log(post[0].owner);
+        //console.log(post[0].isMine);
 
         return res.status(200).json({
             success: true,
