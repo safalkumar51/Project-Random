@@ -9,7 +9,7 @@ const singlePostSlice = createSlice({
         setPost: postAdapter.setOne,
         updatePost: postAdapter.updateOne,
         removePost: postAdapter.removeOne,
-        clearPost: postAdapter.removeAll,
+        clearPost: postAdapter.removeAll,   
         toggleLike: (state, action) => {
             const post = state.entities[action.payload];
             if (post) {

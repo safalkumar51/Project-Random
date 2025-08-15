@@ -9,7 +9,7 @@ import { useNavigation } from '@react-navigation/native'
 
 import CommentsList from '../../components/CommentsList';
 import PostCards from '../../components/PostCards'
-import SharedHeader from '../../components/SharedHeader'
+import SharedHeader from '../../components/SharedHeader'    
 import baseURL from '../../assets/config'
 
 import dayjs from 'dayjs';

@@ -20,6 +20,7 @@ import { toggleOtherProfileLike } from '../redux/slices/otherProfileSlice';
 import { selectSinglePostById } from '../redux/selectors/singlePostSelectors';
 import { selectFeedPostById } from '../redux/selectors/feedSelectors';
 import { toggleLike } from '../redux/slices/singlePostSlice';
+import { selectMyPostsByIds } from '../redux/selectors/myProfileSelectors';
 
 dayjs.extend(relativeTime);
 
@@ -34,6 +35,8 @@ const PostCards = ({ postId, counter }) => {
         post = useSelector(state => selectSinglePostById(state, postId), shallowEqual);
     } else if(counter === 2){
         post = useSelector(state => selectFeedPostById(state, postId), shallowEqual);
+    } else if(counter === 3){
+        post = useSelector(state=>selectMyPostsByIds(state, postId),shallowEqual);
     }
 
     const time = useMemo(() => dayjs(post?.createdAt).fromNow(), [post?.createdAt]);
