@@ -1,30 +1,22 @@
-import { ActivityIndicator, FlatList, StyleSheet, View, Animated, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard, TextInput, TouchableOpacity, Text } from 'react-native'
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { ActivityIndicator, StyleSheet, View, Animated, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard, TextInput, TouchableOpacity, Text } from 'react-native'
+import { useEffect, useRef, useCallback, useMemo } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
 import { useNavigation } from '@react-navigation/native'
 
-import CommentCard from '../../components/CommentCard'
+import CommentsList from '../../components/CommentsList';
 import PostCards from '../../components/PostCards'
 import SharedHeader from '../../components/SharedHeader'
 import baseURL from '../../assets/config'
-import {
-    setSinglePost,
-    clearSinglePost,
-    toggleLike,
-    toggleCommentLike,
-    addComment,
-} from '../../redux/slices/singlePostSlice';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { toggleFeedComment } from '../../redux/slices/feedSlice';
-import { toggleMyProfileComment } from '../../redux/slices/myProfileSlice';
-import { toggleOtherProfileComment } from '../../redux/slices/otherProfileSlice';
 import CommentInput from '../../components/CommentInput';
+import { clearPost, setPost, toggleComment } from '../../redux/slices/singlePostSlice';
+import { addComment, addManyComment, clearComments, setComments } from '../../redux/slices/singlePostCommentsSlice';
 
 
 dayjs.extend(relativeTime);
@@ -39,7 +31,6 @@ const PostScreen = ({ route }) => {
     const scrollDirection = useRef('up');
     const insets = useSafeAreaInsets();
 
-    const post = useSelector((state) => state.singlePost.post, shallowEqual);
     const dispatch = useDispatch();
 
     const pageNumber = useRef(0);
@@ -73,12 +64,8 @@ const PostScreen = ({ route }) => {
         lastScrollY.current = currentY;
     }, [headerHeight, insets.top])
 
-    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-
-    // function to fetch profile( if pageno = 1 ) and user post from backend
     const fetchPost = async (page) => {
         if (page !== 1 && (loading.current || !hasMore.current)) return;
-
         loading.current = true;
 
         try{
@@ -94,11 +81,15 @@ const PostScreen = ({ route }) => {
                 }
             });
             if (response.data.success) {
-                const postData = response.data.post;
+                const commentsData = response.data.comments;
                 if (page === 1) {
+                    const postData = response.data.post;
                     totalPages.current = response.data.totalPages;
+                    dispatch(setPost(postData));
+                    dispatch(setComments(commentsData));
+                } else{
+                    dispatch(addManyComment(commentsData));
                 }
-                dispatch(setSinglePost({ page, post: postData }));
                 pageNumber.current = page;
                 hasMore.current = page < totalPages.current;
             }
@@ -119,30 +110,26 @@ const PostScreen = ({ route }) => {
     useEffect(() => {
         postLoading.current = true;
         const loadData = async () => {
-            dispatch(clearSinglePost());
+            dispatch(clearPost());
+            dispatch(clearComments());
             pageNumber.current = 0;
             loading.current = false;
             hasMore.current = true;
             totalPages.current = undefined;
+            
             await fetchPost(1);
         }
         loadData();
         postLoading.current = false;
     }, [postId]);
 
-    // if user reaches end to flatlist loadmore
     const loadMore = useCallback(() => {
         if (!loading.current && hasMore.current && pageNumber.current) {
             fetchPost(pageNumber.current + 1);
         }
     }, []);
 
-    const handleToggleCommentLike = useCallback((commentId) => {
-        dispatch(toggleCommentLike(commentId));
-    }, [dispatch]);
-
     const sendComment = async (text) => {
-        console.log(text);
         if (text.trim() !== "") {
             try {
 
@@ -163,12 +150,7 @@ const PostScreen = ({ route }) => {
 
                 if (response.data.success) {
                     dispatch(addComment(response.data.comment));
-                    dispatch(toggleFeedComment(postId));
-                    if(post.isMine){
-                        dispatch(toggleMyProfileComment(postId));
-                    } else {
-                        dispatch(toggleOtherProfileComment(postId));
-                    }
+                    dispatch(toggleComment(postId));
 
                 } else {
                     console.error(response.data.message);
@@ -187,54 +169,20 @@ const PostScreen = ({ route }) => {
     };
 
     const listHeader = useMemo(() => {
-        // Return null or a loading spinner if there's no post data yet
-        if (!post) {
+        if (!postId || postLoading.current) {
             return <ActivityIndicator size="large" />;
-        }
-        if(postLoading.current){
-            return( <ActivityIndicator size="large" /> );
         }
 
         return (
             <>
                 <PostCards
-                    name={post.owner?.name}
-                    profileImage={post.owner?.profilepic}
-                    createdAt={post.createdAt}
-                    postText={post.caption}
-                    postImage={post.postpic}
-                    ownerId={post.owner?._id}
-                    postId={post._id}
-                    likesCount={post.likesCount}
-                    commentsCount={post.commentsCount}
-                    isLiked={post.isLiked}
-                    isCommented={post.isCommented}
-                    isMine={post.isMine}
+                    postId={postId}
+                    counter={1}
                 />
             </>
         );
-    }, [post]);
+    }, [postId]);
 
-    const keyExtractor = useCallback((item) => item._id, []);
-
-    const renderItem = useCallback(({ item }) => {
-        return (
-            <CommentCard
-                name={item.commentOwner.name}
-                profileImage={item.commentOwner.profilepic}
-                createdAt={item.createdAt}
-                comment={item.text}
-                commentId={item._id}
-                commentOwnerId={item.commentOwner?._id}
-                commentLikesCount={item.commentLikesCount}
-                isCommentLiked={item.isCommentLiked}
-                isCommentMine={item.isCommentMine}
-                onToggleCommentLike={handleToggleCommentLike}
-            />
-        )
-    }, [handleToggleCommentLike])
-
-    console.log(post);
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <KeyboardAvoidingView
@@ -249,24 +197,14 @@ const PostScreen = ({ route }) => {
                             title="Post"
                         />
                         <View style={{ flex: 1 }}>
-                            <AnimatedFlatList
-                                data={post?.comments}
-                                keyExtractor={keyExtractor}
-                                renderItem={renderItem}
-
+                            <CommentsList
+                                postId={postId}
                                 onScroll={handleScroll}
                                 scrollEventThrottle={16}
-
-                                // to run loadmore function when end is reached for infinite scrolling
                                 onEndReached={loadMore}
                                 onEndReachedThreshold={0.5}
-
-                                // this makes navbar sticky
                                 ListHeaderComponent={listHeader}
-
                                 contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: 80 }}
-
-                                // to display loading as footer
                                 ListFooterComponent={loading.current && !postLoading.current && <ActivityIndicator />}
                                 showsVerticalScrollIndicator={false}
                             />

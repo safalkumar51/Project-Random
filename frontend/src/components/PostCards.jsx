@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
-import { useDispatch } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
@@ -17,23 +17,29 @@ import baseURL from '../assets/config';
 import { toggleFeedLike } from '../redux/slices/feedSlice';
 import { toggleMyProfileLike } from '../redux/slices/myProfileSlice';
 import { toggleOtherProfileLike } from '../redux/slices/otherProfileSlice';
+import { selectSinglePostById } from '../redux/selectors/singlePostSelectors';
+import { selectFeedPostById } from '../redux/selectors/feedSelectors';
 import { toggleLike } from '../redux/slices/singlePostSlice';
 
 dayjs.extend(relativeTime);
 
-const PostCards = ({ name, createdAt, profileImage, postText, postImage, ownerId, postId, likesCount, commentsCount, isLiked, isCommented, isMine }) => {
+const PostCards = ({ postId, counter }) => {
     const navigation = useNavigation();
 
     const dispatch= useDispatch();
 
-    const time = useMemo(() => dayjs(createdAt).fromNow(), [createdAt]);
+    let post = {};
+
+    if(counter === 1){
+        post = useSelector(state => selectSinglePostById(state, postId), shallowEqual);
+    } else if(counter === 2){
+        post = useSelector(state => selectFeedPostById(state, postId), shallowEqual);
+    }
+
+    const time = useMemo(() => dayjs(post?.createdAt).fromNow(), [post?.createdAt]);
 
     const getProfileHandler = () => {
-        navigation.navigate("OtherProfileScreen", {
-            status: "connected",
-            otherId: ownerId,
-            requestId: ""
-        });
+        navigation.navigate("OtherProfileScreen", {otherId: post?.owner._id});
     };
 
     const getPostHandler = () => {
@@ -50,7 +56,7 @@ const PostCards = ({ name, createdAt, profileImage, postText, postImage, ownerId
             }
 
             const response = await axios.post(`${baseURL}/post/like`, {
-                postId
+                postId: post._id
             }, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
@@ -58,12 +64,12 @@ const PostCards = ({ name, createdAt, profileImage, postText, postImage, ownerId
             });
 
             if (response.data.success) {
-                dispatch(toggleLike(postId));
-                dispatch(toggleFeedLike(postId));
-                if (isMine) {
-                    dispatch(toggleMyProfileLike(postId));
+                dispatch(toggleLike(post._id));
+                dispatch(toggleFeedLike(post._id));
+                if (post.isMine) {
+                    dispatch(toggleMyProfileLike(post._id));
                 } else {
-                    dispatch(toggleOtherProfileLike(postId));
+                    dispatch(toggleOtherProfileLike(post._id));
                 }
 
             } else {
@@ -84,40 +90,40 @@ const PostCards = ({ name, createdAt, profileImage, postText, postImage, ownerId
         <View style={styles.shadowWrapper}>
             <View style={styles.card}>
                 <TouchableOpacity style={styles.topRow} onPress={getProfileHandler}>
-                    <Image style={styles.avatar} source={{ uri: profileImage }} />
+                    <Image style={styles.avatar} source={{ uri: post?.owner?.profilepic }} />
                     <View style={styles.ImageTxt}>
-                        <Text style={styles.name}>{name}</Text>
+                        <Text style={styles.name}>{post?.owner?.name}</Text>
                         <Text style={styles.time}>{time}</Text>
                     </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={getPostHandler}>
-                    <Text style={styles.postText}>{postText}</Text>
-                    {postImage && (
-                        <Image style={styles.PostImage} source={{ uri: postImage }} />
+                    <Text style={styles.postText}>{post?.caption}</Text>
+                    {post?.postpic && (
+                        <Image style={styles.PostImage} source={{ uri: post?.postpic }} />
                     )}
                 </TouchableOpacity>
 
                 <View style={styles.interactionWrapper}>
                     <TouchableOpacity style={styles.interaction} onPress={handleLike}>
                         <Icon
-                            name={isLiked ? 'heart' : 'heart-o'}
+                            name={post?.isLiked ? 'heart' : 'heart-o'}
                             size={26}
-                            color={isLiked ? 'red' : 'black'}
+                            color={post?.isLiked ? 'red' : 'black'}
                         />
-                        <Text style={[styles.interactionTxt, { color: isLiked ? 'red' : '#333' }]}>
-                            {likesCount > 0 ? `${likesCount} Like` : 'Like'}
+                        <Text style={[styles.interactionTxt, { color: post?.isLiked ? 'red' : '#333' }]}>
+                            {post?.likesCount > 0 ? `${post?.likesCount} Like` : 'Like'}
                         </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.interaction} onPress={getPostHandler}>
                         <Icon
-                            name={isCommented ? 'comment' : 'comment-o'}
+                            name={post?.isCommented ? 'comment' : 'comment-o'}
                             size={26}
-                            color={isCommented ? '#007AFF' : 'black'}
+                            color={post?.isCommented ? '#007AFF' : 'black'}
                         />
-                        <Text style={[styles.interactionTxt, { color: isCommented ? '#007AFF' : '#333' }]}>
-                            {commentsCount > 0 ? `${commentsCount} Comment` : 'Comment'}
+                        <Text style={[styles.interactionTxt, { color: post?.isCommented ? '#007AFF' : '#333' }]}>
+                            {post?.commentsCount > 0 ? `${post?.commentsCount} Comment` : 'Comment'}
                         </Text>
                     </TouchableOpacity>
                 </View>
