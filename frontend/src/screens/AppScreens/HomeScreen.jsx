@@ -11,10 +11,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import baseURL from '../../assets/config';
 import NavBar from '../../components/NavBar';
 import PostCards from '../../components/PostCards';
-import { addFeedPosts } from '../../redux/slices/feedSlice';
+import { addFeedPosts, setFeedPosts } from '../../redux/slices/feedSlice';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import FeedList from '../../components/FeedList';
 
 dayjs.extend(relativeTime);
 
@@ -27,7 +28,7 @@ const HomeScreen = () => {
     const lastScrollY = useRef(0);
     const scrollDirection = useRef('up');
     const insets = useSafeAreaInsets();
-    const posts = useSelector((state) => state.feed.posts);
+
     const dispatch = useDispatch();
 
     const pageNumber = useRef(0);
@@ -55,12 +56,13 @@ const HomeScreen = () => {
 
             if (response.data.success) {
                 const postsData = response.data.posts;
-                dispatch(addFeedPosts({ page, posts: postsData }));
 
                 if (page === 1) {
+                    dispatch(setFeedPosts(postsData));
                     totalPages.current = response.data.totalPages;
+                } else{
+                    dispatch(addFeedPosts(postsData));
                 }
-
                 pageNumber.current = page;
                 hasMore.current = page < totalPages.current;
             } else {
@@ -128,31 +130,10 @@ const HomeScreen = () => {
         lastScrollY.current = currentY;
     };
 
-    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-
     const loadMore = () => {
         if (!loading.current && hasMore.current && pageNumber.current) {
             fetchPosts(pageNumber.current + 1);
         }
-    };
-
-    const renderItem = ({ item }) => {
-        return (
-            <PostCards
-                name={item.owner?.name}
-                time={dayjs(item.createdAt).fromNow()}
-                profileImage={item.owner?.profilepic}
-                postText={item.caption}
-                postImage={item.postpic}
-                ownerId={item.owner?._id}
-                postId={item._id}
-                likesCount={item.likesCount}
-                commentsCount={item.commentsCount}
-                isLiked={item.isLiked}
-                isCommented={item.isCommented}
-                isMine={item.isMine}
-            />
-        );
     };
 
 
@@ -161,21 +142,14 @@ const HomeScreen = () => {
             <View style={styles.HomeContainer}>
                 <NavBar scrollY={headerTranslateY} />
                 <View style={{ flex: 1 }}>
-                    <AnimatedFlatList
-                        ref={flatListRef}
-                        data={posts}
-                        keyExtractor={(item) => item._id}
-                        renderItem={renderItem}
+                    <FeedList
+                        flatListRef={flatListRef}
                         onScroll={handleScroll}
                         scrollEventThrottle={16}
                         contentContainerStyle={{ paddingTop: headerHeight }}
-
-                        // to run loadmore function when end is reached for infinite scrolling
                         onEndReached={loadMore}
                         onEndReachedThreshold={0.5}
-
-                        // to display loading as footer
-                        ListFooterComponent={loading && <ActivityIndicator />}
+                        ListFooterComponent={loading.current && <ActivityIndicator />}
                         showsVerticalScrollIndicator={false}
                     />
                 </View>

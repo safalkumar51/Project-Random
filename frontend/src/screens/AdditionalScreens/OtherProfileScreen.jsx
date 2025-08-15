@@ -37,7 +37,7 @@ const OtherProfileScreen = ({ route }) => {
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
 
-    const { status = '', otherId = '', requestId = '' } = route.params;
+    const { otherId = '' } = route.params;
 
     const profile = useSelector((state) => state.otherProfile.profile);
     const dispatch = useDispatch();
@@ -66,52 +66,29 @@ const OtherProfileScreen = ({ route }) => {
                 return;
             }
 
-            if (status === 'connected') {
-                const response = await axios.get(`${baseURL}/connection/profile`, {
-                    headers: {
-                        Authorization: `Bearer ${authToken}`,
-                    }, params: {
-                        page,
-                        otherId
-                    }
-                });
-                if (response.data.success) {
-                    if (page === 1) {
-                        totalPages.current = response.data.totalPages;
-                    }
-
-                    dispatch(addOtherProfilePosts({page, profile: response.data.profile}))
-                    pageNumber.current = page;
-                    hasMore.current = page < totalPages.current
+            const response = await axios.get(`${baseURL}/otherprofile`, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                }, params: {
+                    page,
+                    otherId
                 }
-                else {
-                    console.error(response.data.message);
-                    if (response.data.message === 'Log In Required!') {
-                        await AsyncStorage.removeItem('authToken');
-                        navigation.replace("LoginScreen");
-                    }
+            });
+            
+            if (response.data.success) {
+                if (page === 1) {
+                    totalPages.current = response.data.totalPages;
                 }
 
-            } else {
-                const response = await axios.get(`${baseURL}/connection/requestprofile`, {
-                    headers: {
-                        Authorization: `Bearer ${authToken}`,
-                    }, params: {
-                        otherId
-                    }
-                });
-                if (response.data.success) {
-                    dispatch(addOtherProfilePosts({ page, profile: response.data.profile }));
-                    totalPages.current = 1;
-                    pageNumber.current = page;
-                    hasMore.current = page < totalPages.current;
-                }
-                else {
-                    console.error(response.data.message);
-                    if (response.data.message === 'Log In Required!') {
-                        await AsyncStorage.removeItem('authToken');
-                        navigation.replace("LoginScreen");
-                    }
+                dispatch(addOtherProfilePosts({ page, profile: response.data.profile }))
+                pageNumber.current = page;
+                hasMore.current = page < totalPages.current
+            }
+            else {
+                console.error(response.data.message);
+                if (response.data.message === 'Log In Required!') {
+                    await AsyncStorage.removeItem('authToken');
+                    navigation.replace("LoginScreen");
                 }
             }
 

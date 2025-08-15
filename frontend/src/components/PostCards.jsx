@@ -1,35 +1,45 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, Dimensions, Alert } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import baseURL from '../assets/config';
 
 const { width, height } = Dimensions.get('window');
-import { useDispatch } from 'react-redux';
-import { toggleFeedLike, toggleFeedComment } from '../redux/slices/feedSlice';
-import { toggleLike, toggleComment, toggleMyProfileLike } from '../redux/slices/myProfileSlice';
-import { toggleOtherLike, toggleOtherComment, toggleOtherProfileLike } from '../redux/slices/otherProfileSlice';
 
-const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, postId, likesCount, commentsCount, isLiked, isCommented, isMine }) => {
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+import baseURL from '../assets/config';
+import { toggleFeedLike } from '../redux/slices/feedSlice';
+import { toggleMyProfileLike } from '../redux/slices/myProfileSlice';
+import { toggleOtherProfileLike } from '../redux/slices/otherProfileSlice';
+import { selectSinglePostById } from '../redux/selectors/singlePostSelectors';
+import { selectFeedPostById } from '../redux/selectors/feedSelectors';
+import { toggleLike } from '../redux/slices/singlePostSlice';
+
+dayjs.extend(relativeTime);
+
+const PostCards = ({ postId, counter }) => {
     const navigation = useNavigation();
 
-    const dispatch = useDispatch();
+    const dispatch= useDispatch();
 
-    const [liked, setLiked] = useState(false);
-    const [likeCount, setLikeCount] = useState(0);
-    const [commented, setCommented] = useState(false);
-    const [commentCount, setCommentCount] = useState(0);
-    const [mine, setMine] = useState(false);
+    let post = {};
+
+    if(counter === 1){
+        post = useSelector(state => selectSinglePostById(state, postId), shallowEqual);
+    } else if(counter === 2){
+        post = useSelector(state => selectFeedPostById(state, postId), shallowEqual);
+    }
+
+    const time = useMemo(() => dayjs(post?.createdAt).fromNow(), [post?.createdAt]);
 
     const getProfileHandler = () => {
-        navigation.navigate("OtherProfileScreen", {
-            status: "connected",
-            otherId: ownerId,
-            requestId: ""
-        });
+        navigation.navigate("OtherProfileScreen", {otherId: post?.owner._id});
     };
 
     const getPostHandler = () => {
@@ -46,7 +56,7 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, pos
             }
 
             const response = await axios.post(`${baseURL}/post/like`, {
-                postId
+                postId: post._id
             }, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
@@ -54,15 +64,13 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, pos
             });
 
             if (response.data.success) {
-
-                dispatch(toggleFeedLike(postId));
-                if(isMine){
-                    dispatch(toggleMyProfileLike(postId));
-                } else{
-                    dispatch(toggleOtherProfileLike(postId));
+                dispatch(toggleLike(post._id));
+                dispatch(toggleFeedLike(post._id));
+                if (post.isMine) {
+                    dispatch(toggleMyProfileLike(post._id));
+                } else {
+                    dispatch(toggleOtherProfileLike(post._id));
                 }
-                setLiked(!liked);
-                setLikeCount(prev => liked ? prev - 1 : prev + 1);
 
             } else {
                 console.error(response.data.message);
@@ -77,52 +85,45 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, pos
         }
     };
 
-    useEffect(() => {
-        setLikeCount(likesCount);
-        setCommentCount(commentsCount);
-        setLiked(isLiked);
-        setCommented(isCommented);
-        setMine(isMine);
-    }, [])
 
     return (
         <View style={styles.shadowWrapper}>
             <View style={styles.card}>
                 <TouchableOpacity style={styles.topRow} onPress={getProfileHandler}>
-                    <Image style={styles.avatar} source={{ uri: profileImage }} />
+                    <Image style={styles.avatar} source={{ uri: post?.owner?.profilepic }} />
                     <View style={styles.ImageTxt}>
-                        <Text style={styles.name}>{name}</Text>
+                        <Text style={styles.name}>{post?.owner?.name}</Text>
                         <Text style={styles.time}>{time}</Text>
                     </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={getPostHandler}>
-                    <Text style={styles.postText}>{postText}</Text>
-                    {postImage && (
-                        <Image style={styles.PostImage} source={{ uri: postImage }} />
+                    <Text style={styles.postText}>{post?.caption}</Text>
+                    {post?.postpic && (
+                        <Image style={styles.PostImage} source={{ uri: post?.postpic }} />
                     )}
                 </TouchableOpacity>
 
                 <View style={styles.interactionWrapper}>
                     <TouchableOpacity style={styles.interaction} onPress={handleLike}>
                         <Icon
-                            name={liked ? 'heart' : 'heart-o'}
+                            name={post?.isLiked ? 'heart' : 'heart-o'}
                             size={26}
-                            color={liked ? 'red' : 'black'}
+                            color={post?.isLiked ? 'red' : 'black'}
                         />
-                        <Text style={[styles.interactionTxt, { color: liked ? 'red' : '#333' }]}>
-                            {likeCount > 0 ? `${likeCount} Like` : 'Like'}
+                        <Text style={[styles.interactionTxt, { color: post?.isLiked ? 'red' : '#333' }]}>
+                            {post?.likesCount > 0 ? `${post?.likesCount} Like` : 'Like'}
                         </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.interaction} onPress={getPostHandler}>
                         <Icon
-                            name={commented ? 'comment' : 'comment-o'}
+                            name={post?.isCommented ? 'comment' : 'comment-o'}
                             size={26}
-                            color={commented ? '#007AFF' : 'black'}
+                            color={post?.isCommented ? '#007AFF' : 'black'}
                         />
-                        <Text style={[styles.interactionTxt, { color: commented ? '#007AFF' : '#333' }]}>
-                            {commentCount > 0 ? `${commentCount} Comment` : 'Comment'}
+                        <Text style={[styles.interactionTxt, { color: post?.isCommented ? '#007AFF' : '#333' }]}>
+                            {post?.commentsCount > 0 ? `${post?.commentsCount} Comment` : 'Comment'}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -131,7 +132,7 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, pos
     );
 };
 
-export default PostCards;
+export default React.memo(PostCards);
 
 const styles = StyleSheet.create({
     card: {

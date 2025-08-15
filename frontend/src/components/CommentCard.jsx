@@ -1,7 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View, Dimensions, Image } from 'react-native'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigation } from '@react-navigation/native';
-import { useDispatch } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -9,19 +8,25 @@ import baseURL from '../assets/config';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import { selectCommentById } from '../redux/selectors/singlePostSelectors';
+import { toggleCommentLike } from '../redux/slices/singlePostCommentsSlice';
 
 dayjs.extend(relativeTime);
 
 const { width } = Dimensions.get('window');
 
-const CommentCard = ({ name, profileImage, createdAt, comment, commentLikesCount, commentId, commentOwnerId, isCommentLiked, isCommentMine, onToggleLike }) => {
+const CommentCard = ({ commentId }) => {
     const navigation = useNavigation();
-    const dispatch = useDispatch(); 
 
-    const time = useMemo(() => dayjs(createdAt).fromNow(), [createdAt]);
+    const dispatch = useDispatch();
+
+    const comment = useSelector(state => selectCommentById(state, commentId), shallowEqual);
+
+    const time = useMemo(() => dayjs(comment.createdAt).fromNow(), [comment.createdAt]);
 
     const getProfileHandler = () => {
-        navigation.navigate("OtherProfileScreen", { status: "connected", otherId: commentOwnerId, requestId: "" });
+        navigation.navigate("OtherProfileScreen", { otherId: comment.commentOwner._id });
     }
 
     const toggleLike = async () => {
@@ -42,8 +47,8 @@ const CommentCard = ({ name, profileImage, createdAt, comment, commentLikesCount
             });
 
             if (response.data.success) {
-
-                onToggleLike(commentId);
+                
+                dispatch(toggleCommentLike(commentId));
 
             } else {
                 console.error(response.data.message);
@@ -62,27 +67,27 @@ const CommentCard = ({ name, profileImage, createdAt, comment, commentLikesCount
         <View style={styles.card}>
             <View style={styles.upper}>
                 <TouchableOpacity style={styles.userInfo} onPress={getProfileHandler}>
-                    <Image style={styles.avatar} source={{ uri: profileImage }} />
+                    <Image style={styles.avatar} source={{ uri: comment.commentOwner.profilepic }} />
                     <View style={styles.nameTime}>
-                        <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{name}</Text>
+                        <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{comment.commentOwner.name}</Text>
                         <Text style={styles.time}>{time}</Text>
                     </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.interaction} onPress={toggleLike}>
                     <Icon
-                        name={isCommentLiked ? 'heart' : 'heart-o'}
+                        name={comment.isCommentLiked ? 'heart' : 'heart-o'}
                         size={18}
-                        color={isCommentLiked ? 'red' : 'black'}
+                        color={comment.isCommentLiked ? 'red' : 'black'}
                     />
-                    <Text style={[styles.interactionTxt, { color: isCommentLiked ? 'red' : '#333' }]}>
-                        {commentLikesCount > 0 ? `${commentLikesCount} Likes` : '0 Like'}
+                    <Text style={[styles.interactionTxt, { color: comment.isCommentLiked ? 'red' : '#333' }]}>
+                        {comment.commentLikesCount > 0 ? `${comment.commentLikesCount} Likes` : '0 Like'}
                     </Text>
                 </TouchableOpacity>
             </View>
 
             <View style={styles.lower}>
-                <Text style={styles.comment}>{comment}</Text>
+                <Text style={styles.comment}>{comment.text}</Text>
             </View>
         </View>
     );

@@ -1,29 +1,22 @@
-import { ActivityIndicator, FlatList, StyleSheet, View, Animated, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard, TextInput, TouchableOpacity, Text } from 'react-native'
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { ActivityIndicator, StyleSheet, View, Animated, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard, TextInput, TouchableOpacity, Text } from 'react-native'
+import { useEffect, useRef, useCallback, useMemo } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
 import { useNavigation } from '@react-navigation/native'
 
-import CommentCard from '../../components/CommentCard'
+import CommentsList from '../../components/CommentsList';
 import PostCards from '../../components/PostCards'
 import SharedHeader from '../../components/SharedHeader'
 import baseURL from '../../assets/config'
-import {
-    setSinglePost,
-    clearSinglePost,
-    toggleLike,
-    toggleCommentLike,
-    addComment,
-} from '../../redux/slices/singlePostSlice';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { toggleFeedComment } from '../../redux/slices/feedSlice';
-import { toggleMyProfileComment } from '../../redux/slices/myProfileSlice';
-import { toggleOtherProfileComment } from '../../redux/slices/otherProfileSlice';
+import CommentInput from '../../components/CommentInput';
+import { clearPost, setPost, toggleComment } from '../../redux/slices/singlePostSlice';
+import { addComment, addManyComment, clearComments, setComments } from '../../redux/slices/singlePostCommentsSlice';
 
 
 dayjs.extend(relativeTime);
@@ -38,9 +31,7 @@ const PostScreen = ({ route }) => {
     const scrollDirection = useRef('up');
     const insets = useSafeAreaInsets();
 
-    const post = useSelector((state) => state.singlePost.post);
     const dispatch = useDispatch();
-    const [text, setText] = useState('');
 
     const pageNumber = useRef(0);
     const loading = useRef(false);
@@ -48,7 +39,7 @@ const PostScreen = ({ route }) => {
     const totalPages = useRef();
     const postLoading = useRef(false);
 
-    const handleScroll = (event) => {
+    const handleScroll = useCallback((event) => {
         const currentY = event.nativeEvent.contentOffset.y;
         if (currentY > lastScrollY.current) {
             if (scrollDirection.current !== 'down' && currentY > 60) {
@@ -71,14 +62,10 @@ const PostScreen = ({ route }) => {
         }
 
         lastScrollY.current = currentY;
-    }
+    }, [headerHeight, insets.top])
 
-    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-
-    // function to fetch profile( if pageno = 1 ) and user post from backend
     const fetchPost = async (page) => {
         if (page !== 1 && (loading.current || !hasMore.current)) return;
-
         loading.current = true;
 
         try{
@@ -94,12 +81,15 @@ const PostScreen = ({ route }) => {
                 }
             });
             if (response.data.success) {
-                const postData = response.data.post;
+                const commentsData = response.data.comments;
                 if (page === 1) {
+                    const postData = response.data.post;
                     totalPages.current = response.data.totalPages;
+                    dispatch(setPost(postData));
+                    dispatch(setComments(commentsData));
+                } else{
+                    dispatch(addManyComment(commentsData));
                 }
-                console.log(response.data.post);
-                dispatch(setSinglePost({ page, post: postData }));
                 pageNumber.current = page;
                 hasMore.current = page < totalPages.current;
             }
@@ -120,29 +110,26 @@ const PostScreen = ({ route }) => {
     useEffect(() => {
         postLoading.current = true;
         const loadData = async () => {
-            dispatch(clearSinglePost());
+            dispatch(clearPost());
+            dispatch(clearComments());
             pageNumber.current = 0;
             loading.current = false;
             hasMore.current = true;
             totalPages.current = undefined;
+            
             await fetchPost(1);
         }
         loadData();
         postLoading.current = false;
     }, [postId]);
 
-    // if user reaches end to flatlist loadmore
-    const loadMore = () => {
+    const loadMore = useCallback(() => {
         if (!loading.current && hasMore.current && pageNumber.current) {
             fetchPost(pageNumber.current + 1);
         }
-    };
+    }, []);
 
-    const handleToggleLike = useCallback((commentId) => {
-        dispatch(toggleCommentLike(commentId));
-    }, [dispatch]);
-
-    const sendComment = async () => {
+    const sendComment = async (text) => {
         if (text.trim() !== "") {
             try {
 
@@ -163,13 +150,7 @@ const PostScreen = ({ route }) => {
 
                 if (response.data.success) {
                     dispatch(addComment(response.data.comment));
-                    dispatch(toggleFeedComment(postId));
-                    console.log(post.isMine)
-                    if(post.isMine){
-                        dispatch(toggleMyProfileComment(postId));
-                    } else {
-                        dispatch(toggleOtherProfileComment(postId));
-                    }
+                    dispatch(toggleComment(postId));
 
                 } else {
                     console.error(response.data.message);
@@ -188,53 +169,20 @@ const PostScreen = ({ route }) => {
     };
 
     const listHeader = useMemo(() => {
-        // Return null or a loading spinner if there's no post data yet
-        if (!post) {
+        if (!postId || postLoading.current) {
             return <ActivityIndicator size="large" />;
         }
 
         return (
-            <View>
-                {postLoading.current ? (
-                    <ActivityIndicator size="large" />
-                ) : (
-                    <>
-                        <PostCards
-                            name={post.owner?.name}
-                            profileImage={post.owner?.profilepic}
-                            time={dayjs(post.createdAt).fromNow()}
-                            postText={post.caption}
-                            postImage={post.postpic}
-                            ownerId={post.owner?._id}
-                            postId={post._id}
-                            likesCount={post.likesCount}
-                            commentsCount={post.commentsCount}
-                            isLiked={post.isLiked}
-                            isCommented={post.isCommented}
-                            isMine={post.isMine}
-                        />
-                    </>
-                )}
-            </View>
+            <>
+                <PostCards
+                    postId={postId}
+                    counter={1}
+                />
+            </>
         );
-    }, [post]);
+    }, [postId]);
 
-    const renderItem = useCallback(({ item }) => {
-        return (
-            <CommentCard
-                name={item.commentOwner.name}
-                profileImage={item.commentOwner.profilepic}
-                createdAt={item.createdAt}
-                comment={item.text}
-                commentId={item._id}
-                commentOwnerId={item.commentOwner?._id}
-                commentLikesCount={item.commentLikesCount}
-                isCommentLiked={item.isCommentLiked}
-                isCommentMine={item.isCommentMine}
-                onToggleLike={handleToggleLike}
-            />
-        )
-    }, [handleToggleLike])
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <KeyboardAvoidingView
@@ -249,39 +197,18 @@ const PostScreen = ({ route }) => {
                             title="Post"
                         />
                         <View style={{ flex: 1 }}>
-                            <AnimatedFlatList
-                                data={post?.comments}
-                                keyExtractor={(item) => item._id}
-                                renderItem={renderItem}
-
+                            <CommentsList
+                                postId={postId}
                                 onScroll={handleScroll}
                                 scrollEventThrottle={16}
-
-                                // to run loadmore function when end is reached for infinite scrolling
                                 onEndReached={loadMore}
                                 onEndReachedThreshold={0.5}
-
-                                // this makes navbar sticky
                                 ListHeaderComponent={listHeader}
-
                                 contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: 80 }}
-
-                                // to display loading as footer
                                 ListFooterComponent={loading.current && !postLoading.current && <ActivityIndicator />}
                                 showsVerticalScrollIndicator={false}
                             />
-                            <View style={styles.inputRow}>
-                                <TextInput
-                                    style={styles.input}
-                                    value={text}
-                                    onChangeText={setText}
-                                    placeholder="Write a comment"
-                                    placeholderTextColor="#888"
-                                />
-                                <TouchableOpacity style={styles.buttonContainer} onPress={sendComment}>
-                                    <Text style={styles.buttonText}>SEND</Text>
-                                </TouchableOpacity>
-                            </View>
+                            <CommentInput onSend={sendComment} />
                         </View>
                     </View>
                 </TouchableWithoutFeedback>
@@ -299,39 +226,5 @@ const styles = StyleSheet.create({
     },
     innerContainer: {
         flex: 1,
-    },
-    inputRow: {
-        position: 'absolute',
-        bottom: 5, // ⬅️ Distance from the bottom
-        left: 10,   // ⬅️ Optional: distance from left
-        right: 10,  // ⬅️ Optional: distance from right
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 8,
-        paddingHorizontal: 10,
-        backgroundColor: '#fff',
-        borderRadius: 25,
-        elevation: 7
-    },
-    input: {
-        flex: 1,
-        height: 40,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 20,
-        paddingHorizontal: 15,
-        marginRight: 10,
-        backgroundColor: '#f9f9f9',
-    },
-    buttonContainer: {
-        backgroundColor: "#0d76e6ff",
-        paddingVertical: 9,
-        paddingHorizontal: 12,
-        borderRadius: 10,
-    },
-    buttonText: {
-        color: "white",
-        fontSize: 17,
-        fontWeight: 500,
     },
 })

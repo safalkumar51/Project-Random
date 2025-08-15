@@ -3,6 +3,7 @@ import requestsReducer from './slices/requestsSlice';
 import connectionsReducer from './slices/connectionsSlice';
 import feedReducer from './slices/feedSlice';
 import singlePostReducer from './slices/singlePostSlice';
+import singlePostCommentsReducer from './slices/singlePostCommentsSlice'; 
 import myProfileReducer from './slices/myProfileSlice';
 import otherProfileReducer from './slices/otherProfileSlice';
 import messagesReducer from './slices/messagesSlice';
@@ -14,6 +15,7 @@ export const store = configureStore({
     connections: connectionsReducer,
     feed: feedReducer,
     singlePost: singlePostReducer,
+    singlePostComments: singlePostCommentsReducer,
     myProfile: myProfileReducer,
     otherProfile: otherProfileReducer,
     messages: messagesReducer, 

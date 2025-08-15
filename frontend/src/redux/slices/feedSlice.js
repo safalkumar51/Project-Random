@@ -1,73 +1,33 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const initialState = {
-    posts: [],
-    loading: false,
-    error: null,
-};
+import { feedAdapter, initialFeedState } from '../adaptors/feedAdapters';
 
 const feedSlice = createSlice({
     name: 'feed',
-    initialState,
+    initialState: initialFeedState,
     reducers: {
-        setFeedPosts: (state, action) => {
-            state.posts = action.payload;
-        },
-        addFeedPosts: (state, action) => {
-            const { page, posts } = action.payload;
-            if (page === 1) {
-                state.posts = posts;
-            } else {
-                state.posts = [...state.posts, ...posts];
-            }
-        },
-
-        addSinglePostFeed: (state, action) => {
-            const newPost = action.payload;
-            state.posts.unshift(newPost);
-        },
-
-        removeFeedPost: (state, action) => {
-            state.posts = state.posts.filter(post => post._id !== action.payload);
-        },
-
+        setFeedPosts: feedAdapter.setAll,
+        addFeedPost: feedAdapter.addOne,
+        addFeedPosts: feedAdapter.addMany,
+        removeFeedPost: feedAdapter.removeOne,
+        clearFeedPosts: feedAdapter.removeAll,
         toggleFeedLike: (state, action) => {
-            const _id = action.payload;
-            const idx = state.posts.findIndex(p => p._id === _id);
-
-            if (idx !== -1) {
-                const post = state.posts[idx];
-                if (post.isLiked) {
-                    post.isLiked = false;
-                    post.likeCount = Math.max((post.likeCount || 0) - 1, 0);
-                } else {
-                    post.isLiked = true;
-                    post.likeCount = (post.likeCount || 0) + 1;
-                }
+            const post = state.entities[action.payload];
+            if (post) {
+                post.isLiked = !post.isLiked;
+                post.likesCount += post.isLiked ? 1 : -1;
             }
         },
-
         toggleFeedComment: (state, action) => {
-            const postId = action.payload;
-            if (!Array.isArray(state.posts)) return;
-
-            const post = state.posts.find(p => p._id === postId);
-
+            const post = state.entities[action.payload];
             if (post) {
                 post.isCommented = true;
-                post.commentsCount = (post.commentsCount || 0) + 1;
+                post.commentsCount += 1;
             }
         },
     },
 });
 
-export const {
-    setFeedPosts,
-    addFeedPosts,
-    addSinglePostFeed,
-    removeFeedPost,
-    toggleFeedLike,
-    toggleFeedComment,
-} = feedSlice.actions;
+export const { setFeedPosts, addFeedPost, addFeedPosts,removeFeedPost, clearFeedPosts, toggleFeedLike, toggleFeedComment } = feedSlice.actions;
 
 export default feedSlice.reducer;

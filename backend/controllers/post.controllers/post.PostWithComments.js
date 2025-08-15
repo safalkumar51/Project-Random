@@ -1,12 +1,13 @@
 const mongoose = require('mongoose');
 const postModel = require('../../models/post.model');
 const userModel = require('../../models/user.model');
+const commentModel = require('../../models/comment.model');
 
 const getPostWithComments = async (req, res) => {
     try {
         const postId = mongoose.Types.ObjectId.createFromHexString(req.query.postId);
         const pageNumber = Number(req.query.page) || 1;
-        const limit = 20;
+        const limit = 6;
         const skip = (pageNumber - 1) * limit;
 
         const user = await userModel.findOne({ _id: req.userId }).select('token');
@@ -14,6 +15,79 @@ const getPostWithComments = async (req, res) => {
             return res.status(404).json({
                 success: false,
                 message: 'Log In Required!'
+            });
+        }
+
+        const comments = await commentModel.aggregate([
+            {
+                $match: { post: postId }
+            },
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'user',
+                    foreignField: '_id',
+                    as: 'commentOwner',
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                                profilepic: 1,
+                            }
+                        }
+                    ],
+                }
+            },
+            {
+                $lookup: {
+                    from: "commentlikes",
+                    localField: '_id',
+                    foreignField: 'comment',
+                    as: "commentlikes"
+                }
+            },
+            {
+                $addFields: {
+                    commentOwner: {
+                        $first: '$commentOwner',
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    commentLikesCount: { $size: "$commentlikes" },
+                    isCommentLiked: {
+                        $in: [
+                            user._id,
+                            { $map: { input: "$commentlikes", as: "cl", in: "$$cl.user" } }
+                        ]
+                    },
+                    isCommentMine: {
+                        $eq: ["$commentOwner._id", user._id]
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    text: 1,
+                    commentOwner: 1,
+                    createdAt: 1,
+                    isCommentMine: 1,
+                    isCommentLiked: 1,
+                    commentLikesCount: 1
+                }
+            }
+        ]);
+
+        if(pageNumber > 1){
+            return res.status(200).json({
+                success: true,
+                comments: comments
             });
         }
 
@@ -49,71 +123,16 @@ const getPostWithComments = async (req, res) => {
             {
                 $lookup: {
                     from: 'comments',
-                    let: { postId: "$_id" },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: { $eq: ["$post", "$$postId"] }
-                            }
-                        },
-                        { $sort: { createdAt: -1 } },
-                        { $skip: skip },
-                        { $limit: limit },
-                        {
-                            $lookup: {
-                                from: 'users',
-                                localField: 'user',
-                                foreignField: '_id',
-                                as: 'commentOwner',
-                                pipeline: [
-                                    {
-                                        $project: {
-                                            _id: 1,
-                                            name: 1,
-                                            profilepic: 1,
-                                        }
-                                    }
-                                ],  
-                            }
-                        },
-                        {
-                            $lookup: {
-                                from: "commentlikes",
-                                localField: '_id',
-                                foreignField: 'comment',
-                                as: "commentlikes"
-                            }
-                        },
-                        {
-                            $addFields: {
-                                commentLikesCount: { $size: "$commentlikes" },
-                                isCommentLiked: {
-                                    $in: [
-                                        user._id,
-                                        { $map: { input: "$commentlikes", as: "cl", in: "$$cl.user" } }
-                                    ]
-                                },
-                                isCommentMine: {
-                                    $eq: ["$commentOwner._id", user._id]
-                                },
-                                commentOwner: {
-                                    $first: '$commentOwner',
-                                }
-                            }
-                        },
-                        {
-                            $project: {
-                                _id: 1,
-                                text: 1,
-                                commentOwner: 1,
-                                createdAt: 1,
-                                isCommentMine: 1,
-                                isCommentLiked: 1,
-                                commentLikesCount: 1
-                            }
-                        }
-                    ],
+                    localField: '_id',
+                    foreignField: 'post',
                     as: 'comments',
+                }
+            },
+            {
+                $addFields: {
+                    owner: {
+                        $first: '$owner',
+                    }
                 }
             },
             {
@@ -141,7 +160,7 @@ const getPostWithComments = async (req, res) => {
                             if: {
                                 $in: [
                                     user._id,
-                                    { $map: { input: "$comments", as: "comment", in: "$$comment.commentOwner._id" } }
+                                    { $map: { input: "$comments", as: "comment", in: "$$comment.user" } }
                                 ]
                             },
                             then: true,
@@ -155,9 +174,6 @@ const getPostWithComments = async (req, res) => {
                             else: false
                         }
                     },
-                    owner: {
-                        $first: '$owner',
-                    }
                 }
             },
             {
@@ -166,7 +182,6 @@ const getPostWithComments = async (req, res) => {
                     postpic: 1,
                     caption: 1,
                     owner: 1,
-                    comments: 1,
                     likesCount: 1,
                     commentsCount: 1,
                     isLiked: 1,
@@ -181,11 +196,15 @@ const getPostWithComments = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid Request' });
         }
 
-        console.log(post[0].owner);
+        const total = await commentModel.countDocuments({ post: postId });
 
         return res.status(200).json({
             success: true,
+            pageNumber,
+            totalPages: Math.ceil(total / limit),
+            totalPosts: total,
             post: post[0],
+            comments: comments
         });
 
     } catch (error) {

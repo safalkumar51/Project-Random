@@ -121,6 +121,13 @@ const userHomeFeed = async (req, res) => {
             },
             {
                 $addFields: {
+                    owner: {
+                        $first: '$owner',
+                    }
+                }
+            },
+            {
+                $addFields: {
                     likesCount: {
                         $size: "$likes"
                     },
@@ -161,9 +168,6 @@ const userHomeFeed = async (req, res) => {
                             then: true,
                             else: false
                         }
-                    },
-                    owner: {
-                        $first: '$owner',
                     }
                 }
             },
