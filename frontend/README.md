@@ -1,54 +1,76 @@
-📱 Project Random Features (Redux) - Frontend
-A React Native application powered by Redux for state management.
-Built with scalability, cross-platform support, and developer experience in mind.
+# 📱 Project Random - Frontend
 
-🚀 Features
-✅ Cross-platform (iOS & Android) support
-✅ Centralized state management with Redux
-✅ Clean & organized project structure (src/ for components, screens, utils)
-✅ ESLint + Prettier for code quality & formatting
-✅ Unit & integration tests with Jest
+Welcome to **Project Random** — a **React Native mobile application** powered by **Redux** for state management.  
 
-🛠️ Tech Stack
-⚛️ React Native – Cross-platform mobile framework
+This project is built with **scalability, cross-platform support, and developer experience** in mind.  
 
-🎛️ Redux – State management
+---
 
-🧪 Jest – Testing framework
+## 🌟 Key Features
 
-🧹 ESLint + Prettier – Linting & formatting
+### 📱 Cross-Platform Support
+* Runs seamlessly on **iOS** and **Android**.
 
-⚙️ Installation & Setup
-Clone the repository
+### 🎛 Centralized State Management
+* State handled with **Redux** for scalability and consistency.
 
-bash
-git clone <repo-url>
-cd Project-Random-features-Redux/frontend
-Install dependencies
+### 🗂 Clean Project Structure
+* Organized `src/` folder for **components, screens, utils**.  
 
-bash
+### 🧹 Developer Experience
+* **ESLint + Prettier** for code quality and formatting.  
+
+---
+
+## ⚙️ Tech Stack
+
+### 🧩 Core
+* ⚛️ **React Native** – Cross-platform mobile framework  
+* 🎛️ **Redux** – State management  
+
+### 🧹 Code Quality
+* ESLint + Prettier – Linting & formatting  
+
+---
+
+## 🛠 How to Run Locally
+
+### 1. Clone the Repo
+```bash
+git clone https://github.com/safalkumar51/Project-Random
+cd Project-Random
+```
+
+### 2. Install Dependencies
+```bash
 npm install
-Run the app
+```
 
-📱 Android:
+### 3. Run the App
 
-bash
+#### 📱 Android:
+```bash
 npm run android
-🍏 iOS:
+```
 
-bash
+#### 🍏 iOS:
+```bash
 npm run ios
-Start Metro bundler
+```
 
-bash
+### 4. Start Metro Bundler
+```bash
 npm start
-🧪 Testing
-Run test cases with:
+```
 
-bash
+### 🧪 Testing
+Run test cases with:
+```bash
 npm test
-📂 Project Structure
-text
+```
+
+## 📂 Project Structure
+```
 frontend/
 │── src/              # Main source code
 │   ├── components/   # Reusable UI components
@@ -61,20 +83,32 @@ frontend/
 │── index.js          # Entry point
 │── package.json      # Dependencies & scripts
 │── tsconfig.json     # TypeScript configuration
-📖 Available Scripts
-npm start – Start Metro bundler
+```
 
-npm run android – Run app on Android
+## 📖 Available Scripts
 
-npm run ios – Run app on iOS
+- `npm start` – Start Metro bundler
+- `npm run android` – Run app on Android
+- `npm run ios` – Run app on iOS
+- `npm test` – Run Jest tests
+- `npm run lint` – Run ESLint
 
-npm test – Run Jest tests
+---
 
-npm run lint – Run ESLint
+## 🤝 Contribution
 
-🤝 Contribution
-Contributions are welcome! 🎉
+Contributions are welcome! 🎉  
 Please follow the existing code style and ensure tests are added for new features.
 
-📜 License
+---
+
+## 📜 License
+
 This project is licensed under the MIT License.
+
+---
+
+## ⭐ Show Your Support
+
+If you find this helpful, give it a ⭐ on GitHub, share it with friends, or contribute to the codebase.  
+Your support helps the project grow! 🚀
