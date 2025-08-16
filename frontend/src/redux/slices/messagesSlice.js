@@ -1,34 +1,25 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const initialState = {
-  messages: [],
-};
+import { messagesAdapter, initialMessagesState } from '../adaptors/messagesAdapters';
 
 const messagesSlice = createSlice({
   name: 'messages',
-  initialState,
+  initialState: initialMessagesState,
   reducers: {
-    addMessages: (state, action) => {
-      const { page, data } = action.payload;
-      if (page === 1) {
-        state.messages = data; 
-      } else {
-        state.messages = [...state.messages, ...data]; 
-      }
-    },
-    addSingleMessageToFront: (state, action) => {
-      state.messages.unshift(action.payload);
-    },
-    removeMessage: (state, action) => {
-      state.messages = state.messages.filter((msg) => msg._id !== action.payload);
-    },
+    setMessages: messagesAdapter.setAll,
+    addMessages: messagesAdapter.addMany,
+    addMessage: messagesAdapter.addOne,
+    removeMessage: messagesAdapter.removeOne,
+    clearMessages: messagesAdapter.removeAll,
   },
 });
 
 export const {
+  setMessages,
   addMessages,
-  addSingleMessageToFront,
-  removeMessage,
+  addMessage,
+  removeMessages,
+  clearMessages,
 } = messagesSlice.actions;
 
 export default messagesSlice.reducer;

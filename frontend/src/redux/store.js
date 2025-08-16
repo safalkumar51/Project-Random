@@ -8,7 +8,7 @@ import myProfileReducer from './slices/myProfileSlice';
 import myPostsReducer from './slices/myPostsSlice';
 import otherProfileReducer from './slices/otherProfileSlice';
 import messagesReducer from './slices/messagesSlice';
-import chatReducer from './slices/chatSlice';
+import chatsReducer from './slices/chatsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -21,6 +21,6 @@ export const store = configureStore({
     myPosts: myPostsReducer,
     otherProfile: otherProfileReducer,
     messages: messagesReducer, 
-    chat: chatReducer,          
+    chats: chatsReducer,          
   },
 });

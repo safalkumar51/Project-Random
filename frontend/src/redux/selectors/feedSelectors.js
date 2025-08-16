@@ -1,9 +1,10 @@
 import { createSelector } from '@reduxjs/toolkit';
 
 import { feedAdapter } from '../adaptors/feedAdapters';
+import { messageAdapter } from '../adaptors/messagesAdapters';
 
 // Get the built-in selectors from the adapters
-const feedSelectors = feedAdapter.getSelectors(
+const feedSelectors = messageAdapter.getSelectors(
     (state) => state.feed
 );
 

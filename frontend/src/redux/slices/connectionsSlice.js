@@ -1,38 +1,33 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const initialState = {
-  connections: [],
-};
+import { connectionsAdapter, initialConnectionsState } from '../adaptors/connectionsAdapters';
 
 const connectionsSlice = createSlice({
   name: 'connections',
-  initialState,
+  initialState: initialConnectionsState,
   reducers: {
-    addConnection: (state, action) => {
-      state.connections.unshift(action.payload);
-    },
-    addConnections: (state, action) => {
-      const { page, connections } = action.payload;
-
-      if (page === 1) {
-        state.connections = connections;
-      } else {
-        state.connections = [...state.connections, ...connections];
+    setConnections: connectionsAdapter.setAll,
+    addConnections: connectionsAdapter.addMany,
+    addConnection: connectionsAdapter.addOne,
+    removeConnection: connectionsAdapter.removeOne,
+    clearConnections: connectionsAdapter.removeAll,
+    updateConnectionStatus: (state,action)=>{
+      const {_id,status} = action.payload;
+      const connection = state.entities[_id];
+      if(connection){
+        connection.status = status;
       }
-    },
-    removeConnection: (state, action) => {
-      const { _id } = action.payload
-      state.connections = state.connections.filter(
-        (conn) => conn._id !== _id
-      );
     },
   },
 });
 
 export const {
-  addConnection,
+  setConnections,
   addConnections,
+  addConnection,
   removeConnection,
+  clearConnections,
+  updateConnectionStatus,
 } = connectionsSlice.actions;
 
 export default connectionsSlice.reducer;
