@@ -92,20 +92,24 @@ const deleteComment = async (req, res) => {
             });
         }
 
-        const comment = await Comment.findById(commentId);
+        const comment = await Comment.findOne({_id: commentId})
+            .select('user post')
+            .populate({
+                path: 'post',
+                select: 'owner',
+                populate: {
+                    path: 'owner',
+                    select: '_id'
+                }
+            });
 
-        if (!commentId || !comment) {
+        if (!commentId || !comment || (comment.user !== req.userId && comment.post.owner._id !== req.userId)) {
             return res.status(400).json({ success: false, message: 'Invalid Request' });
         }
 
-        // Only comment owner or admin can delete
-        if (comment.user.toString() !== userId) {
-            return res.status(403).json({ success: false, message: 'Unauthorized to delete this comment' });
-        }
-
-        await comment.delete();
-
-        return res.status(200).json({ success: true, message: 'Comment deleted' });
+        await commentModel.findOneAndDelete({ _id: commentId });
+        
+        return res.status(200).json({ success: true, message: 'Comment deleted', comment: comment });
 
     } catch (error) {
         console.error('Error deleting comment:', error);

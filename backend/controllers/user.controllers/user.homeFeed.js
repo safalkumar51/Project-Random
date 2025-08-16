@@ -8,7 +8,7 @@ const userHomeFeed = async (req, res) => {
         const pageNumber = Number(req.query.page) || 1;
         const limit = 20;
         const skip = (pageNumber - 1) * limit;
-
+        console.log(pageNumber);
         //// 1. Get user's connections
         //const user = await userModel.findOne({_id: req.userId})
         //    .select('token')

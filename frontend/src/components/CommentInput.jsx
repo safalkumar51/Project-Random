@@ -39,7 +39,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         backgroundColor: '#fff',
         borderRadius: 25,
-        elevation: 7
+        elevation: 7,
+        marginBottom: 13,
     },
     input: {
         flex: 1,

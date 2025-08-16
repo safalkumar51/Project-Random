@@ -2,20 +2,21 @@ import { StyleSheet, Text, View, Image } from 'react-native'
 import React, { useEffect } from 'react'
 import { shallowEqual, useDispatch, useSelector } from 'react-redux'
 import { selectOtherProfileById } from '../redux/selectors/otherProfileSelectors';
+import { selectMyProfileById } from '../redux/selectors/myProfileSelectors';
 
 const ProfileCard = ({ profileId, counter }) => {
-
+    console.log(profileId);
     let profile = {};
-    if(counter){
+    if(counter === 1){
         profile = useSelector(state => selectOtherProfileById(state, profileId), shallowEqual);
     } else {
-        profile = useSelector();
+        profile = useSelector(state => selectMyProfileById(state, profileId), shallowEqual);
     }
 
     console.log(2);
-        useEffect(() => {
-            console.log(22);
-        },[])
+    useEffect(() => {
+        console.log(22);
+    },[]);
 
     return (
         <View style={styles.profileCard}>

@@ -1,18 +1,17 @@
-import { Animated, FlatList, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Animated, FlatList, StyleSheet, Text, View } from 'react-native'
 import React, { useCallback, useMemo } from 'react'
 import { selectFeedPostsIds } from '../redux/selectors/feedSelectors';
 import { shallowEqual, useSelector } from 'react-redux';
-import PostCards from './PostCards';
+import PostCards from '../components/PostCards';
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
-const FeedList = ({ flatListRef, onScroll,
-    scrollEventThrottle,
+const FeedList = ({ 
+    flatListRef,
+    onScroll,
     onEndReached,
-    onEndReachedThreshold,
-    contentContainerStyle,
-    ListFooterComponent,
-    showsVerticalScrollIndicator }) => {
+    loading
+}) => {
     const postsIds = useSelector(selectFeedPostsIds, shallowEqual);
 
     const keyExtractor = useCallback((item) => (item._id ? item._id : item), []);
@@ -27,12 +26,12 @@ const FeedList = ({ flatListRef, onScroll,
             keyExtractor={keyExtractor}
             renderItem={renderItem}
             onScroll={onScroll}
-            scrollEventThrottle={scrollEventThrottle}
+            scrollEventThrottle={16}
             onEndReached={onEndReached}
-            onEndReachedThreshold={onEndReachedThreshold}
-            contentContainerStyle={contentContainerStyle}
-            ListFooterComponent={ListFooterComponent}
-            showsVerticalScrollIndicator={showsVerticalScrollIndicator}
+            onEndReachedThreshold={0.5}
+            contentContainerStyle={{ paddingTop: 60 }}
+            ListFooterComponent={loading.current && <ActivityIndicator />}
+            showsVerticalScrollIndicator={false}
         />
     )
 }

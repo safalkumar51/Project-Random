@@ -8,7 +8,7 @@ const userProfile = async (req, res) => {
         const pageNumber = Number(req.query.page) || 1;
         const limit = 20;
         const skip = (pageNumber - 1) * limit;
-
+        console.log(pageNumber);
         const posts = await postModel.aggregate([
             {
                 $match: {owner: req.userId}
@@ -96,6 +96,7 @@ const userProfile = async (req, res) => {
                     _id: 1,
                     postpic: 1,
                     caption: 1,
+                    owner: 1,
                     likesCount: 1,
                     commentsCount: 1,
                     isLiked: 1,
@@ -106,7 +107,7 @@ const userProfile = async (req, res) => {
             }
         ]);
 
-        if(page > 1){
+        if(pageNumber > 1){
             return res.status(200).json({
                 success: true,
                 pageNumber,

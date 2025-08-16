@@ -1,5 +1,5 @@
-import { ActivityIndicator, StyleSheet, View, Animated, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard, TextInput, TouchableOpacity, Text } from 'react-native'
-import { useEffect, useRef, useCallback, useMemo } from 'react'
+import { StyleSheet, View, Animated, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from 'react-native'
+import { useEffect, useRef, useCallback, } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useDispatch } from 'react-redux';
@@ -7,9 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
 import { useNavigation } from '@react-navigation/native'
 
-import CommentsList from '../../components/CommentsList';
-import PostCards from '../../components/PostCards'
-import SharedHeader from '../../components/SharedHeader'
+import SharedHeader from '../../components/SharedHeader'    
 import baseURL from '../../assets/config'
 
 import dayjs from 'dayjs';
@@ -17,6 +15,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import CommentInput from '../../components/CommentInput';
 import { clearPost, setPost, toggleComment } from '../../redux/slices/singlePostSlice';
 import { addComment, addManyComment, clearComments, setComments } from '../../redux/slices/singlePostCommentsSlice';
+import CommentsList from '../../lists/CommentsList';
 
 
 dayjs.extend(relativeTime);
@@ -170,21 +169,6 @@ const PostScreen = ({ route }) => {
         }
     };
 
-    const listHeader = useMemo(() => {
-        if (!postId || postLoading.current) {
-            return <ActivityIndicator size="large" />;
-        }
-
-        return (
-            <>
-                <PostCards
-                    postId={postId}
-                    counter={1}
-                />
-            </>
-        );
-    }, [postId]);
-
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <KeyboardAvoidingView
@@ -202,13 +186,9 @@ const PostScreen = ({ route }) => {
                             <CommentsList
                                 postId={postId}
                                 onScroll={handleScroll}
-                                scrollEventThrottle={16}
                                 onEndReached={loadMore}
-                                onEndReachedThreshold={0.5}
-                                ListHeaderComponent={listHeader}
-                                contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: 80 }}
-                                ListFooterComponent={loading.current && !postLoading.current && <ActivityIndicator />}
-                                showsVerticalScrollIndicator={false}
+                                loading={loading}
+                                postLoading={postLoading}
                             />
                             <CommentInput onSend={sendComment} />
                         </View>

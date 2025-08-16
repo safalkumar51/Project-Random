@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     View, TextInput, Button, FlatList, Text, StyleSheet, Image, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, Animated, ActivityIndicator,
     TouchableOpacity,
@@ -10,14 +10,15 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import axios from 'axios';
 
 import SharedHeader from '../../components/SharedHeader';
-import BackButton from '../../components/BackButton';
 import ChatCard from '../../components/ChatCard';
 import { socket } from '../../utils/socket';
 import baseURL from '../../assets/config';
-import { addMessages, addSingleMessage, clearMessages } from '../../redux/slices/chatSlice';
+//import { addMessages, addSingleMessage, clearMessages } from '../../redux/slices/chatsSlice';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import CommentInput from '../../components/CommentInput';
+import { addChat, addChats, setChats } from '../../redux/slices/chatsSlice';
 
 dayjs.extend(relativeTime);
 
@@ -28,11 +29,8 @@ const ChatScreen = ({ route }) => {
     const scrollDirection = useRef('up');
     const insets = useSafeAreaInsets();
 
-    const { otherId, name, avatar, userId } = route.params;
+    const { otherId, name, avatar } = route.params;
     const dispatch = useDispatch();
-    const chats = useSelector((state) => state.chat.messages);
-
-    const [text, setText] = useState('');
 
     const pageNumber = useRef(1);
     const loading = useRef(false);
@@ -40,7 +38,7 @@ const ChatScreen = ({ route }) => {
     const totalPages = useRef();
 
 
-    const handleScroll = (event) => {
+    const handleScroll = useCallback((event) => {
         const currentY = event.nativeEvent.contentOffset.y;
         if (currentY > lastScrollY.current) {
             if (scrollDirection.current !== 'down' && currentY > 60) {
@@ -63,10 +61,8 @@ const ChatScreen = ({ route }) => {
         }
 
         lastScrollY.current = currentY;
-    }
-
-    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-
+    }, [headerHeight, insets.top])
+    
     const fetchChats = async (page) => {
         if (page !== 1 && (loading.current || !hasMore.current)) return;
 
@@ -86,10 +82,13 @@ const ChatScreen = ({ route }) => {
             });
 
             if (response.data.success) {
-                dispatch(addMessages({page, data: response.data.chats}))
+                const chatsData = response.data.chats;
                 if (page === 1) {
                     totalPages.current = response.data.totalPages;
-                }
+                    dispatch(setChats(chatsData));
+                } else{
+                    dispatch(addChats(chatsData));
+                }                
                 pageNumber.current = page;
                 hasMore.current = page < totalPages.current
             }
@@ -122,13 +121,13 @@ const ChatScreen = ({ route }) => {
     }, [otherId]);
 
     // if user reaches end to flatlist loadmore
-    const loadMore = () => {
+    const loadMore = useCallback(() => {
         if (!loading.current && hasMore.current && pageNumber.current) {
             fetchChats(pageNumber.current + 1);
         }
-    };
+    },[]);
 
-    const sendMessage = async () => {
+    const sendMessage = async (text) => {
         if (text.trim() !== "") {
             try {
 
@@ -148,7 +147,7 @@ const ChatScreen = ({ route }) => {
                 });
 
                 if (response.data.success) {
-                    dispatch(addSingleMessage(response.data.chat));
+                    dispatch(addChat(response.data.chat));
                 } else {
                     console.error(response.data.message);
                     if (response.data.message === 'Log In Required!') {
@@ -165,18 +164,6 @@ const ChatScreen = ({ route }) => {
         }
     };
 
-    const renderItem = ({ item }) => {
-        return (
-            <ChatCard
-                otherId={otherId}
-                id={`${item.from}`}
-                avatar={avatar}
-                message={item.message}
-                time={dayjs(item.createdAt).fromNow()}
-            />
-        );
-    };
-
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <KeyboardAvoidingView
@@ -191,37 +178,9 @@ const ChatScreen = ({ route }) => {
                             title={name}
                         />
                         <View style={{ flex: 1 }}>
-                            <AnimatedFlatList
-                                data={chats}
-                                keyExtractor={(item) => item._id}
-                                renderItem={renderItem}
-                                inverted
-                                onScroll={handleScroll}
-                                scrollEventThrottle={16}
-
-                                // to run loadmore function when end is reached for infinite scrolling
-                                onEndReached={loadMore}
-                                onEndReachedThreshold={0.5}
-
-                                // to display loading as footer
-                                ListFooterComponent={loading.current && <ActivityIndicator />}
-                                showsVerticalScrollIndicator={false}
-
-                                contentContainerStyle={styles.messagesContainer}
-                            />
+                            
                         </View>
-                        <View style={styles.inputRow}>
-                            <TextInput
-                                style={styles.input}
-                                value={text}
-                                onChangeText={setText}
-                                placeholder="Type a message"
-                                placeholderTextColor="#888"
-                            />
-                            <TouchableOpacity style={styles.buttonContainer} onPress={sendMessage}>
-                                <Text style={styles.buttonText}>SEND</Text>
-                            </TouchableOpacity>
-                        </View>
+                        <CommentInput onSend={sendMessage} />
                     </View>
                 </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
@@ -240,7 +199,7 @@ const styles = StyleSheet.create({
         margin: 5,
     },
     messagesContainer: {
-        paddingBottom: 60,
+        paddingBottom: 80,
         paddingTop: 60
     },
     inputRow: {

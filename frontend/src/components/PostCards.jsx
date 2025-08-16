@@ -20,34 +20,38 @@ import { selectFeedPostById } from '../redux/selectors/feedSelectors';
 import { toggleLike } from '../redux/slices/singlePostSlice';
 import { selectOtherPostsById } from '../redux/selectors/otherProfileSelectors';
 import { toggleOtherPostsLike } from '../redux/slices/otherPostsSlice';
+import { selectMyPostsById } from '../redux/selectors/myProfileSelectors';
+import { toggleMyPostLike } from '../redux/slices/myPostsSlice';
 
 dayjs.extend(relativeTime);
 
 const PostCards = ({ postId, counter }) => {
     const navigation = useNavigation();
 
-    const dispatch= useDispatch();
+    const dispatch = useDispatch();
 
     let post = {};
 
-    if(counter === 1){
+    if (counter === 1) {
         post = useSelector(state => selectSinglePostById(state, postId), shallowEqual);
-    } else if(counter === 2){
+    } else if (counter === 2) {
         post = useSelector(state => selectFeedPostById(state, postId), shallowEqual);
-    } else if(counter ===3){
-        post = useSelector(state => selectMyPostById(state, postId), shallowEqual);
-    } else if(counter === 4){
+    } else if (counter === 3) {
+        post = useSelector(state => selectMyPostsById(state, postId), shallowEqual);
+    } else if (counter === 4) {
         post = useSelector(state => selectOtherPostsById(state, postId), shallowEqual);
     }
-
-    console.log(post);
 
     const time = useMemo(() => dayjs(post?.createdAt).fromNow(), [post?.createdAt]);
 
     const getProfileHandler = () => {
-        console.log(post);
-        if(post.isMine){
-            navigation.navigate("Profile");
+        if (post.isMine) {
+            if (counter === 1) {
+                navigation.navigate("Home", { screen: "Profile" });
+            } else if (counter === 2) {
+                navigation.navigate("Profile");
+            } else return;
+
         } else {
             navigation.navigate("OtherProfileScreen", { otherId: post?.owner._id });
         }
@@ -78,7 +82,7 @@ const PostCards = ({ postId, counter }) => {
                 dispatch(toggleLike(post._id));
                 dispatch(toggleFeedLike(post._id));
                 if (post.isMine) {
-                    //dispatch(toggleMyProfileLike(post._id));
+                    dispatch(toggleMyPostLike(post._id));
                 } else {
                     dispatch(toggleOtherPostsLike(post._id));
                 }
@@ -95,7 +99,6 @@ const PostCards = ({ postId, counter }) => {
             console.error('Error like/unlike post:', err);
         }
     };
-
 
     return (
         <View style={styles.shadowWrapper}>

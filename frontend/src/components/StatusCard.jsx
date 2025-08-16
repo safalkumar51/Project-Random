@@ -5,8 +5,11 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import baseURL from '../assets/config';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import { setOtherProfileStatus } from '../redux/slices/otherProfileSlice'; // NEW
 import { selectRequestById } from '../redux/selectors/otherProfileSelectors';
+import { updateRequestStatus } from '../redux/slices/requestSlice';
+import { removeRequest, updateRequestsStatus } from '../redux/slices/requestsSlice';
+import { clearOtherProfile } from '../redux/slices/otherProfileSlice';
+import { clearOtherPosts } from '../redux/slices/otherPostsSlice';
 
 const { width } = Dimensions.get('window');
 
@@ -14,8 +17,6 @@ const StatusCard = ({ requestId }) => {
     const navigation = useNavigation();
 
     const dispatch = useDispatch();
-
-    console.log(requestId);
 
     const request = useSelector(state => selectRequestById(state, requestId), shallowEqual);
 
@@ -31,7 +32,7 @@ const StatusCard = ({ requestId }) => {
 
             const response = await axios.post(`${ baseURL }/connection/accept`, {
                 requestId,
-                senderId
+                senderId: data.from
             }, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
@@ -39,8 +40,8 @@ const StatusCard = ({ requestId }) => {
             });
 
             if (response.data.success) {
-                Alert.alert(response.data.message);
-
+                dispatch(updateRequestStatus({ requestId, status: response.data.status }));
+                dispatch(updateRequestsStatus({ requestId, status: response.data.status }));
             } else {
                 console.error(response.data.message);
                 if (response.data.message === 'Log In Required!') {
@@ -61,9 +62,9 @@ const StatusCard = ({ requestId }) => {
                 return;
             }
 
-            const response = await axios.post(`${ baseURL } /connection/reject`, {
+            const response = await axios.post(`${baseURL}/connection/reject`, {
                 requestId,
-                senderId
+                senderId: data.from
             }, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
@@ -71,8 +72,10 @@ const StatusCard = ({ requestId }) => {
             });
 
             if (response.data.success) {
-                Alert.alert(response.data.message);
-
+                dispatch(removeRequest(requestId));
+                dispatch(clearOtherProfile());
+                dispatch(clearOtherPosts());
+                navigation.navigate("Home");
             } else {
                 console.error(response.data.message);
                 if (response.data.message === 'Log In Required!') {
@@ -81,15 +84,9 @@ const StatusCard = ({ requestId }) => {
                 }
             }
         } catch (err) {
-            console.log('Error rejecting:', err);
+            console.error('Error rejecting:', err);
         }
     };
-    console.log(1);
-    useEffect(() => {
-        console.log(11);
-    },[])
-
-    console.log(data);
 
     return (
         <View style={styles.card}>

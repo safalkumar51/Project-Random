@@ -1,21 +1,20 @@
 import { StyleSheet, View, FlatList, ActivityIndicator, Animated, Alert } from 'react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { initSocket, socket } from '../../utils/socket';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch} from 'react-redux';
 
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import baseURL from '../../assets/config';
 import NavBar from '../../components/NavBar';
-import PostCards from '../../components/PostCards';
 import { addFeedPosts, setFeedPosts } from '../../redux/slices/feedSlice';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import FeedList from '../../components/FeedList';
+import FeedList from '../../lists/FeedList';
 
 dayjs.extend(relativeTime);
 
@@ -104,7 +103,7 @@ const HomeScreen = () => {
         };
     }, []);
 
-    const handleScroll = (event) => {
+    const handleScroll = useCallback((event) => {
         const currentY = event.nativeEvent.contentOffset.y;
 
         if (currentY > lastScrollY.current) {
@@ -128,13 +127,13 @@ const HomeScreen = () => {
         }
 
         lastScrollY.current = currentY;
-    };
+    },[]);
 
-    const loadMore = () => {
+    const loadMore = useCallback(() => {
         if (!loading.current && hasMore.current && pageNumber.current) {
             fetchPosts(pageNumber.current + 1);
         }
-    };
+    },[]);
 
 
     return (
@@ -145,12 +144,8 @@ const HomeScreen = () => {
                     <FeedList
                         flatListRef={flatListRef}
                         onScroll={handleScroll}
-                        scrollEventThrottle={16}
-                        contentContainerStyle={{ paddingTop: headerHeight }}
                         onEndReached={loadMore}
-                        onEndReachedThreshold={0.5}
-                        ListFooterComponent={loading.current && <ActivityIndicator />}
-                        showsVerticalScrollIndicator={false}
+                        loading={loading}
                     />
                 </View>
             </View>
@@ -158,7 +153,7 @@ const HomeScreen = () => {
     );
 };
 
-export default HomeScreen;
+export default React.memo(HomeScreen);
 
 const styles = StyleSheet.create({
     HomeContainer: {

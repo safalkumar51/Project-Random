@@ -7,7 +7,7 @@ const getPostWithComments = async (req, res) => {
     try {
         const postId = mongoose.Types.ObjectId.createFromHexString(req.query.postId);
         const pageNumber = Number(req.query.page) || 1;
-        const limit = 6;
+        const limit = 30;
         const skip = (pageNumber - 1) * limit;
 
         const user = await userModel.findOne({ _id: req.userId }).select('token');

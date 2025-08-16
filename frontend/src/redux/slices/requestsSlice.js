@@ -1,44 +1,32 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const initialState = {
-    requests: [],
-};
+import { requestsAdapter, initialRequestsState } from '../adaptors/requestsAdapter';
 
 const requestsSlice = createSlice({
     name: 'requests',
-    initialState,
+    initialState: initialRequestsState,
     reducers: {
-        addRequests: (state, action) => {
-            const { page, data } = action.payload;
-            if (page === 1) {
-                state.requests = data;
-            } else {
-                state.requests = [...state.requests, ...data];
+        setRequests: requestsAdapter.setAll,
+        addRequests: requestsAdapter.addMany,
+        addRequest: requestsAdapter.addOne,
+        removeRequest: requestsAdapter.removeOne,
+        clearRequests: requestsAdapter.removeAll,
+        updateRequestsStatus: (state, action) => {
+            const { requestId, status } = action.payload;
+            const request = state.entities[requestId];
+            if (request) {
+                request.status = status;
             }
         },
-        removeRequest: (state, action) => {
-            const { _id } = action.payload
-            state.requests = state.requests.filter(
-                (req) => req._id !== _id
-            );
-        },
-        updateRequestStatus: (state, action) => {
-            const { _id, status } = action.payload;
-            const requestIndex = state.requests.findIndex((req) => req._id === _id);
-            if (requestIndex !== -1) {
-                state.requests[requestIndex].status = status;
-            }
-        },
-        addRequest: (state, action) => {
-            state.requests.unshift(action.payload);
-        }
-    },
+    }
 });
 
 export const {
+    setRequests,
     addRequests,
     removeRequest,
-    updateRequestStatus,
+    clearRequests,
+    updateRequestsStatus,
     addRequest,
 } = requestsSlice.actions;
 

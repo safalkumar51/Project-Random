@@ -1,14 +1,14 @@
 import { createEntityAdapter } from '@reduxjs/toolkit';
 
-export const profileAdapter = createEntityAdapter({
+export const myProfileAdapter = createEntityAdapter({
     selectId: (profile) => profile._id, // Using postId as the ID
 });
 
-export const initialProfileState = profileAdapter.getInitialState();
+export const initialMyProfileState = myProfileAdapter.getInitialState();
 
-export const postsAdapter = createEntityAdapter({
+export const myPostsAdapter = createEntityAdapter({
     selectId: (post) => post._id,
     sortComparer: false
 });
 
-export const initialCommentsState = postsAdapter.getInitialState();
+export const initialMyPostsState = myPostsAdapter.getInitialState();

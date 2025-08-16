@@ -7,7 +7,7 @@ const otherPostsSlice = createSlice({
     initialState: initialOtherPostsState,
     reducers: {
         setOtherPosts: otherPostsAdapter.setAll,
-        addManyOtherPosts: otherPostsAdapter.addMany,
+        addOtherPosts: otherPostsAdapter.addMany,
         clearOtherPosts: otherPostsAdapter.removeAll,
         toggleOtherPostsLike: (state, action) => {
             const post = state.entities[action.payload];
@@ -26,5 +26,5 @@ const otherPostsSlice = createSlice({
     }
 });
 
-export const { setOtherPosts, addManyOtherPosts, clearOtherPosts, toggleOtherPostsLike, toggleOtherPostsComment } = otherPostsSlice.actions;
+export const { setOtherPosts, addOtherPosts, clearOtherPosts, toggleOtherPostsLike, toggleOtherPostsComment } = otherPostsSlice.actions;
 export default otherPostsSlice.reducer;

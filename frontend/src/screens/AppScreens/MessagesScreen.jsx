@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Animated, ActivityIndicator, Alert } from 'react-native';
 
 import { useIsFocused, useNavigation } from '@react-navigation/native';
@@ -10,7 +10,7 @@ import axios from 'axios';
 import baseURL from '../../assets/config';
 import MessagesCard from '../../components/MessagesCard';
 import NavBar from '../../components/NavBar';
-import { addMessages } from '../../redux/slices/messagesSlice';
+import { addMessages, setMessages } from '../../redux/slices/messagesSlice';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -29,7 +29,6 @@ const MessagesScreen = () => {
     const scrollDirection = useRef('up');
     const insets = useSafeAreaInsets();
 
-    const messages = useSelector((state) => state.messages.messages);
     const dispatch = useDispatch();
 
     const pageNumber = useRef(0);
@@ -58,11 +57,13 @@ const MessagesScreen = () => {
                 }
             });
             if (response.data.success) {
-                dispatch(addMessages({page, data: response.data.messages}));
+                const messagesData = response.data.messages;
                 if (page === 1) {
                     totalPages.current = response.data.totalPages;
+                    dispatch(setMessages(messagesData));
+                } else {
+                    dispatch(addMessages(messagesData));
                 }
-
                 pageNumber.current = page;
                 hasMore.current = page < totalPages.current;
             }
@@ -82,7 +83,6 @@ const MessagesScreen = () => {
     };
 
     useEffect(() => {
-        console.log(navigation.getState());
         // function to reload or scroll to top 
         const reload = navigation.addListener('tabPress', () => {
             if (isFocused) {
@@ -104,42 +104,41 @@ const MessagesScreen = () => {
 
     // Track scroll offset
 
-    const handleScroll = (event) => {
-        const currentY = event.nativeEvent.contentOffset.y;
-
-        if (currentY > lastScrollY.current) {
-            if (scrollDirection.current !== 'down' && currentY > 60) {
-                Animated.timing(headerTranslateY, {
-                    toValue: -headerHeight - insets.top,
-                    duration: 200,
-                    useNativeDriver: true,
-                }).start();
-                scrollDirection.current = 'down';
+    const handleScroll = useCallback((event) => {
+            const currentY = event.nativeEvent.contentOffset.y;
+            if (currentY > lastScrollY.current) {
+                if (scrollDirection.current !== 'down' && currentY > 60) {
+                    Animated.timing(headerTranslateY, {
+                        toValue: -headerHeight - insets.top,
+                        duration: 200,
+                        useNativeDriver: true,
+                    }).start();
+                    scrollDirection.current = 'down';
+                }
+            } else {
+                if (scrollDirection.current !== 'up') {
+                    Animated.timing(headerTranslateY, {
+                        toValue: 0,
+                        duration: 200,
+                        useNativeDriver: true,
+                    }).start();
+                    scrollDirection.current = 'up';
+                }
             }
-        } else {
-            if (scrollDirection.current !== 'up') {
-                Animated.timing(headerTranslateY, {
-                    toValue: 0,
-                    duration: 200,
-                    useNativeDriver: true,
-                }).start();
-                scrollDirection.current = 'up';
-            }
-        }
-
-        lastScrollY.current = currentY;
-    }
+    
+            lastScrollY.current = currentY;
+        }, [headerHeight, insets.top])
 
     const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
     // if user reaches end to flatlist loadmore
-    const loadMore = () => {
+    const loadMore = useCallback(() => {
         if (!loading.current && hasMore.current && pageNumber.current) {
             fetchMessages(pageNumber.current + 1);
         }
-    };
+    },[]);
 
-    const renderItem = ({ item }) => {
+    const renderItem = useCallback(({ item }) => {
         return (
             <MessagesCard
                 name={item.from.name}
@@ -149,7 +148,7 @@ const MessagesScreen = () => {
                 otherId={item.from._id}
             />
         );
-    };
+    },[]);
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
@@ -179,7 +178,7 @@ const MessagesScreen = () => {
     );
 };
 
-export default MessagesScreen;
+export default React.memo(MessagesScreen);
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },

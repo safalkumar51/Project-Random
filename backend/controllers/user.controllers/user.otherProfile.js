@@ -120,6 +120,7 @@ const userOtherProfile = async (req, res) => {
                         _id: 1,
                         postpic: 1,
                         caption: 1,
+                        owner: 1,
                         likesCount: 1,
                         commentsCount: 1,
                         isLiked: 1,

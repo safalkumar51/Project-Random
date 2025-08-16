@@ -7,15 +7,15 @@ const RequestSlice = createSlice({
     reducers: {
         setRequest: requestAdapter.setOne,
         clearRequest: requestAdapter.removeAll,
-        toggleStatus: (state, action) => {
-            const { requestId, status } = action.payload
+        updateRequestStatus: (state, action) => {
+            const { requestId, status } = action.payload;
             const request = state.entities[requestId];
-            if (post) {
+            if (request) {
                 request.status = status;
             }
         }
     }
 });
 
-export const { setRequest, clearRequest, toggleStatus } = RequestSlice.actions;
+export const { setRequest, clearRequest, updateRequestStatus } = RequestSlice.actions;
 export default RequestSlice.reducer;

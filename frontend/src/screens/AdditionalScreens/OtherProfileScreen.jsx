@@ -23,10 +23,10 @@ import baseURL from '../../assets/config';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { selectOtherPostsIds, selectRequestIds } from '../../redux/selectors/otherProfileSelectors';
 import { clearOtherProfile, setOtherProfile } from '../../redux/slices/otherProfileSlice';
-import { addManyOtherPosts, clearOtherPosts, setOtherPosts } from '../../redux/slices/otherPostsSlice';
+import { addOtherPosts, clearOtherPosts, setOtherPosts } from '../../redux/slices/otherPostsSlice';
 import { clearRequest, setRequest } from '../../redux/slices/requestSlice';
+import OtherProfileList from '../../lists/OtherProfileList';
 
 dayjs.extend(relativeTime);
 
@@ -37,12 +37,6 @@ const OtherProfileScreen = ({ route }) => {
     const { otherId } = route.params;
 
     const dispatch = useDispatch();
-
-    const requestIds = useSelector(selectRequestIds, shallowEqual);
-    const otherPostsIds = useSelector(selectOtherPostsIds, shallowEqual);
-    
-    const requestData = useMemo(() => requestIds, [requestIds]);
-    const postsData = useMemo(() => otherPostsIds, [otherPostsIds]);
 
     const headerHeight = 60;
     const headerTranslateY = useRef(new Animated.Value(0)).current;
@@ -101,17 +95,16 @@ const OtherProfileScreen = ({ route }) => {
             });
 
             if (response.data.success) {
+                const postsData = response.data.posts;
                 if (page === 1) {
                     totalPages.current = response.data.totalPages;
                     const profileData = response.data.profile;
-                    dispatch(setOtherProfile(profileData));
-                    const postsData = response.data.posts;
-                    dispatch(setOtherPosts(postsData));
                     const requestData = response.data.request;
+                    dispatch(setOtherProfile(profileData));
+                    dispatch(setOtherPosts(postsData));
                     dispatch(setRequest(requestData));
                 } else {
-                    const postsData = response.data.posts;
-                    dispatch(addManyOtherPosts(postsData));
+                    dispatch(addOtherPosts(postsData));
                 }
 
                 pageNumber.current = page;
@@ -157,35 +150,6 @@ const OtherProfileScreen = ({ route }) => {
         }
     }, []);
 
-    console.log(postsData);
-    useEffect(() => {
-        console.log("fuck fuck");
-    },[])
-
-    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-
-    const listHeader = useMemo(() => {
-        if (!otherId || profileLoading.current) {
-            return <ActivityIndicator size="large" />;
-        }
-
-        return (
-            <>
-                <ProfileCard
-                    profileId={otherId}
-                    counter={1}
-                />
-                <StatusCard
-                    requestId={requestData[0]}
-                />
-            </>
-        );
-    }, [otherId, profileLoading.current, requestData]);
-
-    const keyExtractor = useCallback((item) => (item._id ? item._id : item), []);
-
-    const renderItem = useCallback(({ item }) => <PostCards postId={item} counter={4} /> , []);
-
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.main}>
@@ -194,26 +158,11 @@ const OtherProfileScreen = ({ route }) => {
                     title="Profile"
                 />
                 <View style={{ flex: 1 }}>
-                    <AnimatedFlatList
-                        data={postsData}
-                        keyExtractor={keyExtractor}
-                        renderItem={renderItem}
-
+                    <OtherProfileList
                         onScroll={handleScroll}
-                        scrollEventThrottle={16}
-
-                        contentContainerStyle={{ paddingTop: headerHeight }}
-
-                        // to run loadmore function when end is reached for infinite scrolling
                         onEndReached={loadMore}
-                        onEndReachedThreshold={0.5}
-
-                        // this makes navbar sticky
-                        ListHeaderComponent={listHeader}
-
-                        // to display loading as footer
-                        ListFooterComponent={loading.current && !profileLoading.current && <ActivityIndicator />}
-                        showsVerticalScrollIndicator={false}
+                        loading={loading}
+                        profileLoading={profileLoading}
                     />
                 </View>
             </View>

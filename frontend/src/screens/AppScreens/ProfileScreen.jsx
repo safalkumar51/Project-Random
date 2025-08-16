@@ -18,10 +18,13 @@ import NavBar from '../../components/NavBar';
 import PostCards from '../../components/PostCards';
 import ProfileCard from '../../components/ProfileCard';
 import baseURL from '../../assets/config';
-import { setMyProfile, addMyProfilePosts, setMyProfileError } from '../../redux/slices/myProfileSlice';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { selectMyPostsIds, selectMyProfileIds } from '../../redux/selectors/myProfileSelectors';
+import { setMyProfile } from '../../redux/slices/myProfileSlice';
+import { addMyPosts, setMyPosts } from '../../redux/slices/myPostsSlice';
+import MyProfileList from '../../lists/MyProfileList';
 
 dayjs.extend(relativeTime);
 
@@ -38,12 +41,6 @@ const ProfileScreen = () => {
     const scrollDirection = useRef('up');
 
     const dispatch = useDispatch();
-
-    const profileIds = useSelector(selectMyProfileIds, shallowEqual);
-    const postsIds = useSelector(selectMyPostsIds, shallowEqual);
-
-    const profileData = useMemo(() => profileIds, [profileIds]);
-    const postsData = useMemo(() => postsIds, [postsIds]);
 
     const pageNumber = useRef(0);
     const loading = useRef(false);
@@ -70,17 +67,13 @@ const ProfileScreen = () => {
             });
 
             if (response.data.success) {
-
-
-
+                const postsData = response.data.posts;
                 if (page === 1) {
                     totalPages.current = response.data.totalPages;
                     const profileData = response.data.profile;
-                    const postsData = response.data.posts;
                     dispatch(setMyProfile(profileData));
                     dispatch(setMyPosts(postsData));
                 } else {
-                    const postsData = response.data.posts;
                     dispatch(addMyPosts(postsData));
                 }
                 pageNumber.current = page;
@@ -144,59 +137,23 @@ const ProfileScreen = () => {
         lastScrollY.current = currentY;
     }, [headerHeight, insets.top]);
 
-    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-
     const loadMore = useCallback(() => {
         if (!loading.current && hasMore.current && pageNumber.current) {
             fetchProfile(pageNumber.current + 1);
         }
     }, []);
 
-    const listHeader = useMemo(() => {
-        if (profileLoading.current) {
-            return <ActivityIndicator size="large" />;
-        }
-
-        return (
-            <>
-                <ProfileCard
-                    profileId={profileData[0]}
-                    counter={0}
-                />
-            </>
-        );
-    }, [profileLoading.current, profileData]);
-
-    const keyExtractor = useCallback((item) => (item._id ? item._id : item), []);
-
-    const renderItem = useCallback(({ item }) => {
-        return (
-            <PostCards
-                postId={item}
-                counter={3}
-            />
-        );
-    }, []);
-
-
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.main}>
                 <NavBar scrollY={headerTranslateY} />
                 <View style={{ flex: 1 }}>
-                    <AnimatedFlatList
-                        ref={flatListRef}
-                        data={postsData}
-                        keyExtractor={keyExtractor}
-                        renderItem={renderItem}
+                    <MyProfileList
+                        flatListRef={flatListRef}
                         onScroll={handleScroll}
-                        scrollEventThrottle={16}
                         onEndReached={loadMore}
-                        onEndReachedThreshold={0.5}
-                        contentContainerStyle={{ paddingTop: headerHeight }}
-                        ListHeaderComponent={listHeader}
-                        ListFooterComponent={loading.current && !profileLoading.current && <ActivityIndicator />}
-                        showsVerticalScrollIndicator={false}
+                        loading={loading}
+                        profileLoading={profileLoading}
                     />
                 </View>
             </View>
@@ -204,7 +161,7 @@ const ProfileScreen = () => {
     );
 };
 
-export default ProfileScreen;
+export default React.memo(ProfileScreen);
 
 const styles = StyleSheet.create({
     main: {

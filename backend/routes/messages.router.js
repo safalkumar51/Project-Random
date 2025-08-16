@@ -10,7 +10,6 @@ router.get('/', isLoggedIn, async (req,res) => {
     const pageNumber = Number(req.query.page) || 1;
     const limit = 30;
     const skip = (pageNumber - 1) * limit;
-    console.log(req.userId);
 
     try{
 

@@ -6,9 +6,9 @@ import {
     Alert,
     Animated,
 } from 'react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 
 import axios from 'axios';
@@ -18,7 +18,9 @@ import ActivityCard from '../../components/ActivityCard';
 import NavBar from '../../components/NavBar';
 import { socket } from '../../utils/socket';
 import baseURL from '../../assets/config';
-import { addRequest, addRequests } from '../../redux/slices/requestsSlice';
+
+import { addRequest, addRequests, setRequests } from '../../redux/slices/requestsSlice';
+import { selectRequestsIds } from '../../redux/selectors/requestsSelectors';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -36,7 +38,6 @@ const AlertScreen = () => {
     const scrollDirection = useRef('up');
     const insets = useSafeAreaInsets();
 
-    const requests = useSelector((state) => state.requests.requests);
     const dispatch = useDispatch();
 
     const pageNumber = useRef(0);
@@ -46,9 +47,9 @@ const AlertScreen = () => {
 
     const fetchRequests = async (page) => {
         if (page !== 1 && (loading.current || !hasMore.current)) return;
-        
+
         loading.current = true;
-        
+
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -63,9 +64,12 @@ const AlertScreen = () => {
             });
 
             if (response.data.success) {
-                dispatch(addRequests({ page, data: response.data.requests }));
                 if (page === 1) {
                     totalPages.current = response.data.totalPages;
+                    dispatch(setRequests(response.data.requests));
+                }
+                else {
+                    dispatch(addRequests(response.data.requests));
                 }
                 pageNumber.current = page;
                 hasMore.current = (page < totalPages.current);
@@ -98,7 +102,6 @@ const AlertScreen = () => {
     // on mounting fetchrequests(pageno = 1)
     useEffect(() => {
         const handleRequest = (data) => {
-            console.log(data);
             dispatch(addRequest(data));
         };
         socket.off('receive_request', handleRequest); // prevent duplicates
@@ -113,9 +116,8 @@ const AlertScreen = () => {
 
     // Track scroll offset
 
-    const handleScroll = (event) => {
+    const handleScroll = useCallback((event) => {
         const currentY = event.nativeEvent.contentOffset.y;
-
         if (currentY > lastScrollY.current) {
             if (scrollDirection.current !== 'down' && currentY > 60) {
                 Animated.timing(headerTranslateY, {
@@ -136,52 +138,27 @@ const AlertScreen = () => {
             }
         }
         lastScrollY.current = currentY;
-    };
+    }, [headerHeight, insets.top]);
 
-    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-
-    const loadMore = () => {
+    const loadMore = useCallback(() => {
         if (!loading.current && hasMore.current && pageNumber.current) {
             fetchRequests(pageNumber.current + 1);
         }
-    };
-
-    const renderItem = ({ item }) => (
-        <ActivityCard
-            name={item.from?.name}
-            profileImage={item.from?.profilepic}
-            time={dayjs(item.createdAt).fromNow()}
-            status={item.status}
-            requestId={item._id}
-            senderId={item.from?._id}
-        />
-    );
-
+    }, []);
+    
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.main}>
                 <NavBar scrollY={headerTranslateY} />
                 <View style={{ flex: 1 }}>
-                    <AnimatedFlatList
-                        ref={flatListRef}
-                        data={requests}
-                        keyExtractor={(item) => item._id}
-                        renderItem={renderItem}
-                        onScroll={handleScroll}
-                        scrollEventThrottle={16}
-                        contentContainerStyle={{ paddingTop: headerHeight }}
-                        onEndReached={loadMore}
-                        onEndReachedThreshold={0.5}
-                        ListFooterComponent={loading.current && <ActivityIndicator />}
-                        showsVerticalScrollIndicator={false}
-                    />
+                    
                 </View>
             </View>
         </SafeAreaView>
     );
 };
 
-export default AlertScreen;
+export default React.memo(AlertScreen);
 
 const styles = StyleSheet.create({
     main: {
