@@ -1,7 +1,8 @@
-import { StyleSheet, Text, TouchableOpacity, View, Dimensions, Image } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, Dimensions, Image, Alert, Pressable ,Modal} from 'react-native'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import Icons from 'react-native-vector-icons/Entypo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import baseURL from '../assets/config';
@@ -20,6 +21,7 @@ const CommentCard = ({ commentId }) => {
     const navigation = useNavigation();
 
     const dispatch = useDispatch();
+    const [modalVisible,setModalVisible ] =useState(false);
 
     const comment = useSelector(state => selectCommentById(state, commentId), shallowEqual);
 
@@ -63,16 +65,48 @@ const CommentCard = ({ commentId }) => {
         }
     };
 
+    const handleDelete =()=>{
+        Alert.alert("comment Deleted");
+        setModalVisible(false);
+    }
+    const handleReport =()=>{
+        Alert.alert("Comment reported");
+        setModalVisible(false);
+    }
+
     return (
+        <>
+        <Pressable onLongPress={()=>setModalVisible(true)}>
         <View style={styles.card}>
+            
             <View style={styles.upper}>
+
+                  
+                
                 <TouchableOpacity style={styles.userInfo} onPress={getProfileHandler}>
+                    
                     <Image style={styles.avatar} source={{ uri: comment.commentOwner.profilepic }} />
+                    
                     <View style={styles.nameTime}>
+                       
                         <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{comment.commentOwner.name}</Text>
+                        
                         <Text style={styles.time}>{time}</Text>
+                       
+                  
                     </View>
+                    {/* <TouchableOpacity  style={styles.menuButton}>
+                     <Icons name="dots-three-horizontal" size={20} color="#333"/>
+                     
+                  </TouchableOpacity> */}
+                    
                 </TouchableOpacity>
+                    
+                  
+       
+                 
+                
+               
 
                 <TouchableOpacity style={styles.interaction} onPress={toggleLike}>
                     <Icon
@@ -84,12 +118,48 @@ const CommentCard = ({ commentId }) => {
                         {comment.commentLikesCount > 0 ? `${comment.commentLikesCount} Likes` : '0 Like'}
                     </Text>
                 </TouchableOpacity>
+
+                
             </View>
+            
 
             <View style={styles.lower}>
                 <Text style={styles.comment}>{comment.text}</Text>
             </View>
         </View>
+
+        </Pressable>
+
+        {/* Modal for delete , report , cancel option */}
+        <Modal 
+        transparent={true}
+        visible={modalVisible}
+        animationType="slide"
+        onRequestClose={()=>setModalVisible(false)}
+        >
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                    {true && (
+                        <Pressable style={[styles.modalBtn, styles.withBorder]} onPress={handleDelete}>
+                            <Text style={styles.deleteTxt}>Delete</Text>
+                        </Pressable>
+                    )}
+                    {/* <Pressable style={[styles.modalBtn, styles.withBorder]}  onPress={handleDelete}>
+                            <Text style={styles.deleteTxt}>Delete</Text>
+                        </Pressable> */}
+                    <Pressable style={[styles.modalBtn, styles.withBorder]} onPress={handleReport}>
+                        <Text style={styles.reportTxt}>Report</Text>
+                    </Pressable>
+                    <Pressable style={[styles.modalBtn, styles.withBorder]} onPress={()=>setModalVisible(false)}>
+                        <Text style={styles.cancelTxt}>cancel</Text>
+                    </Pressable>
+                </View>
+            </View>
+
+
+        </Modal>
+
+        </>
     );
 };
 
@@ -111,6 +181,18 @@ const styles = StyleSheet.create({
         elevation: 5,
         //borderBottomColor: '#777',
         //borderBottomWidth: 1,
+    },
+    // threeDots:{
+    //     flexDirection: 'col',
+    //     justifyContent: 'space-around',
+    //     alignItems: 'start',
+    //     marginTop: 10,
+    //     marginHorizontal: 10,
+       
+        
+    // },
+    menuButton:{
+        marginRight:150
     },
     upper: {
         flexDirection: 'row',
@@ -163,4 +245,41 @@ const styles = StyleSheet.create({
         fontWeight: 400,
         fontSize: 13,
     },
+    modalOverlay:{
+        flex:1,
+        justifyContent:"flex-end",
+        backgroundColor:'rgba(0,0,0,0.5)',
+
+    },
+    modalContent:{
+        backgroundColor:"#fff",
+        padding:20,
+        borderTopLeftRadius:16,
+        borderTopRightRadius:16,
+        borderBottomWidth:1
+    },
+    modalBtn:{
+        paddingVertical:15,
+        alignItems:'center',
+
+    },
+    deleteTxt: { 
+        fontSize: 16,
+         color: 'red',
+          fontWeight: '600' 
+        },
+  reportTxt: {
+     fontSize: 16,
+      color: 'orange', 
+      fontWeight: '600'
+     },
+  cancelTxt: { 
+    fontSize: 16, 
+    color: '#333',
+     fontWeight: '600' },
+
+     withBorder: {
+    borderBottomWidth:1,
+    borderBottomColor:"#ddd", // light grey line
+},
 })

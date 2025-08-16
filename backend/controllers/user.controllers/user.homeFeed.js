@@ -4,7 +4,6 @@ const userModel = require('../../models/user.model');
 
 const userHomeFeed = async (req, res) => {
     try{
-
         const pageNumber = Number(req.query.page) || 1;
         const limit = 20;
         const skip = (pageNumber - 1) * limit;
