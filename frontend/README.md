@@ -19,20 +19,18 @@ Built with scalability, cross-platform support, and developer experience in mind
 🧹 ESLint + Prettier – Linting & formatting
 
 ⚙️ Installation & Setup
-1.	Clone the repository
+Clone the repository
 
 bash
 git clone <repo-url>
 cd Project-Random-features-Redux/frontend
-
-2. Install dependencies
+Install dependencies
 
 bash
 npm install
+Run the app
 
-3. Run the app
-
- 📱 Android:
+📱 Android:
 
 bash
 npm run android
@@ -40,8 +38,7 @@ npm run android
 
 bash
 npm run ios
-
-4. Start Metro bundler
+Start Metro bundler
 
 bash
 npm start
@@ -65,15 +62,15 @@ frontend/
 │── package.json      # Dependencies & scripts
 │── tsconfig.json     # TypeScript configuration
 📖 Available Scripts
-⦁	npm start – Start Metro bundler
+npm start – Start Metro bundler
 
-⦁	npm run android – Run app on Android
+npm run android – Run app on Android
 
-⦁	npm run ios – Run app on iOS
+npm run ios – Run app on iOS
 
-⦁	npm test – Run Jest tests
+npm test – Run Jest tests
 
-⦁	npm run lint – Run ESLint
+npm run lint – Run ESLint
 
 🤝 Contribution
 Contributions are welcome! 🎉
