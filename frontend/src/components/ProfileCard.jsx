@@ -1,25 +1,40 @@
 import { StyleSheet, Text, View, Image } from 'react-native'
-import React from 'react'
+import React, { useEffect } from 'react'
+import { shallowEqual, useDispatch, useSelector } from 'react-redux'
+import { selectOtherProfileById } from '../redux/selectors/otherProfileSelectors';
 
-const ProfileCard = ({ name, email, profileImage, bio }) => {
+const ProfileCard = ({ profileId, counter }) => {
+
+    let profile = {};
+    if(counter){
+        profile = useSelector(state => selectOtherProfileById(state, profileId), shallowEqual);
+    } else {
+        profile = useSelector();
+    }
+
+    console.log(2);
+        useEffect(() => {
+            console.log(22);
+        },[])
+
     return (
         <View style={styles.profileCard}>
             <View style={styles.profileContainer}>
-                <Image style={styles.profileImg} source={{ uri: profileImage }} />
-                <Text style={styles.name}>{name}</Text>
-                <Text style={styles.email}>{email}</Text>
+                <Image style={styles.profileImg} source={{ uri: profile?.profilepic }} />
+                <Text style={styles.name}>{profile?.name}</Text>
+                <Text style={styles.email}>{profile?.email}</Text>
             </View>
             
-            {bio && (
+            {profile?.bio && (
                 <View style={styles.bioContainer}>
-                    <Text>{bio}</Text>
+                    <Text>{profile?.bio}</Text>
                 </View>
             )}
         </View>
     )
 }
 
-export default ProfileCard
+export default React.memo(ProfileCard)
 
 const styles = StyleSheet.create({
     profileCard: {

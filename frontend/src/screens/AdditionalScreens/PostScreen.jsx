@@ -109,18 +109,20 @@ const PostScreen = ({ route }) => {
 
     useEffect(() => {
         postLoading.current = true;
-        const loadData = async () => {
+        const loadData = async () => {            
+            await fetchPost(1);
+        }
+        loadData();
+        postLoading.current = false;
+
+        return () => {
             dispatch(clearPost());
             dispatch(clearComments());
             pageNumber.current = 0;
             loading.current = false;
             hasMore.current = true;
             totalPages.current = undefined;
-            
-            await fetchPost(1);
         }
-        loadData();
-        postLoading.current = false;
     }, [postId]);
 
     const loadMore = useCallback(() => {

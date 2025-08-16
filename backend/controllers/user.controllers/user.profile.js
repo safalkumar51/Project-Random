@@ -18,6 +18,23 @@ const userProfile = async (req, res) => {
             { $limit: limit },
             {
                 $lookup: {
+                    from: 'users',
+                    localField: 'owner',
+                    foreignField: '_id',
+                    as: 'owner',
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                                profilepic: 1,
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $lookup: {
                     from: "likes",
                     localField: '_id',
                     foreignField: 'post',
@@ -30,6 +47,13 @@ const userProfile = async (req, res) => {
                     localField: '_id',
                     foreignField: 'post',
                     as: 'comments',
+                }
+            },
+            {
+                $addFields: {
+                    owner: {
+                        $first: '$owner',
+                    }
                 }
             },
             {

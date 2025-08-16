@@ -1,20 +1,27 @@
 import { Alert, StyleSheet, Text, TouchableOpacity, View, Dimensions } from 'react-native';
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import baseURL from '../assets/config';
-import { useDispatch } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { setOtherProfileStatus } from '../redux/slices/otherProfileSlice'; // NEW
+import { selectRequestById } from '../redux/selectors/otherProfileSelectors';
 
 const { width } = Dimensions.get('window');
 
-const StatusCard = ({ status, requestId, senderId }) => {
+const StatusCard = ({ requestId }) => {
     const navigation = useNavigation();
+
     const dispatch = useDispatch();
 
+    console.log(requestId);
+
+    const request = useSelector(state => selectRequestById(state, requestId), shallowEqual);
+
+    const data = useMemo(() => request, [request]);
+
     const connectHandler = async () => {
-        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -34,9 +41,6 @@ const StatusCard = ({ status, requestId, senderId }) => {
             if (response.data.success) {
                 Alert.alert(response.data.message);
 
-                // 🔹 Update status instantly in profile view
-                dispatch(setOtherProfileStatus("connected"));
-
             } else {
                 console.error(response.data.message);
                 if (response.data.message === 'Log In Required!') {
@@ -50,7 +54,6 @@ const StatusCard = ({ status, requestId, senderId }) => {
     };
 
     const removeHandler = async () => {
-        return;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -70,9 +73,6 @@ const StatusCard = ({ status, requestId, senderId }) => {
             if (response.data.success) {
                 Alert.alert(response.data.message);
 
-                // 🔹 Update status instantly in profile view
-                dispatch(setOtherProfileStatus("none"));
-
             } else {
                 console.error(response.data.message);
                 if (response.data.message === 'Log In Required!') {
@@ -84,18 +84,24 @@ const StatusCard = ({ status, requestId, senderId }) => {
             console.log('Error rejecting:', err);
         }
     };
+    console.log(1);
+    useEffect(() => {
+        console.log(11);
+    },[])
+
+    console.log(data);
 
     return (
         <View style={styles.card}>
-            {(status === "requested" || status === "connected") && (
+            {(data?.status !== "pending") && (
                 <View style={styles.statusWrapper}>
-                    <Text style={[styles.statusText, status === "connected" ? styles.connected : styles.requested]}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                    <Text style={[styles.statusText, data?.status === "connected" ? styles.connected : styles.requested]}>
+                        {data?.status.charAt(0).toUpperCase() + data?.status.slice(1)}
                     </Text>
                 </View>
             )}
 
-            {status === "pending" && (
+            {data?.status === "pending" && (
                 <View style={styles.container}>
                     <TouchableOpacity style={styles.connectBtn} onPress={connectHandler}>
                         <Text style={styles.connectTxt}>Connect</Text>
@@ -109,7 +115,7 @@ const StatusCard = ({ status, requestId, senderId }) => {
     );
 };
 
-export default StatusCard;
+export default React.memo(StatusCard);
 
 const styles = StyleSheet.create({
     card: {

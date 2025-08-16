@@ -6,6 +6,8 @@ import singlePostReducer from './slices/singlePostSlice';
 import singlePostCommentsReducer from './slices/singlePostCommentsSlice'; 
 import myProfileReducer from './slices/myProfileSlice';
 import otherProfileReducer from './slices/otherProfileSlice';
+import otherPostsReducer from './slices/otherPostsSlice';
+import requestReducer from './slices/requestSlice'
 import messagesReducer from './slices/messagesSlice';
 import chatReducer from './slices/chatSlice';
 
@@ -18,6 +20,8 @@ export const store = configureStore({
     singlePostComments: singlePostCommentsReducer,
     myProfile: myProfileReducer,
     otherProfile: otherProfileReducer,
+    otherPosts: otherPostsReducer,
+    request: requestReducer,
     messages: messagesReducer, 
     chat: chatReducer,          
   },

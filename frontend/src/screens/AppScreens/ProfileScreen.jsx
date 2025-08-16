@@ -6,10 +6,10 @@ import {
     Animated,
     Alert,
 } from 'react-native';
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -38,12 +38,18 @@ const ProfileScreen = () => {
     const scrollDirection = useRef('up');
 
     const dispatch = useDispatch();
-    const profile = useSelector((state) => state.myProfile.profile);
+
+    const profileIds = useSelector(selectMyProfileIds, shallowEqual);
+    const postsIds = useSelector(selectMyPostsIds, shallowEqual);
+
+    const profileData = useMemo(() => profileIds, [profileIds]);
+    const postsData = useMemo(() => postsIds, [postsIds]);
 
     const pageNumber = useRef(0);
     const loading = useRef(false);
     const hasMore = useRef(true);
     const totalPages = useRef(1);
+    const profileLoading = useRef(false);
 
     const fetchProfile = async (page = 1) => {
         if (page !== 1 && (loading.current || !hasMore.current)) return;
@@ -57,21 +63,26 @@ const ProfileScreen = () => {
                 return;
             }
 
-            const response = await axios.get(`${ baseURL }/user/profile?page=${page}`, {
+            const response = await axios.get(`${baseURL}/user/profile?page=${page}`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                 }
             });
-            
+
             if (response.data.success) {
-                
-                const profileData = response.data.profile;
+
+
 
                 if (page === 1) {
                     totalPages.current = response.data.totalPages;
+                    const profileData = response.data.profile;
+                    const postsData = response.data.posts;
+                    dispatch(setMyProfile(profileData));
+                    dispatch(setMyPosts(postsData));
+                } else {
+                    const postsData = response.data.posts;
+                    dispatch(addMyPosts(postsData));
                 }
-                
-                dispatch(addMyProfilePosts({ page, profile: profileData }));
                 pageNumber.current = page;
                 hasMore.current = page < totalPages.current;
             } else {
@@ -79,18 +90,21 @@ const ProfileScreen = () => {
                     await AsyncStorage.removeItem('authToken');
                     navigation.replace('LoginScreen');
                 }
-                dispatch(setMyProfileError(response.data.message));
             }
         } catch (err) {
             console.error('Error fetching profile:', err);
-            dispatch(setMyProfileError(err.message));
         }
 
         loading.current = false;
     };
 
     useEffect(() => {
-        fetchProfile(1);
+        profileLoading.current = true;
+        const loadData = async () => {
+            await fetchProfile(1);
+        }
+        loadData();
+        profileLoading.current = false;
     }, []);
 
     useEffect(() => {
@@ -106,7 +120,7 @@ const ProfileScreen = () => {
         return reload;
     }, [navigation, isFocused]);
 
-    const handleScroll = (event) => {
+    const handleScroll = useCallback((event) => {
         const currentY = event.nativeEvent.contentOffset.y;
         if (currentY > lastScrollY.current) {
             if (scrollDirection.current !== 'down' && currentY > 60) {
@@ -128,36 +142,41 @@ const ProfileScreen = () => {
             }
         }
         lastScrollY.current = currentY;
-    };
+    }, [headerHeight, insets.top]);
 
     const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
-    const loadMore = () => {
+    const loadMore = useCallback(() => {
         if (!loading.current && hasMore.current && pageNumber.current) {
             fetchProfile(pageNumber.current + 1);
         }
-    };
+    }, []);
 
+    const listHeader = useMemo(() => {
+        if (profileLoading.current) {
+            return <ActivityIndicator size="large" />;
+        }
 
+        return (
+            <>
+                <ProfileCard
+                    profileId={profileData[0]}
+                    counter={0}
+                />
+            </>
+        );
+    }, [profileLoading.current, profileData]);
 
-    const renderItem = ({ item }) => {
+    const keyExtractor = useCallback((item) => (item._id ? item._id : item), []);
+
+    const renderItem = useCallback(({ item }) => {
         return (
             <PostCards
-                name={profile.name}
-                time={dayjs(item.createdAt).fromNow()}
-                profileImage={profile.profilepic}
-                postText={item.caption}
-                postImage={item.postpic}
-                ownerId={profile._id}
-                postId={item._id}
-                likesCount={item.likesCount}
-                commentsCount={item.commentsCount}
-                isLiked={item.isLiked}
-                isCommented={item.isCommented}
-                isMine={item.isMine}
+                postId={item}
+                counter={3}
             />
         );
-    };
+    }, []);
 
 
     return (
@@ -167,25 +186,16 @@ const ProfileScreen = () => {
                 <View style={{ flex: 1 }}>
                     <AnimatedFlatList
                         ref={flatListRef}
-                        data={profile.posts}
-                        keyExtractor={(item) => item._id}
+                        data={postsData}
+                        keyExtractor={keyExtractor}
                         renderItem={renderItem}
                         onScroll={handleScroll}
                         scrollEventThrottle={16}
                         onEndReached={loadMore}
                         onEndReachedThreshold={0.5}
                         contentContainerStyle={{ paddingTop: headerHeight }}
-                        ListHeaderComponent={() =>
-                            profile && (
-                                <ProfileCard
-                                    name={profile.name}
-                                    email={profile.email}
-                                    profileImage={profile.profilepic}
-                                    bio={profile.bio}
-                                />
-                            )
-                        }
-                        ListFooterComponent={loading.current && <ActivityIndicator />}
+                        ListHeaderComponent={listHeader}
+                        ListFooterComponent={loading.current && !profileLoading.current && <ActivityIndicator />}
                         showsVerticalScrollIndicator={false}
                     />
                 </View>

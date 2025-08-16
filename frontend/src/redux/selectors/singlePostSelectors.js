@@ -4,7 +4,7 @@ import { postAdapter, commentsAdapter } from '../adaptors/singlePostAdapters';
 
 
 // Get the built-in selectors from the adapters
-const postsSelectors = postAdapter.getSelectors(
+const postSelectors = postAdapter.getSelectors(
     (state) => state.singlePost
 );
 
@@ -16,7 +16,7 @@ const commentsSelectors = commentsAdapter.getSelectors(
 export const {
     selectById: selectSinglePostById,
     selectIds: selectSinglePostIds,
-} = postsSelectors;
+} = postSelectors;
 
 export const {
     selectById: selectCommentById,

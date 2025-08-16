@@ -15,11 +15,11 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 
 import baseURL from '../assets/config';
 import { toggleFeedLike } from '../redux/slices/feedSlice';
-import { toggleMyProfileLike } from '../redux/slices/myProfileSlice';
-import { toggleOtherProfileLike } from '../redux/slices/otherProfileSlice';
 import { selectSinglePostById } from '../redux/selectors/singlePostSelectors';
 import { selectFeedPostById } from '../redux/selectors/feedSelectors';
 import { toggleLike } from '../redux/slices/singlePostSlice';
+import { selectOtherPostsById } from '../redux/selectors/otherProfileSelectors';
+import { toggleOtherPostsLike } from '../redux/slices/otherPostsSlice';
 
 dayjs.extend(relativeTime);
 
@@ -34,12 +34,23 @@ const PostCards = ({ postId, counter }) => {
         post = useSelector(state => selectSinglePostById(state, postId), shallowEqual);
     } else if(counter === 2){
         post = useSelector(state => selectFeedPostById(state, postId), shallowEqual);
+    } else if(counter ===3){
+        post = useSelector(state => selectMyPostById(state, postId), shallowEqual);
+    } else if(counter === 4){
+        post = useSelector(state => selectOtherPostsById(state, postId), shallowEqual);
     }
+
+    console.log(post);
 
     const time = useMemo(() => dayjs(post?.createdAt).fromNow(), [post?.createdAt]);
 
     const getProfileHandler = () => {
-        navigation.navigate("OtherProfileScreen", {otherId: post?.owner._id});
+        console.log(post);
+        if(post.isMine){
+            navigation.navigate("Profile");
+        } else {
+            navigation.navigate("OtherProfileScreen", { otherId: post?.owner._id });
+        }
     };
 
     const getPostHandler = () => {
@@ -67,9 +78,9 @@ const PostCards = ({ postId, counter }) => {
                 dispatch(toggleLike(post._id));
                 dispatch(toggleFeedLike(post._id));
                 if (post.isMine) {
-                    dispatch(toggleMyProfileLike(post._id));
+                    //dispatch(toggleMyProfileLike(post._id));
                 } else {
-                    dispatch(toggleOtherProfileLike(post._id));
+                    dispatch(toggleOtherPostsLike(post._id));
                 }
 
             } else {

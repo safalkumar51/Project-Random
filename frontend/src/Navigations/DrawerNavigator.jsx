@@ -13,10 +13,10 @@ import MyConnectionScreen from '../screens/DrawerScreens/MyConnectionsScreen';
 import SettingsScreen from '../screens/DrawerScreens/SettingsScreen';
 import LogoutScreen from '../screens/DrawerScreens/LogOutScreen';
 import MainTabNavigator from './MainTabNavigator';
-import OtherProfileScreen from '../screens/AdditionalScreens/OtherProfileScreen';
 import TermsScreen from '../screens/AdditionalScreens/TermsScreen';
 import PostScreen from '../screens/AdditionalScreens/PostScreen';
 import ChatScreen from '../screens/AppScreens/ChatScreen';
+import OtherProfileScreen from '../screens/AdditionalScreens/OtherProfileScreen';
 
 
 

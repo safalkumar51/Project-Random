@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const postModel = require("../../models/post.model");
 const userModel = require("../../models/user.model");
+const friendRequestModel = require('../../models/friendRequest.model');
 
 const userOtherProfile = async (req, res) => {
 
@@ -11,7 +12,7 @@ const userOtherProfile = async (req, res) => {
         const skip = (pageNumber - 1) * limit;
 
         const otherId = mongoose.Types.ObjectId.createFromHexString(req.query.otherId);
-
+        
         const user = await userModel.findOne({ _id: req.userId }).select('token');
         if (!user || user.token !== req.userToken) {
             return res.status(404).json({
@@ -41,6 +42,23 @@ const userOtherProfile = async (req, res) => {
                 { $limit: limit },
                 {
                     $lookup: {
+                        from: 'users',
+                        localField: 'owner',
+                        foreignField: '_id',
+                        as: 'owner',
+                        pipeline: [
+                            {
+                                $project: {
+                                    _id: 1,
+                                    name: 1,
+                                    profilepic: 1,
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    $lookup: {
                         from: "likes",
                         localField: '_id',
                         foreignField: 'post',
@@ -57,6 +75,13 @@ const userOtherProfile = async (req, res) => {
                 },
                 {
                     $addFields: {
+                        owner: {
+                            $first: '$owner',
+                        }
+                    }
+                },
+                {
+                    $addFields: {
                         likesCount: {
                             $size: "$likes"
                         },
@@ -67,7 +92,7 @@ const userOtherProfile = async (req, res) => {
                             $cond: {
                                 if: {
                                     $in: [
-                                        req.userId,
+                                        otherId,
                                         { $map: { input: "$likes", as: "like", in: "$$like.user" } }
                                     ]
                                 },
@@ -79,7 +104,7 @@ const userOtherProfile = async (req, res) => {
                             $cond: {
                                 if: {
                                     $in: [
-                                        req.userId,
+                                        otherId,
                                         { $map: { input: "$comments", as: "comment", in: "$$comment.user" } }
                                     ]
                                 },
@@ -87,7 +112,7 @@ const userOtherProfile = async (req, res) => {
                                 else: false
                             }
                         },
-                        isMine: true
+                        isMine: false
                     }
                 },
                 {
@@ -106,7 +131,7 @@ const userOtherProfile = async (req, res) => {
             ]);
         }
 
-        if (page > 1) {
+        if (pageNumber > 1) {
             return res.status(200).json({
                 success: true,
                 pageNumber,
@@ -116,7 +141,7 @@ const userOtherProfile = async (req, res) => {
 
         const other = await userModel.aggregate([
             {
-                $match: { _id: req.userId }
+                $match: { _id: otherId }
             },
             {
                 $project: {
@@ -136,7 +161,7 @@ const userOtherProfile = async (req, res) => {
             });
         }
 
-        const total = await postModel.countDocuments({ owner: req.userId });
+        const total = await postModel.countDocuments({ owner: otherId });
 
         return res.status(200).json({
             success: true,
