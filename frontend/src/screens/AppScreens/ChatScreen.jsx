@@ -18,6 +18,7 @@ import { addMessages, addSingleMessage, clearMessages } from '../../redux/slices
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import ChatsList from '../../lists/ChatsList';
 
 dayjs.extend(relativeTime);
 
@@ -65,7 +66,6 @@ const ChatScreen = ({ route }) => {
         lastScrollY.current = currentY;
     }
 
-    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
     const fetchChats = async (page) => {
         if (page !== 1 && (loading.current || !hasMore.current)) return;
@@ -86,7 +86,7 @@ const ChatScreen = ({ route }) => {
             });
 
             if (response.data.success) {
-                dispatch(addMessages({page, data: response.data.chats}))
+                dispatch(addMessages({ page, data: response.data.chats }))
                 if (page === 1) {
                     totalPages.current = response.data.totalPages;
                 }
@@ -165,17 +165,6 @@ const ChatScreen = ({ route }) => {
         }
     };
 
-    const renderItem = ({ item }) => {
-        return (
-            <ChatCard
-                otherId={otherId}
-                id={`${item.from}`}
-                avatar={avatar}
-                message={item.message}
-                time={dayjs(item.createdAt).fromNow()}
-            />
-        );
-    };
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
@@ -191,23 +180,10 @@ const ChatScreen = ({ route }) => {
                             title={name}
                         />
                         <View style={{ flex: 1 }}>
-                            <AnimatedFlatList
-                                data={chats}
-                                keyExtractor={(item) => item._id}
-                                renderItem={renderItem}
+                            <ChatsList
                                 inverted
                                 onScroll={handleScroll}
-                                scrollEventThrottle={16}
-
-                                // to run loadmore function when end is reached for infinite scrolling
                                 onEndReached={loadMore}
-                                onEndReachedThreshold={0.5}
-
-                                // to display loading as footer
-                                ListFooterComponent={loading.current && <ActivityIndicator />}
-                                showsVerticalScrollIndicator={false}
-
-                                contentContainerStyle={styles.messagesContainer}
                             />
                         </View>
                         <View style={styles.inputRow}>
@@ -238,10 +214,6 @@ const styles = StyleSheet.create({
         flex: 1,
         //padding: 10,
         margin: 5,
-    },
-    messagesContainer: {
-        paddingBottom: 60,
-        paddingTop: 60
     },
     inputRow: {
         position: 'absolute',

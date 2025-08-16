@@ -14,6 +14,7 @@ import { addMessages } from '../../redux/slices/messagesSlice';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import MessagesList from '../../lists/messagesList';
 
 dayjs.extend(relativeTime);
 
@@ -52,13 +53,13 @@ const MessagesScreen = () => {
                 return;
             }
 
-            const response = await axios.get(`${ baseURL }/messages?page=${page}`, {
+            const response = await axios.get(`${baseURL}/messages?page=${page}`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                 }
             });
             if (response.data.success) {
-                dispatch(addMessages({page, data: response.data.messages}));
+                dispatch(addMessages({ page, data: response.data.messages }));
                 if (page === 1) {
                     totalPages.current = response.data.totalPages;
                 }
@@ -130,8 +131,6 @@ const MessagesScreen = () => {
         lastScrollY.current = currentY;
     }
 
-    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-
     // if user reaches end to flatlist loadmore
     const loadMore = () => {
         if (!loading.current && hasMore.current && pageNumber.current) {
@@ -139,39 +138,16 @@ const MessagesScreen = () => {
         }
     };
 
-    const renderItem = ({ item }) => {
-        return (
-            <MessagesCard
-                name={item.from.name}
-                avatar={item.from.profilepic}
-                time={dayjs(item.updatedAt).fromNow()}
-                unreadCount={item.newMessages}
-                otherId={item.from._id}
-            />
-        );
-    };
-
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.container}>
                 <NavBar scrollY={headerTranslateY} />
                 <View style={{ flex: 1 }}>
-                    <AnimatedFlatList
-                        ref={flatListRef}
-                        data={messages}
-                        keyExtractor={(item => item._id)}
-                        renderItem={renderItem}
+                    <MessagesList
+                        flatListRef={flatListRef}
                         onScroll={handleScroll}
-                        scrollEventThrottle={16}
-                        contentContainerStyle={{ paddingTop: headerHeight }}
-
-                        // to run loadmore function when end is reached for infinite scrolling
                         onEndReached={loadMore}
-                        onEndReachedThreshold={0.5}
-
-                        // to display loading as footer
-                        ListFooterComponent={loading.current && <ActivityIndicator />}
-                        showsVerticalScrollIndicator={false}
+                        loading={loading}
                     />
                 </View>
             </View>

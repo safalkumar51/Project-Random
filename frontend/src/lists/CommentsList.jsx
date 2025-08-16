@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { FlatList, Animated } from 'react-native';
 import { useSelector, shallowEqual } from 'react-redux';
 import { selectCommentIds } from '../redux/selectors/singlePostSelectors';
-import CommentCard from './CommentCard';
+import CommentCard from '../components/CommentCard';
 
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);

@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
 import { useNavigation } from '@react-navigation/native'
 
-import CommentsList from '../../components/CommentsList';
+import CommentsList from '../../lists/CommentsList';
 import PostCards from '../../components/PostCards'
 import SharedHeader from '../../components/SharedHeader'    
 import baseURL from '../../assets/config'

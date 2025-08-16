@@ -2,7 +2,7 @@ import { Animated, FlatList, StyleSheet, Text, View } from 'react-native'
 import React, { useCallback, useMemo } from 'react'
 import { selectFeedPostsIds } from '../redux/selectors/feedSelectors';
 import { shallowEqual, useSelector } from 'react-redux';
-import PostCards from './PostCards';
+import PostCards from '../components/PostCards';
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
