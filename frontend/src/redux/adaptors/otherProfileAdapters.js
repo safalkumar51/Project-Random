@@ -8,7 +8,7 @@ export const initialOtherProfileState = otherProfileAdapter.getInitialState();
 
 export const otherPostsAdapter = createEntityAdapter({
     selectId: (post) => post._id,
-    sortComparer: false
+    sortComparer: (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
 });
 
 export const initialOtherPostsState = otherPostsAdapter.getInitialState();

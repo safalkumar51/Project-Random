@@ -15,7 +15,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import CommentInput from '../../components/CommentInput';
 import { clearPost, setPost, toggleComment } from '../../redux/slices/singlePostSlice';
 import { addComment, addManyComment, clearComments, setComments } from '../../redux/slices/singlePostCommentsSlice';
-import CommentsList from '../../lists/CommentsList';
+import SinglePostList from '../../lists/SinglePostList';
 
 
 dayjs.extend(relativeTime);
@@ -183,7 +183,7 @@ const PostScreen = ({ route }) => {
                             title="Post"
                         />
                         <View style={{ flex: 1 }}>
-                            <CommentsList
+                            <SinglePostList
                                 postId={postId}
                                 onScroll={handleScroll}
                                 onEndReached={loadMore}

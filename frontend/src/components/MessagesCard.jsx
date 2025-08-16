@@ -1,24 +1,34 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useNavigation } from '@react-navigation/native'
+import { shallowEqual, useSelector } from 'react-redux';
+import { selectMessagesById } from '../redux/selectors/messagesSelectors';
 
-const MessagesCard = ({ name, avatar, time, unreadCount, otherId }) => {
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
+
+const MessagesCard = ({ messageId }) => {
     const navigation = useNavigation();
+    const message = useSelector(state => selectMessagesById(state, messageId), shallowEqual);
+    const messageData = useMemo(() => message, [message]);
+    const time = useMemo(() => dayjs(messageData?.updatedAt).fromNow(), [messageData?.updatedAt]);
     return (
         <TouchableOpacity
             style={styles.chatItem}
-            onPress={() => navigation.navigate('ChatScreen', { otherId, name, avatar })}
+            onPress={() => navigation.navigate('ChatScreen', { otherId: messageData.from._id, name: messageData.from.name , avatar: message.from.profilepic })}
 
         >
-            <Image source={{ uri: avatar }} style={styles.avatar} />
+            <Image source={{ uri: messageData.from.profilepic }} style={styles.avatar} />
             <View style={styles.chatDetails}>
                 <View style={styles.rowBetween}>
-                    <Text style={styles.name}>{name}</Text>
+                    <Text style={styles.name}>{messageData.from.name}</Text>
                     <Text style={styles.time}>{time}</Text>
                 </View>
-                {unreadCount > 0 ? (
+                {messageData.newMessages > 0 ? (
                     <Text style={styles.newMessage}>
-                        {unreadCount} New Message{unreadCount > 1 ? 's' : ''}
+                        {messageData.newMessages} New Message{messageData.newMessages > 1 ? 's' : ''}
                     </Text>
                 ) : (
                     <Text style={styles.message}>No new messages</Text>

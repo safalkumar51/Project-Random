@@ -23,8 +23,8 @@ import { useNavigation } from '@react-navigation/native';
 
 import SharedHeader from '../../components/SharedHeader';
 import baseURL from '../../assets/config';
-import { addSinglePostMyProfile } from '../../redux/slices/myProfileSlice';
-import { addSinglePostFeed } from '../../redux/slices/feedSlice';
+import { addFeedPost } from '../../redux/slices/feedSlice';
+import { addMyPosts } from '../../redux/slices/myPostsSlice';
 
 const AddPostScreen = () => {
 
@@ -107,8 +107,8 @@ const AddPostScreen = () => {
 
             const formData = new FormData();
             formData.append('caption', bodyRef.current.trim());
-            
-            if(selectedMedia){
+
+            if (selectedMedia) {
                 const uriParts = selectedMedia.path.split('/');
                 const name = uriParts[uriParts.length - 1];
 
@@ -126,7 +126,7 @@ const AddPostScreen = () => {
                 });
             }
 
-            const response = await axios.post(`${ baseURL }/post/upload`, formData, {
+            const response = await axios.post(`${baseURL}/post/upload`, formData, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                     'Content-Type': 'multipart/form-data',
@@ -135,8 +135,8 @@ const AddPostScreen = () => {
 
             if (response.data.success) {
                 Alert.alert("Post uploaded!");
-                dispatch(addSinglePostMyProfile(response.data.post));
-                dispatch(addSinglePostFeed(response.data.post));
+                dispatch(addMyPosts(response.data.post));
+                dispatch(addFeedPost(response.data.post));
                 navigation.goBack();
             } else {
                 console.error(response.data.message);
@@ -146,17 +146,26 @@ const AddPostScreen = () => {
                 }
             }
 
-        } catch(err){
+        } catch (err) {
             console.error("Add Post Error: ", err);
         }
         loading.current = false;;
     };
 
+    if (loading.current) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" />
+                <Text>Loading...</Text>
+            </View>
+        )
+    }
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={{ flex: 1 }}>
                 <SharedHeader
-                    scrollY= {0}
+                    scrollY={0}
                     title="Create Post"
                 />
 

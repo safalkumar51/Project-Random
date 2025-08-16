@@ -8,11 +8,10 @@ import PostCards from '../components/PostCards';
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
-const CommentsList = React.memo(({
+const SinglePostList = React.memo(({
     postId,
     onScroll,
     onEndReached,
-    ListHeaderComponent,
     loading,
     postLoading
 }) => {
@@ -56,4 +55,4 @@ const CommentsList = React.memo(({
     );
 });
 
-export default React.memo(CommentsList);
+export default React.memo(SinglePostList);

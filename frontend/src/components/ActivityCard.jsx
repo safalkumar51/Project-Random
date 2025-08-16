@@ -20,8 +20,8 @@ const { width } = Dimensions.get('window');
 
 const ActivityCard = ({ requestId }) => {
     const navigation = useNavigation();
-
     const dispatch = useDispatch();
+    console.log(requestId);
 
     const request = useSelector(state => selectRequestsById(state, requestId), shallowEqual);
 
@@ -100,27 +100,31 @@ const ActivityCard = ({ requestId }) => {
         }
     };
 
+    useEffect(() => {
+        console.log(11);
+    },[])
+
     return (
         <View style={styles.card}>
             <View style={styles.upper}>
                 <TouchableOpacity style={styles.userInfo} onPress={getProfileHandler}>
-                    <Image style={styles.avatar} source={{ uri: requestData.from.profilepic }} />
+                    <Image style={styles.avatar} source={{ uri: requestData?.from.profilepic }} />
                     <View style={styles.nameTime}>
-                        <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{requestData.from.name}</Text>
+                        <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{requestData?.from.name}</Text>
                         <Text style={styles.time}>{time}</Text>
                     </View>
                 </TouchableOpacity>
 
-                {(requestData.status !== "pending") && (
+                {(requestData?.status !== "pending") && (
                     <View style={styles.statusWrapper}>
-                        <Text style={[styles.statusText, requestData.status === "connected" ? styles.connected : styles.requested]}>
-                            {requestData.status.charAt(0).toUpperCase() + requestData.status.slice(1)}
+                        <Text style={[styles.statusText, requestData?.status === "connected" ? styles.connected : styles.requested]}>
+                            {requestData?.status.charAt(0).toUpperCase() + requestData?.status.slice(1)}
                         </Text>
                     </View>
                 )}
             </View>
 
-            {requestData.status === "pending" && (
+            {requestData?.status === "pending" && (
                 <View style={styles.lower}>
                     <TouchableOpacity style={styles.connectBtn} onPress={connectHandler}>
                         <Text style={styles.connectTxt}>Connect</Text>

@@ -10,15 +10,15 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import axios from 'axios';
 
 import SharedHeader from '../../components/SharedHeader';
-import ChatCard from '../../components/ChatCard';
 import { socket } from '../../utils/socket';
 import baseURL from '../../assets/config';
 //import { addMessages, addSingleMessage, clearMessages } from '../../redux/slices/chatsSlice';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import ChatsList from '../../lists/ChatsList';
 import CommentInput from '../../components/CommentInput';
-import { addChat, addChats, setChats } from '../../redux/slices/chatsSlice';
+import { addChat, addChats, clearChats, setChats } from '../../redux/slices/chatsSlice';
 
 dayjs.extend(relativeTime);
 
@@ -109,7 +109,7 @@ const ChatScreen = ({ route }) => {
 
     useEffect(() => {
         const handleRequest = (chat) => {
-            dispatch(addSingleMessage(chat));
+            dispatch(addChat(chat));
         };
         socket.off('receive_chat', handleRequest); // prevent duplicates
         socket.on('receive_chat', handleRequest);
@@ -117,6 +117,7 @@ const ChatScreen = ({ route }) => {
 
         return () => {
             socket.off('receive_chat', handleRequest);
+            dispatch(clearChats());
         }
     }, [otherId]);
 
@@ -178,7 +179,13 @@ const ChatScreen = ({ route }) => {
                             title={name}
                         />
                         <View style={{ flex: 1 }}>
-                            
+                            <ChatsList
+                                otherId={otherId}
+                                avatar={avatar}
+                                onScroll={handleScroll}
+                                onEndReached={loadMore}
+                                loading={loading}
+                            />
                         </View>
                         <CommentInput onSend={sendMessage} />
                     </View>
@@ -187,6 +194,8 @@ const ChatScreen = ({ route }) => {
         </SafeAreaView>
     );
 };
+
+export default React.memo(ChatScreen);
 
 const styles = StyleSheet.create({
     container: {
@@ -197,10 +206,6 @@ const styles = StyleSheet.create({
         flex: 1,
         //padding: 10,
         margin: 5,
-    },
-    messagesContainer: {
-        paddingBottom: 80,
-        paddingTop: 60
     },
     inputRow: {
         position: 'absolute',
@@ -237,5 +242,3 @@ const styles = StyleSheet.create({
         fontWeight: 500,
     },
 });
-
-export default ChatScreen;

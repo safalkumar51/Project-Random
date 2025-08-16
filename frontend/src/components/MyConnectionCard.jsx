@@ -1,18 +1,28 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View, Dimensions, Alert } from 'react-native'
-import React from 'react'
+import React, { useMemo } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import baseURL from '../assets/config';
-import { useDispatch } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { removeConnection } from '../redux/slices/connectionsSlice';
-import { setOtherProfileStatus } from '../redux/slices/otherProfileSlice'; // NEW import
+import { selectConnectionsById } from '../redux/selectors/connectionsSelector';
+
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 const { width } = Dimensions.get('window');
 
-const MyConnectionCard = ({ name, profileImage, time, senderId, requestId }) => {
+const MyConnectionCard = ({ connectionId }) => {
     const navigation = useNavigation();
     const dispatch = useDispatch();
+
+    const connection = useSelector(state => selectConnectionsById(state, connectionId), shallowEqual);
+
+    const connectionData = useMemo(() => connection, [connection]);
+    const time = useMemo(() => dayjs(connectionData?.createdAt).fromNow(), [connectionData?.createdAt]);
 
     const getProfileHandler = () => {
         navigation.navigate("OtherProfileScreen", { status: "connected", otherId: senderId, requestId: "" });
@@ -27,7 +37,7 @@ const MyConnectionCard = ({ name, profileImage, time, senderId, requestId }) => 
             }
 
             const response = await axios.post(`${baseURL}/connection/remove`, {
-                senderId
+                senderId: connectionData?.from._id
             }, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
@@ -38,7 +48,7 @@ const MyConnectionCard = ({ name, profileImage, time, senderId, requestId }) => 
                 Alert.alert(response.data.message);
 
                 // Update Redux
-                dispatch(removeConnection({_id: requestId}));
+                dispatch(removeConnection({_id: connectionId}));
                 //dispatch(setOtherProfileStatus("none")); // Instant sync for profile view
 
             } else {
@@ -58,9 +68,9 @@ const MyConnectionCard = ({ name, profileImage, time, senderId, requestId }) => 
         <View style={styles.card}>
             <View style={styles.wrapper}>
                 <TouchableOpacity style={styles.userInfo} onPress={getProfileHandler}>
-                    <Image style={styles.avatar} source={{ uri: profileImage }} />
+                    <Image style={styles.avatar} source={{ uri: connectionData.from.profilepic }} />
                     <View style={styles.nameTime}>
-                        <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{name}</Text>
+                        <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{connectionData.from.name}</Text>
                         <Text style={styles.time}>{time}</Text>
                     </View>
                 </TouchableOpacity>
@@ -72,7 +82,7 @@ const MyConnectionCard = ({ name, profileImage, time, senderId, requestId }) => 
     );
 };
 
-export default MyConnectionCard;
+export default React.memo(MyConnectionCard);
 
 const styles = StyleSheet.create({
     card: {

@@ -1,21 +1,16 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Animated, ActivityIndicator, Alert } from 'react-native';
 
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 import baseURL from '../../assets/config';
-import MessagesCard from '../../components/MessagesCard';
 import NavBar from '../../components/NavBar';
 import { addMessages, setMessages } from '../../redux/slices/messagesSlice';
-
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-
-dayjs.extend(relativeTime);
+import MessagesList from '../../lists/MessagesList';
 
 const MessagesScreen = () => {
 
@@ -51,7 +46,7 @@ const MessagesScreen = () => {
                 return;
             }
 
-            const response = await axios.get(`${ baseURL }/messages?page=${page}`, {
+            const response = await axios.get(`${baseURL}/messages?page=${page}`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                 }
@@ -129,8 +124,6 @@ const MessagesScreen = () => {
             lastScrollY.current = currentY;
         }, [headerHeight, insets.top])
 
-    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-
     // if user reaches end to flatlist loadmore
     const loadMore = useCallback(() => {
         if (!loading.current && hasMore.current && pageNumber.current) {
@@ -138,39 +131,16 @@ const MessagesScreen = () => {
         }
     },[]);
 
-    const renderItem = useCallback(({ item }) => {
-        return (
-            <MessagesCard
-                name={item.from.name}
-                avatar={item.from.profilepic}
-                time={dayjs(item.updatedAt).fromNow()}
-                unreadCount={item.newMessages}
-                otherId={item.from._id}
-            />
-        );
-    },[]);
-
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.container}>
                 <NavBar scrollY={headerTranslateY} />
                 <View style={{ flex: 1 }}>
-                    <AnimatedFlatList
-                        ref={flatListRef}
-                        data={messages}
-                        keyExtractor={(item => item._id)}
-                        renderItem={renderItem}
+                    <MessagesList
+                        flatListRef={flatListRef}
                         onScroll={handleScroll}
-                        scrollEventThrottle={16}
-                        contentContainerStyle={{ paddingTop: headerHeight }}
-
-                        // to run loadmore function when end is reached for infinite scrolling
                         onEndReached={loadMore}
-                        onEndReachedThreshold={0.5}
-
-                        // to display loading as footer
-                        ListFooterComponent={loading.current && <ActivityIndicator />}
-                        showsVerticalScrollIndicator={false}
+                        loading={loading}
                     />
                 </View>
             </View>

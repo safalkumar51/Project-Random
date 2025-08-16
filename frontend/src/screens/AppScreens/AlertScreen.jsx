@@ -24,6 +24,7 @@ import { selectRequestsIds } from '../../redux/selectors/requestsSelectors';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import RequestsList from '../../lists/RequestsList';
 
 dayjs.extend(relativeTime);
 
@@ -151,7 +152,12 @@ const AlertScreen = () => {
             <View style={styles.main}>
                 <NavBar scrollY={headerTranslateY} />
                 <View style={{ flex: 1 }}>
-                    
+                    <RequestsList
+                        flatListRef = {flatListRef}
+                        onScroll = {handleScroll}
+                        onEndReached={loadMore}
+                        loading = {loading}
+                    />
                 </View>
             </View>
         </SafeAreaView>
