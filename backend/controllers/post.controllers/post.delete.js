@@ -1,10 +1,10 @@
+const commentModel = require('../../models/comment.model');
 const likeModel = require('../../models/like.model');
 const postModel = require('../../models/post.model');
 const userModel = require('../../models/user.model');
 
 const postDelete = async (req, res) => {
     try {
-
         const { postId } = req.body;
 
         const user = await userModel.findOne({ _id: req.userId }).select('token');
@@ -16,8 +16,7 @@ const postDelete = async (req, res) => {
         }
 
         const post = await postModel.findOne({ _id: postId });
-
-        if (!postId || !post || post.user !== req.userId) {
+        if (!postId || !post || post.owner.toString() !== req.userId.toString()) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid Request'

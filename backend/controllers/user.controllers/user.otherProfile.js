@@ -92,7 +92,7 @@ const userOtherProfile = async (req, res) => {
                             $cond: {
                                 if: {
                                     $in: [
-                                        otherId,
+                                        req.userId,
                                         { $map: { input: "$likes", as: "like", in: "$$like.user" } }
                                     ]
                                 },
@@ -104,7 +104,7 @@ const userOtherProfile = async (req, res) => {
                             $cond: {
                                 if: {
                                     $in: [
-                                        otherId,
+                                        req.userId,
                                         { $map: { input: "$comments", as: "comment", in: "$$comment.user" } }
                                     ]
                                 },
@@ -112,7 +112,16 @@ const userOtherProfile = async (req, res) => {
                                 else: false
                             }
                         },
-                        isMine: false
+                        isMine: false,
+                        myCommentsCount: {
+                            $size: {
+                                $filter: {
+                                    input: "$comments",
+                                    as: "cl",
+                                    cond: { $eq: ["$$cl.user", req.userId] }
+                                }
+                            }
+                        }
                     }
                 },
                 {
@@ -127,6 +136,7 @@ const userOtherProfile = async (req, res) => {
                         isCommented: 1,
                         isMine: 1,
                         createdAt: 1,
+                        myCommentsCount: 1,
                     }
                 }
             ]);

@@ -21,13 +21,22 @@ const feedSlice = createSlice({
         toggleFeedComment: (state, action) => {
             const post = state.entities[action.payload];
             if (post) {
-                post.isCommented = true;
                 post.commentsCount += 1;
+                post.myCommentsCount += 1;
+                if (post.myCommentsCount) post.isCommented = true;
             }
         },
+        untoggleFeedComment: (state, action) => {
+            const post = state.entities[action.payload];
+            if (post) {
+                post.commentsCount -= 1;
+                post.myCommentsCount -= 1;
+                if (!post.myCommentsCount) post.isCommented = false;
+            }
+        }
     },
 });
 
-export const { setFeedPosts, addFeedPost, addFeedPosts,removeFeedPost, clearFeedPosts, toggleFeedLike, toggleFeedComment } = feedSlice.actions;
+export const { setFeedPosts, addFeedPost, addFeedPosts,removeFeedPost, clearFeedPosts, toggleFeedLike, toggleFeedComment, untoggleFeedComment } = feedSlice.actions;
 
 export default feedSlice.reducer;

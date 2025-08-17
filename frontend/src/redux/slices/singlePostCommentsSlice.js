@@ -20,5 +20,5 @@ const singlePostCommentsSlice = createSlice({
     }
 });
 
-export const { setComments, addComment, addManyComment, clearComments, toggleCommentLike } = singlePostCommentsSlice.actions;
+export const { setComments, addComment, addManyComment, removeComment, clearComments, toggleCommentLike } = singlePostCommentsSlice.actions;
 export default singlePostCommentsSlice.reducer;

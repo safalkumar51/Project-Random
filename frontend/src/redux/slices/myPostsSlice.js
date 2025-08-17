@@ -8,6 +8,7 @@ const myPostsSlice = createSlice({
     reducers: {
         setMyPosts: myPostsAdapter.setAll,
         addMyPosts: myPostsAdapter.addMany,
+        addMyPost: myPostsAdapter.addOne,
         removeMyPost: myPostsAdapter.removeOne,
         clearMyPosts: myPostsAdapter.removeAll,
         toggleMyPostLike: (state, action) => {
@@ -20,12 +21,21 @@ const myPostsSlice = createSlice({
         toggleMyPostComment: (state, action) => {
             const post = state.entities[action.payload];
             if (post) {
-                post.isCommented = true;
                 post.commentsCount += 1;
+                post.myCommentsCount += 1;
+                if (post.myCommentsCount) post.isCommented = true;
             }
         },
+        untoggleMyPostsComment: (state, action) => {
+            const post = state.entities[action.payload];
+            if (post) {
+                post.commentsCount -= 1;
+                post.myCommentsCount -= 1;
+                if (!post.myCommentsCount) post.isCommented = false;
+            }
+        }
     }
 });
 
-export const { setMyPosts, addMyPosts, removeMyPost, clearMyPosts, toggleMyPostLike, toggleMyPostComment } = myPostsSlice.actions;
+export const { setMyPosts, addMyPosts, addMyPost, removeMyPost, clearMyPosts, toggleMyPostLike, toggleMyPostComment, untoggleMyPostsComment } = myPostsSlice.actions;
 export default myPostsSlice.reducer;

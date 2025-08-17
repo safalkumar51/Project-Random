@@ -15,6 +15,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import baseURL from '../../assets/config';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import { selectMyProfileById, selectMyProfileIds } from '../../redux/selectors/myProfileSelectors';
+import { setMyProfile } from '../../redux/slices/myProfileSlice';
+import { addMyPosts, setMyPosts } from '../../redux/slices/myPostsSlice';
 
 
 
@@ -29,6 +33,16 @@ const EditProfileScreen = () => {
     const [password, setPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+
+    const loading = useRef(false);
+
+    const dispatch = useDispatch();
+
+    const profileId = useSelector(selectMyProfileIds, shallowEqual);
+    const profile = useSelector(
+        (state) => profileId[0] ? selectMyProfileById(state, profileId[0]) : null,
+        shallowEqual
+    );
 
     const requestPermissions = async () => {
         if (Platform.OS === 'android') {
@@ -45,7 +59,6 @@ const EditProfileScreen = () => {
     };
 
     const changeProfilePhotoHandler = async (image) => {
-        return;
         try{
 
             const authToken = await AsyncStorage.getItem('authToken');
@@ -97,15 +110,10 @@ const EditProfileScreen = () => {
     }
 
     const editProfileHandler = async () => {
-        return;
         if (!name.trim()) {
             Alert.alert("Name field can't be empty");
             return;
         }
-        /*if(name === profile.name){
-            Alert.alert("Invalid Request");
-            return;
-        }*/
 
         try {
 
@@ -141,7 +149,6 @@ const EditProfileScreen = () => {
     }
 
     const changePasswordHandler = async () => {
-        return;
         if (!password || !newPassword || !confirmPassword) {
             Alert.alert("All fields are required!");
             return;
@@ -192,16 +199,66 @@ const EditProfileScreen = () => {
         }
     }
 
+    const fetchProfile = async (page) => {
+        if (page !== 1 && loading.current || profileId?.length) return;
+        loading.current = true;
+
+        try {
+            const authToken = await AsyncStorage.getItem('authToken');
+            if (!authToken) {
+                navigation.replace('LoginScreen');
+                return;
+            }
+
+            const response = await axios.get(`${baseURL}/user/profile?page=${page}`, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                }
+            });
+
+            if (response.data.success) {
+                const postsData = response.data.posts;
+                if (page === 1) {
+                    const profileData = response.data.profile;
+                    dispatch(setMyProfile(profileData));
+                    dispatch(setMyPosts(postsData));
+                } else {
+                    dispatch(addMyPosts(postsData));
+                }
+            } else {
+                if (response.data.message === 'Log In Required!') {
+                    await AsyncStorage.removeItem('authToken');
+                    navigation.replace('LoginScreen');
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching profile:', err);
+        }
+
+        loading.current = false;
+    };
+
     useEffect(() => {
         requestPermissions();
-    }, []);
+        fetchProfile(1);
+        if (profile) {   // ✅ guard
+            setname(profile.name);
+            setBio(profile.bio);
+            setImageUri(profile.profilepic);
+        }
+    }, [profileId, profile])
+
 
     const handleCamera = () => {
         ImageCropPicker.openCamera({
-            compressImageMaxHeight: 300,
-            compressImageMaxWidth: 300,
-            cropperToolbarTitle: 'Crop Image',
-            cropping: true,
+             width: 1200,                 
+            height: 1200,                 
+        cropping: true,             
+        freeStyleCropEnabled: false, 
+        hideBottomControls: true,    
+        cropperToolbarTitle: 'Crop Image',
+        compressImageQuality: 1,    
+        compressImageFormat: 'PNG', 
         }).then(image => {
             setImageUri({ path: image.path, mime: image.mime });
             changeProfilePhotoHandler(image);
@@ -215,10 +272,14 @@ const EditProfileScreen = () => {
 
     const handleGallery = () => {
         ImageCropPicker.openPicker({
-            compressImageMaxHeight: 300,
-            compressImageMaxWidth: 300,
-            cropperToolbarTitle: 'Crop Image',
-            cropping: true,
+            width: 1200,                 
+            height: 1200,                 
+        cropping: true,             
+        freeStyleCropEnabled: false, 
+        hideBottomControls: true,    
+        cropperToolbarTitle: 'Crop Image',
+        compressImageQuality: 1,    
+        compressImageFormat: 'PNG',  
         }).then(image => {
             setImageUri({ path: image.path, mime: image.mime });
             changeProfilePhotoHandler(image);
@@ -245,7 +306,7 @@ const EditProfileScreen = () => {
                     <View style={styles.form}>
                         <View style={styles.avatarContainer}>
                             <Image
-                                source={{ uri: imageUri?.path || "https://upload.wikimedia.org/wikipedia/en/thumb/d/df/Andrew_Garfield_as_Spider-Man.jpg/250px-Andrew_Garfield_as_Spider-Man.jpg" }} style={styles.avatar}
+                                source={{ uri: imageUri }} style={styles.avatar}
                             />
 
                             <TouchableOpacity style={styles.cameraIcon} onPress={() => setModalVisible(true)} >

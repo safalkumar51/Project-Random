@@ -6,14 +6,15 @@ import {
     TouchableOpacity,
     Image,
     Alert,
-    Platform
+    Platform,
+    TextInput
 } from 'react-native';
 import React, { useRef, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 
 
-import RichTextEditor from '../../components/RichTextEditor';
+// import RichTextEditor from '../../components/RichTextEditor';
 import Icons from 'react-native-vector-icons/FontAwesome6';
 import ImagePicker from 'react-native-image-crop-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,48 +25,37 @@ import { useNavigation } from '@react-navigation/native';
 import SharedHeader from '../../components/SharedHeader';
 import baseURL from '../../assets/config';
 import { addFeedPost } from '../../redux/slices/feedSlice';
-import { addMyPosts } from '../../redux/slices/myPostsSlice';
+import { addMyPost } from '../../redux/slices/myPostsSlice';
 
 const AddPostScreen = () => {
 
     const navigation = useNavigation();
 
-    const bodyRef = useRef('');
-    const editorRef = useRef(null);
+    // const bodyRef = useRef('');
+    // const editorRef = useRef(null);
+   
+    const [bodyText , setBodyText] = useState('');
+
     const [selectedMedia, setSelectedMedia] = useState(null);
 
     const dispatch = useDispatch();
 
     const loading = useRef(false);
 
-    // A shared handler to validate and set the image
-    const handleImageValidation = (image) => {
-        if (image.width < image.height) {
-            Alert.alert(
-                'Invalid Aspect Ratio',
-                'Image width must be greater than or equal to its height. Please try again.',
-                [{ text: 'OK' }]
-            );
-            return; // Stop processing if invalid
-        }
-
-        setSelectedMedia({ path: image.path, mime: image.mime });
-    };
-
     const cropperOptions = {
-        //width: 1200, // A suggested starting width
-        //height: 1200, // A suggested starting height to create a 1:1 box
+        width: 1600, // A suggested starting width
+        height: 1200, // A suggested starting height to create a 1:1 box
         cropping: true,
-        freeStyleCropEnabled: true,
+        freeStyleCropEnabled: false,
         hideBottomControls: true,
-        compressImageQuality: 1,      // Max quality (min compression)
+        compressImageQuality: 0.8,      // Max quality (min compression)
         compressImageFormat: 'PNG',   // Lossless format
     };
 
     const chooseFromGallery = () => {
         ImagePicker.openPicker(cropperOptions)
             .then(image => {
-                handleImageValidation(image);
+                setSelectedMedia({ path: image.path, mime: image.mime });
             })
             .catch(err => {
                 if (err.code !== 'E_PICKER_CANCELLED') {
@@ -100,15 +90,15 @@ const AddPostScreen = () => {
                 return;
             }
 
-            if (!bodyRef.current.trim() && !selectedMedia) {
+            if (!bodyText.trim() && !selectedMedia) {
                 Alert.alert("Empty Post", "Please add some text or media.");
                 return;
             }
 
             const formData = new FormData();
-            formData.append('caption', bodyRef.current.trim());
-
-            if (selectedMedia) {
+            formData.append('caption', bodyText.trim());
+            
+            if(selectedMedia){
                 const uriParts = selectedMedia.path.split('/');
                 const name = uriParts[uriParts.length - 1];
 
@@ -135,7 +125,7 @@ const AddPostScreen = () => {
 
             if (response.data.success) {
                 Alert.alert("Post uploaded!");
-                dispatch(addMyPosts(response.data.post));
+                dispatch(addMyPost(response.data.post));
                 dispatch(addFeedPost(response.data.post));
                 navigation.goBack();
             } else {
@@ -173,12 +163,23 @@ const AddPostScreen = () => {
                     contentContainerStyle={{ paddingVertical: 80 }}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled">
+                    {/* removed richtexteditor */}
+
                     <View style={styles.textEditor}>
-                        <RichTextEditor
-                            editorRef={editorRef}
-                            onChange={body => (bodyRef.current = body)}
-                        />
+                     <TextInput
+                   
+                   style={styles.textInput}
+                   placeholder = "What's on your mind ...."
+                   placeholderTextColor = "gray"
+                   multiline
+                   value={bodyText}
+                   onChangeText = {setBodyText}
+
+                     />
+
                     </View>
+                    
+
 
                     {/* MEDIA PREVIEW */}
                     {selectedMedia && (
@@ -264,7 +265,8 @@ const styles = StyleSheet.create({
     },
     previewImage: {
         width: '95%',
-        height: 200,
+       // height: 200,
+       aspectRatio:16/12,
         borderRadius: 30,
     },
     removeButton: {
@@ -338,4 +340,15 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: 'gray',
     },
+    textInput:{
+        minHeight : 100,
+        borderWidth :1 ,
+        borderColor : "lightgray",
+        borderRadius : 10,
+        padding : 10,
+        fontSize : 16,
+        textAlignVertical  : 'top',
+        backgroundColor : '#f9f9f9',
+        marginBottom:20
+    }
 });

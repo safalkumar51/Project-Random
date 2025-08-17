@@ -15,7 +15,7 @@ const isLoggedIn = async (req, res, next) => {
     const authToken = authHeader.replace('Bearer ', '');
 
     try{
-
+        
         const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
 
         req.userToken = authToken;

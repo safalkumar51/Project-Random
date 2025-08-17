@@ -19,12 +19,21 @@ const otherPostsSlice = createSlice({
         toggleOtherPostsComment: (state, action) => {
             const post = state.entities[action.payload];
             if (post) {
-                post.isCommented = true;
                 post.commentsCount += 1;
+                post.myCommentsCount +=1;
+                if (post.myCommentsCount) post.isCommented = true;
             }
         },
+        untoggleOtherPostsComment: (state, action) => {
+            const post = state.entities[action.payload];
+            if (post) {
+                post.commentsCount -= 1;
+                post.myCommentsCount -= 1;
+                if (!post.myCommentsCount) post.isCommented = false;
+            }
+        }
     }
 });
 
-export const { setOtherPosts, addOtherPosts, clearOtherPosts, toggleOtherPostsLike, toggleOtherPostsComment } = otherPostsSlice.actions;
+export const { setOtherPosts, addOtherPosts, clearOtherPosts, toggleOtherPostsLike, untoggleOtherPostsComment } = otherPostsSlice.actions;
 export default otherPostsSlice.reducer;

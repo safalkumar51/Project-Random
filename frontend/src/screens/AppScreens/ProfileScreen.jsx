@@ -48,9 +48,9 @@ const ProfileScreen = () => {
     const totalPages = useRef(1);
     const profileLoading = useRef(false);
 
-    const fetchProfile = async (page = 1) => {
+    const fetchProfile = async (page) => {
         if (page !== 1 && (loading.current || !hasMore.current)) return;
-
+        Alert.alert("y");
         loading.current = true;
 
         try {

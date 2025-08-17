@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { FlatList, Animated, ActivityIndicator } from 'react-native';
 import { useSelector, shallowEqual } from 'react-redux';
-import { selectCommentIds } from '../redux/selectors/singlePostSelectors';
+import { selectCommentIds, selectSinglePostById } from '../redux/selectors/singlePostSelectors';
 import CommentCard from '../components/CommentCard';
 import PostCards from '../components/PostCards';
 
@@ -20,6 +20,9 @@ const SinglePostList = React.memo(({
 
     const data = useMemo(() => commentIds, [commentIds]);
 
+    const post = useSelector(state => selectSinglePostById(state, postId), shallowEqual);
+    const postData = useMemo(() => post, [post]);
+
     const listHeader = useMemo(() => {
         if (!postId || postLoading.current) {
             return <ActivityIndicator size="large" />;
@@ -36,7 +39,7 @@ const SinglePostList = React.memo(({
     }, [postId, postLoading.current]);
 
     const keyExtractor = useCallback((item) => (item._id ? item._id : item), []);
-    const renderItem = useCallback(({ item }) => <CommentCard commentId={item} />, []);
+    const renderItem = useCallback(({ item }) => <CommentCard commentId={item} isMine={postData?.isMine} />, []);
 
     return (
         <AnimatedFlatList

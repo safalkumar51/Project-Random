@@ -16,6 +16,7 @@ import MainTabNavigator from './MainTabNavigator';
 import TermsScreen from '../screens/AdditionalScreens/TermsScreen';
 import PostScreen from '../screens/AdditionalScreens/PostScreen';
 import ChatScreen from '../screens/AppScreens/ChatScreen';
+import TeamRandom from '../screens/AdditionalScreens/TeamRandom'
 import OtherProfileScreen from '../screens/AdditionalScreens/OtherProfileScreen';
 
 
@@ -47,11 +48,13 @@ const DrawerNavigator = () => {
             <Drawer.Screen name="Help & Support" component={HelpScreen} />
             <Drawer.Screen name="Personal Details" component={PersonalDetailsScreen} />
             <Drawer.Screen name="Terms" component={TermsScreen} />
+            <Drawer.Screen name="TeamRandom" component={TeamRandom} />
 
 
             <Drawer.Screen name="ChatScreen" component={ChatScreen} />
             <Drawer.Screen name="OtherProfileScreen" component={OtherProfileScreen} />
             <Drawer.Screen name="PostScreen" component={PostScreen} />
+             
         </Drawer.Navigator>
     );
 };

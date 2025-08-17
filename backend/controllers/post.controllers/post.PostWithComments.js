@@ -68,7 +68,7 @@ const getPostWithComments = async (req, res) => {
                     },
                     isCommentMine: {
                         $eq: ["$commentOwner._id", user._id]
-                    }
+                    },
                 }
             },
             {
@@ -174,6 +174,15 @@ const getPostWithComments = async (req, res) => {
                             else: false
                         }
                     },
+                    myCommentsCount: {
+                        $size: {
+                            $filter: {
+                                input: "$comments",
+                                as: "cl",
+                                cond: { $eq: ["$$cl.user", req.userId] }
+                            }
+                        }
+                    }
                 }
             },
             {
@@ -188,6 +197,7 @@ const getPostWithComments = async (req, res) => {
                     isCommented: 1,
                     isMine: 1,
                     createdAt: 1,
+                    myCommentsCount: 1,
                 }
             }
         ]);

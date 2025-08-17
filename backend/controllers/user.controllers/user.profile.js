@@ -88,7 +88,16 @@ const userProfile = async (req, res) => {
                             else: false
                         }
                     },
-                    isMine: true
+                    isMine: true,
+                    myCommentsCount: {
+                        $size: {
+                            $filter: {
+                                input: "$comments",
+                                as: "cl",
+                                cond: { $eq: ["$$cl.user", req.userId] }
+                            }
+                        }
+                    }
                 }
             },
             {
@@ -103,6 +112,7 @@ const userProfile = async (req, res) => {
                     isCommented: 1,
                     isMine: 1,
                     createdAt: 1,
+                    myCommentsCount: 1,
                 }
             }
         ]);

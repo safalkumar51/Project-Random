@@ -20,12 +20,21 @@ const singlePostSlice = createSlice({
         toggleComment: (state, action) => {
             const post = state.entities[action.payload];
             if (post) {
-                post.isCommented = true;
                 post.commentsCount += 1;
+                post.myCommentsCount += 1;
+                if (post.myCommentsCount) post.isCommented = true;
             }
         },
+        untoggleComment: (state, action) => {
+            const post = state.entities[action.payload];
+            if (post) {
+                post.commentsCount -= 1;
+                post.myCommentsCount -= 1;
+                if (!post.myCommentsCount) post.isCommented = false;
+            }
+        }
     }
 });
 
-export const { setPost, updatePost, removePost, clearPost, toggleLike, toggleComment } = singlePostSlice.actions;
+export const { setPost, updatePost, removePost, clearPost, toggleLike, toggleComment, untoggleComment } = singlePostSlice.actions;
 export default singlePostSlice.reducer;

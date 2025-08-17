@@ -100,10 +100,6 @@ const ActivityCard = ({ requestId }) => {
         }
     };
 
-    useEffect(() => {
-        console.log(11);
-    },[])
-
     return (
         <View style={styles.card}>
             <View style={styles.upper}>
