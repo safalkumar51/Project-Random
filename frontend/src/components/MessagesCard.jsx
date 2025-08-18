@@ -17,7 +17,7 @@ const MessagesCard = ({ messageId }) => {
     return (
         <TouchableOpacity
             style={styles.chatItem}
-            onPress={() => navigation.navigate('ChatScreen', { otherId: messageData.from._id, name: messageData.from.name , avatar: message.from.profilepic })}
+            onPress={() => navigation.navigate('ChatScreen', { messageId: messageData._id, otherId: messageData.from._id, name: messageData.from.name , avatar: message.from.profilepic })}
 
         >
             <Image source={{ uri: messageData.from.profilepic }} style={styles.avatar} />

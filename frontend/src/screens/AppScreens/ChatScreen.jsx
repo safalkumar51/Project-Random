@@ -19,6 +19,8 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import ChatsList from '../../lists/ChatsList';
 import CommentInput from '../../components/CommentInput';
 import { addChat, addChats, clearChats, setChats } from '../../redux/slices/chatsSlice';
+import { useFocusEffect } from '@react-navigation/native';
+import { updateUnreadMessageCount } from '../../redux/slices/messagesSlice';
 
 dayjs.extend(relativeTime);
 
@@ -29,7 +31,7 @@ const ChatScreen = ({ route }) => {
     const scrollDirection = useRef('up');
     const insets = useSafeAreaInsets();
 
-    const { otherId, name, avatar } = route.params;
+    const { messageId, otherId, name, avatar } = route.params;
     const dispatch = useDispatch();
 
     const pageNumber = useRef(1);
@@ -62,7 +64,7 @@ const ChatScreen = ({ route }) => {
 
         lastScrollY.current = currentY;
     }, [headerHeight, insets.top])
-    
+
     const fetchChats = async (page) => {
         if (page !== 1 && (loading.current || !hasMore.current)) return;
 
@@ -88,9 +90,9 @@ const ChatScreen = ({ route }) => {
                 if (page === 1) {
                     totalPages.current = response.data.totalPages;
                     dispatch(setChats(chatsData));
-                } else{
+                } else {
                     dispatch(addChats(chatsData));
-                }                
+                }
                 pageNumber.current = page;
                 hasMore.current = page < totalPages.current
             }
@@ -110,8 +112,8 @@ const ChatScreen = ({ route }) => {
     }
 
     useEffect(() => {
-        const handleChat = ({senderId, chat}) => {
-            if(senderId === otherId) dispatch(addChat(chat));
+        const handleChat = ({ senderId, chat }) => {
+            if (senderId === otherId) dispatch(addChat(chat));
         };
         socket.off('receive_chat', handleChat); // prevent duplicates
         socket.on('receive_chat', handleChat);
@@ -127,12 +129,23 @@ const ChatScreen = ({ route }) => {
         }
     }, [otherId]);
 
+    useFocusEffect(useCallback( async () => {
+        const authToken = await AsyncStorage.getItem('authToken');
+        if (!authToken) {
+            navigation.replace("LoginScreen");
+            return;
+        }
+        socket.emit('message_read', { authToken, otherId });
+        dispatch(updateUnreadMessageCount(messageId));
+    }, [socket])
+    );
+
     // if user reaches end to flatlist loadmore
     const loadMore = useCallback(() => {
         if (!loading.current && hasMore.current && pageNumber.current) {
             fetchChats(pageNumber.current + 1);
         }
-    },[]);
+    }, []);
 
     const sendMessage = async (text) => {
         if (text.trim() !== "") {
@@ -193,7 +206,7 @@ const ChatScreen = ({ route }) => {
                                 loading={loading}
                             />
                         </View>
-                        <CommentInput onSend={sendMessage} placeholderText={"Message..."}/>
+                        <CommentInput onSend={sendMessage} placeholderText={"Message..."} />
                     </View>
                 </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
