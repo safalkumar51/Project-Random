@@ -1,4 +1,4 @@
-import React, { use, useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { FlatList, Animated, ActivityIndicator } from 'react-native';
 import { useSelector, shallowEqual } from 'react-redux';
 import PostCards from '../components/PostCards';
@@ -10,24 +10,25 @@ import ProfileCard from '../components/ProfileCard';
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 const OtherProfileList = React.memo(({
+    requestId,
     onScroll,
     onEndReached,
     loading,
     profileLoading
 }) => {
     const profileIds = useSelector(selectOtherProfileIds, shallowEqual);
-    const requestIds = useSelector(selectRequestIds, shallowEqual);
     const postsIds = useSelector(selectOtherPostsIds, shallowEqual);
+    const requestIds = useSelector(selectRequestIds, shallowEqual);
 
     const profileData = useMemo(() => profileIds, [profileIds]);
-    const requestData = useMemo(() => requestIds, [requestIds]);
     const postsData = useMemo(() => postsIds, [postsIds]);
+    const requestData = useMemo(() => requestIds, [requestIds]);
 
     const keyExtractor = useCallback((item) => (item._id ? item._id : item), []);
     const renderItem = useCallback(({ item }) => <PostCards postId={item} counter={4} />, []);
 
     const listHeader = useMemo(() => {
-        if (!requestData?.length || !profileData?.length || profileLoading.current) {
+        if (!profileData?.length || profileLoading.current) {
             return <ActivityIndicator size="large" />;
         }
 
@@ -42,7 +43,7 @@ const OtherProfileList = React.memo(({
                 />
             </>
         );
-    }, [profileData, requestData, profileLoading.current]);
+    }, [profileData, requestId, profileLoading.current]);
 
     return (
         <AnimatedFlatList

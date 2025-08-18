@@ -9,8 +9,9 @@ import axios from 'axios';
 
 import baseURL from '../../assets/config';
 import NavBar from '../../components/NavBar';
-import { addMessages, setMessages } from '../../redux/slices/messagesSlice';
+import { addMessages, setMessages, upsertMessage } from '../../redux/slices/messagesSlice';
 import MessagesList from '../../lists/MessagesList';
+import { socket } from '../../utils/socket';
 
 const MessagesScreen = () => {
 
@@ -94,42 +95,51 @@ const MessagesScreen = () => {
 
     // on mounting fetchposts(pageno = 1)
     useEffect(() => {
+        const handleMessage = (message) => {
+            dispatch(upsertMessage(message));
+        };
+        socket.off('receive_message', handleMessage); // prevent duplicates
+        socket.on('receive_message', handleMessage);
         fetchMessages(1);
+
+        return () => {
+            socket.off('receive_message', handleMessage);
+        }
     }, []);
 
     // Track scroll offset
 
     const handleScroll = useCallback((event) => {
-            const currentY = event.nativeEvent.contentOffset.y;
-            if (currentY > lastScrollY.current) {
-                if (scrollDirection.current !== 'down' && currentY > 60) {
-                    Animated.timing(headerTranslateY, {
-                        toValue: -headerHeight - insets.top,
-                        duration: 200,
-                        useNativeDriver: true,
-                    }).start();
-                    scrollDirection.current = 'down';
-                }
-            } else {
-                if (scrollDirection.current !== 'up') {
-                    Animated.timing(headerTranslateY, {
-                        toValue: 0,
-                        duration: 200,
-                        useNativeDriver: true,
-                    }).start();
-                    scrollDirection.current = 'up';
-                }
+        const currentY = event.nativeEvent.contentOffset.y;
+        if (currentY > lastScrollY.current) {
+            if (scrollDirection.current !== 'down' && currentY > 60) {
+                Animated.timing(headerTranslateY, {
+                    toValue: -headerHeight - insets.top,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'down';
             }
-    
-            lastScrollY.current = currentY;
-        }, [headerHeight, insets.top])
+        } else {
+            if (scrollDirection.current !== 'up') {
+                Animated.timing(headerTranslateY, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+                scrollDirection.current = 'up';
+            }
+        }
+
+        lastScrollY.current = currentY;
+    }, [headerHeight, insets.top])
 
     // if user reaches end to flatlist loadmore
     const loadMore = useCallback(() => {
         if (!loading.current && hasMore.current && pageNumber.current) {
             fetchMessages(pageNumber.current + 1);
         }
-    },[]);
+    }, []);
 
     return (
         <SafeAreaView style={{ flex: 1 }}>

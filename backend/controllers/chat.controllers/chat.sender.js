@@ -1,4 +1,5 @@
 const chatModel = require("../../models/chat.model");
+const friendRequestModel = require("../../models/friendRequest.model");
 const messagesModel = require("../../models/messages.model");
 const userModel = require("../../models/user.model");
 
@@ -16,14 +17,19 @@ const chatSender = async (req, res) => {
         }
 
         const other = await userModel.findOne({ _id: otherId });
-        if (!otherId || !other) {
+        const myWay = await friendRequestModel.findOne({from: req.userId, to: otherId})
+            .select("status");
+        if (!otherId || !other || !myWay || myWay.status !== "connected") {
             return res.status(400).json({
                 success: false,
                 message: "Invalid Request!"
             })
         }
 
-        let messages = await messagesModel.findOne({ from: otherId, to: req.userId }).select('newMessages');
+        let messages = await messagesModel.findOne({ from: otherId, to: req.userId })
+            .select('from newMessages updatedAt')
+            .populate('from', 'name profilepic')
+            .lean();
 
         if (messages) {
             const otherMessages = await messagesModel.findOne({ from: req.userId, to: otherId }).select('newMessages');
@@ -55,7 +61,8 @@ const chatSender = async (req, res) => {
         })
 
         const io = req.app.get('io');
-        io.to(otherId).emit('receive_chat', chat);
+        io.to(otherId).emit('receive_chat', {senderId: otherId, chat: chat});
+        io.to(otherId).emit('receive_message', messages);
 
         return res.status(200).json({
             success: true,

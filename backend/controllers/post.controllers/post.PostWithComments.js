@@ -18,6 +18,16 @@ const getPostWithComments = async (req, res) => {
             });
         }
 
+        const postData = await postModel.findOne({_id: postId})
+            .select("owner")
+            .populate({
+                path: 'owner',
+                select: '_id'
+            })
+            .lean();
+
+        const isPostMine = postData.owner._id.toString() === user._id.toString();
+
         const comments = await commentModel.aggregate([
             {
                 $match: { post: postId }
@@ -69,6 +79,7 @@ const getPostWithComments = async (req, res) => {
                     isCommentMine: {
                         $eq: ["$commentOwner._id", user._id]
                     },
+                    isPostMine: isPostMine,
                 }
             },
             {
@@ -79,7 +90,8 @@ const getPostWithComments = async (req, res) => {
                     createdAt: 1,
                     isCommentMine: 1,
                     isCommentLiked: 1,
-                    commentLikesCount: 1
+                    commentLikesCount: 1,
+                    isPostMine: 1,
                 }
             }
         ]);

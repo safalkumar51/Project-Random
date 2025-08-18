@@ -5,18 +5,12 @@ import { selectOtherProfileById } from '../redux/selectors/otherProfileSelectors
 import { selectMyProfileById } from '../redux/selectors/myProfileSelectors';
 
 const ProfileCard = ({ profileId, counter }) => {
-    console.log(profileId);
     let profile = {};
     if(counter === 1){
         profile = useSelector(state => selectOtherProfileById(state, profileId), shallowEqual);
     } else {
         profile = useSelector(state => selectMyProfileById(state, profileId), shallowEqual);
     }
-
-    console.log(2);
-    useEffect(() => {
-        console.log(22);
-    },[]);
 
     return (
         <View style={styles.profileCard}>

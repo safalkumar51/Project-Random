@@ -1,12 +1,12 @@
 import { Alert, StyleSheet, Text, TouchableOpacity, View, Dimensions } from 'react-native';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import baseURL from '../assets/config';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { selectRequestById } from '../redux/selectors/otherProfileSelectors';
-import { updateRequestStatus } from '../redux/slices/requestSlice';
+import { clearRequest, updateRequestStatus } from '../redux/slices/requestSlice';
 import { removeRequest, updateRequestsStatus } from '../redux/slices/requestsSlice';
 import { clearOtherProfile } from '../redux/slices/otherProfileSlice';
 import { clearOtherPosts } from '../redux/slices/otherPostsSlice';
@@ -15,6 +15,7 @@ const { width } = Dimensions.get('window');
 
 const StatusCard = ({ requestId }) => {
     const navigation = useNavigation();
+    const loading = useRef(false);
 
     const dispatch = useDispatch();
 
@@ -23,6 +24,8 @@ const StatusCard = ({ requestId }) => {
     const data = useMemo(() => request, [request]);
 
     const connectHandler = async () => {
+        if (loading.current) return;
+        loading.current = true;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -52,9 +55,12 @@ const StatusCard = ({ requestId }) => {
         } catch (err) {
             console.error('Error connecting:', err);
         }
+        loading.current = false;
     };
 
     const removeHandler = async () => {
+        if (loading.current) return;
+        loading.current = true;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -73,6 +79,7 @@ const StatusCard = ({ requestId }) => {
 
             if (response.data.success) {
                 dispatch(removeRequest(requestId));
+                dispatch(clearRequest(requestId));
                 dispatch(clearOtherProfile());
                 dispatch(clearOtherPosts());
                 navigation.navigate("Home");
@@ -86,6 +93,7 @@ const StatusCard = ({ requestId }) => {
         } catch (err) {
             console.error('Error rejecting:', err);
         }
+        loading.current = false;
     };
 
     return (

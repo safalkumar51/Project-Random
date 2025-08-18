@@ -22,7 +22,6 @@ const RequestsList = React.memo(({
 
     // Optionally, you can memoize the data if needed
     const requestsData = useMemo(() => requestsIds, [requestsIds]);
-    console.log(requestsData);
 
     return (
         <AnimatedFlatList

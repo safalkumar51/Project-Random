@@ -91,7 +91,7 @@ const deleteComment = async (req, res) => {
             });
         }
 
-        const comment = await Comment.findOne({ _id: commentId })
+        const comment = await commentModel.findOne({ _id: commentId })
             .select('user post')
             .populate({
                 path: 'post',
@@ -100,7 +100,8 @@ const deleteComment = async (req, res) => {
                     path: 'owner',
                     select: '_id'
                 }
-            });
+            }).lean();
+
 
         if (!commentId || !comment || (comment.user.toString() !== req.userId.toString() && comment.post.owner._id.toString() !== req.userId.toString())) {
             return res.status(400).json({ success: false, message: 'Invalid Request' });

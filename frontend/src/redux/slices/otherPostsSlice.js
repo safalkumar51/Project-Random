@@ -35,5 +35,5 @@ const otherPostsSlice = createSlice({
     }
 });
 
-export const { setOtherPosts, addOtherPosts, clearOtherPosts, toggleOtherPostsLike, untoggleOtherPostsComment } = otherPostsSlice.actions;
+export const { setOtherPosts, addOtherPosts, clearOtherPosts, toggleOtherPostsLike, toggleOtherPostsComment, untoggleOtherPostsComment } = otherPostsSlice.actions;
 export default otherPostsSlice.reducer;

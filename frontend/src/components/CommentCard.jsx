@@ -12,7 +12,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { selectCommentById } from '../redux/selectors/singlePostSelectors';
 import { removeComment, toggleCommentLike } from '../redux/slices/singlePostCommentsSlice';
-import { toggleFeedComment, untoggleFeedComment } from '../redux/slices/feedSlice';
+import { untoggleFeedComment } from '../redux/slices/feedSlice';
 import { untoggleMyPostsComment } from '../redux/slices/myPostsSlice';
 import { untoggleComment } from '../redux/slices/singlePostSlice';
 import { untoggleOtherPostsComment } from '../redux/slices/otherPostsSlice';
@@ -21,8 +21,9 @@ dayjs.extend(relativeTime);
 
 const { width } = Dimensions.get('window');
 
-const CommentCard = ({ commentId, isMine }) => {
+const CommentCard = ({ commentId }) => {
     const navigation = useNavigation();
+    const loading = useRef(false);
 
     const dispatch = useDispatch();
     const [modalVisible, setModalVisible] = useState(false);
@@ -32,7 +33,7 @@ const CommentCard = ({ commentId, isMine }) => {
     const time = useMemo(() => dayjs(comment.createdAt).fromNow(), [comment.createdAt]);
 
     const getProfileHandler = () => {
-        if(isMine){
+        if(comment.isCommentMine){
             navigation.navigate("Home", { screen: "Profile" }); 
         }
         else{
@@ -41,6 +42,8 @@ const CommentCard = ({ commentId, isMine }) => {
     }
 
     const toggleLike = async () => {
+        if(loading.current) return;
+        loading.current = true;
         try {
 
             const authToken = await AsyncStorage.getItem('authToken');
@@ -72,6 +75,7 @@ const CommentCard = ({ commentId, isMine }) => {
         } catch (err) {
             console.error('Error like/unlike comment:', err);
         }
+        loading.current = false;;
     };
 
     const handleDelete = () => {
@@ -118,10 +122,9 @@ const CommentCard = ({ commentId, isMine }) => {
             if (response.data.success) {
                 dispatch(removeComment(response.data.comment._id));
                 dispatch(untoggleComment(response.data.comment.post._id))
-                dispatch(untoggleOtherPostsComment(response.data.comment.post._id))
                 dispatch(untoggleFeedComment(response.data.comment.post._id));
-                dispatch(untoggleMyPostsComment(response.data.comment.post._id));
-                if (counter === 1) navigation.goBack();
+                if(comment.isPostMine) dispatch(untoggleMyPostsComment(response.data.comment.post._id));
+                else dispatch(untoggleOtherPostsComment(response.data.comment.post._id))
             } else {
                 if (response.data.message === 'Log In Required!') {
                     await AsyncStorage.removeItem('authToken');
@@ -135,11 +138,35 @@ const CommentCard = ({ commentId, isMine }) => {
     }
 
     const reportComment = async () => {
+        if (loading.current) return;
+        loading.current = true;
         try {
-            return;
+            const authToken = await AsyncStorage.getItem('authToken');
+            if (!authToken) {
+                navigation.replace('LoginScreen');
+                return;
+            }
+
+            const response = await axios.post(`${baseURL}/user/report/comment`, {
+                problem
+            }, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                }
+            })
+
+            if (response.data.success) {
+                Alert.alert("Reported Successfully!!", "Our Support Team wiil tend to your report ASAP")
+            } else {
+                if (response.data.message === 'Log In Required!') {
+                    await AsyncStorage.removeItem('authToken');
+                    navigation.replace('LoginScreen');
+                }
+            }
         } catch (err) {
             console.error('Error reporting post:', err);
         }
+        loading.current = false;
     }
 
     return (
@@ -207,7 +234,7 @@ const CommentCard = ({ commentId, isMine }) => {
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
-                        {(comment?.isCommentMine || isMine) && (
+                        {(comment?.isCommentMine || comment?.isPostMine) && (
                             <Pressable style={[styles.modalBtn, styles.withBorder]} onPress={handleDelete}>
                                 <Text style={styles.deleteTxt}>Delete</Text>
                             </Pressable>

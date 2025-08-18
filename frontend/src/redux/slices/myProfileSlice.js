@@ -10,7 +10,7 @@ const myProfileSlice = createSlice({
     reducers: {
         setMyProfile: myProfileAdapter.setOne,
         removeMyProfile: myProfileAdapter.removeOne,
-        editProfile: (state, action) => {
+        editMyProfile: (state, action) => {
             const profile = state.entities[action.payload.profileId];
             if (profile) {
                 profile.name = action.payload.name;

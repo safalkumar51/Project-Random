@@ -70,18 +70,7 @@ const MyConnectionsScreen = () => {
 
     // on mounting fetchrequests(pageno = 1)
     useEffect(() => {
-        const handleConnection = (data) => {
-            dispatch(addConnection(data));
-            dispatch(updateRequestStatus({ _id: data._id, status: data.status }));
-        };
-        socket.off('receive_connection', handleConnection); // prevent duplicates
-        socket.on('receive_connection', handleConnection);
-
         fetchConnections(1);
-
-        return () => {
-            socket.off('receive_connection', handleConnection);
-        }
     }, []);
 
     const loadMore = useCallback(() => {

@@ -16,6 +16,9 @@ import CommentInput from '../../components/CommentInput';
 import { clearPost, setPost, toggleComment } from '../../redux/slices/singlePostSlice';
 import { addComment, addManyComment, clearComments, setComments } from '../../redux/slices/singlePostCommentsSlice';
 import SinglePostList from '../../lists/SinglePostList';
+import { toggleFeedComment } from '../../redux/slices/feedSlice';
+import { toggleMyPostComment } from '../../redux/slices/myPostsSlice';
+import { toggleOtherPostsComment } from '../../redux/slices/otherPostsSlice';
 
 
 dayjs.extend(relativeTime);
@@ -121,6 +124,7 @@ const PostScreen = ({ route }) => {
             loading.current = false;
             hasMore.current = true;
             totalPages.current = undefined;
+            postLoading.current = false;
         }
     }, [postId]);
 
@@ -152,6 +156,9 @@ const PostScreen = ({ route }) => {
                 if (response.data.success) {
                     dispatch(addComment(response.data.comment));
                     dispatch(toggleComment(postId));
+                    dispatch(toggleFeedComment(postId));
+                    dispatch(toggleMyPostComment(postId));
+                    dispatch(toggleOtherPostsComment(postId));
 
                 } else {
                     console.error(response.data.message);
@@ -190,7 +197,7 @@ const PostScreen = ({ route }) => {
                                 loading={loading}
                                 postLoading={postLoading}
                             />
-                            <CommentInput onSend={sendComment} />
+                            <CommentInput onSend={sendComment} placeholderText={"Write a comment..."}/>
                         </View>
                     </View>
                 </TouchableWithoutFeedback>

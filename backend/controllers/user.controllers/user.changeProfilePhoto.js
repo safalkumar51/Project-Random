@@ -43,7 +43,8 @@ const userChangeProfilePhoto = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "Profile Photo Changed Successfully"
+            message: "Profile Photo Changed Successfully",
+            profilepic: user.profilepic
         });
 
     } catch (err) {

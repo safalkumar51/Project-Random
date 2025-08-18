@@ -1,5 +1,5 @@
 import { Image, StyleSheet, Text, View } from 'react-native'
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
 import { selectChatsById } from '../redux/selectors/chatsSelectors'
 
@@ -12,7 +12,6 @@ const ChatCard = ({otherId, avatar, chatId}) => {
     const chat = useSelector(state => selectChatsById(state, chatId), shallowEqual);
     const chatData = useMemo(() => chat, [chat]);
     const time = useMemo(() => dayjs(chatData?.createdAt).fromNow(), [chatData?.createdAt]);
-    
     return (
         <View
             style={[
@@ -20,11 +19,7 @@ const ChatCard = ({otherId, avatar, chatId}) => {
                 chatData.from !== otherId ? styles.rightAlign : styles.leftAlign,
             ]}
         >
-            {chatData.from === otherId && (
-                <View style={styles.avatarWrapper}>
-                    <Image source={{uri: avatar}} style={styles.avatar} />
-                </View>
-            )}
+            
 
             <View style={[styles.bubble, chatData.from !== otherId ? styles.myBubble : styles.theirBubble]}>
                 <Text style={[styles.text, chatData.from !== otherId && styles.myText]}>{chatData.message}</Text>

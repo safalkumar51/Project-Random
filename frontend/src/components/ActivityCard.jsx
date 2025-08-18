@@ -1,5 +1,5 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View, Dimensions, Alert } from 'react-native';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
@@ -20,8 +20,9 @@ const { width } = Dimensions.get('window');
 
 const ActivityCard = ({ requestId }) => {
     const navigation = useNavigation();
+    const loading = useRef(false);
+
     const dispatch = useDispatch();
-    console.log(requestId);
 
     const request = useSelector(state => selectRequestsById(state, requestId), shallowEqual);
 
@@ -33,6 +34,8 @@ const ActivityCard = ({ requestId }) => {
     };
 
     const connectHandler = async () => {
+        if (loading.current) return;
+        loading.current = true;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -62,9 +65,12 @@ const ActivityCard = ({ requestId }) => {
         } catch (err) {
             console.error('Error connecting:', err);
         }
+        loading.current = false;
     };
 
     const removeHandler = async () => {
+        if (loading.current) return;
+        loading.current = true;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -84,7 +90,9 @@ const ActivityCard = ({ requestId }) => {
             if (response.data.success) {
                 // Remove from requests slice
                 dispatch(removeRequest(requestId));
-
+                dispatch(clearRequest(requestId));
+                dispatch(clearOtherProfile());
+                dispatch(clearOtherPosts());
                 // Sync with otherProfileSlice if the profile is open later
                 //dispatch(setOtherProfileStatus("none"));
 
@@ -98,6 +106,7 @@ const ActivityCard = ({ requestId }) => {
         } catch (err) {
             console.error('Error rejecting:', err);
         }
+        loading.current = false;
     };
 
     return (

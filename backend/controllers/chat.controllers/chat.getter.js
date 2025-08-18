@@ -1,6 +1,7 @@
 const userModel = require("../../models/user.model");
 const chatModel = require("../../models/chat.model");
 const messagesModel = require("../../models/messages.model");
+const friendRequestModel = require("../../models/friendRequest.model");
 
 const chatGetter = async (req, res) => {
     const otherId = req.query.otherId;
@@ -19,7 +20,7 @@ const chatGetter = async (req, res) => {
         }
 
         const other = await userModel.findOne({_id: otherId});
-        if(!otherId || !other){
+        if (!otherId || !other){
             return res.status(400).json({
                 success: false,
                 message: "Invalid Request!"

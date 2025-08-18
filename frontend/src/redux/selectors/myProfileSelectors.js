@@ -16,6 +16,7 @@ const myPostsSelectors = myPostsAdapter.getSelectors(
 export const {
     selectById: selectMyProfileById,
     selectIds: selectMyProfileIds,
+    selectAll: selectMyProfile,
 } = myProfileSelectors;
 
 export const {

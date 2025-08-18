@@ -6,10 +6,10 @@ const userSignOut = async (req, res) => {
 
         const user = await userModel.findOne({ _id: req.userId }).select('token');
 
-        if (!user || user.token !== req.userToken) {
+        if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "Log In Required!"
+                message: "Invalid Request!"
             })
         }
 

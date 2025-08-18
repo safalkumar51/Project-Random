@@ -14,13 +14,11 @@ const ChatsList = React.memo(({
     onEndReached,
     loading,
 }) => {
-    // Only select the comment IDs for this post
     const chatsId = useSelector(selectChatsIds, shallowEqual);
 
     const keyExtractor = useCallback((item) => (item._id ? item._id : item), []);
     const renderItem = useCallback(({ item }) => <ChatCard chatId={item} otherId={otherId} avatar={avatar} />, []);
 
-    // Optionally, you can memoize the data if needed
     const chatsData = useMemo(() => chatsId, [chatsId]);
 
     return (

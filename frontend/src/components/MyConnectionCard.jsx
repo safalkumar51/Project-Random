@@ -1,5 +1,5 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View, Dimensions, Alert } from 'react-native'
-import React, { useMemo } from 'react'
+import React, { useMemo, useRef } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
@@ -10,6 +10,10 @@ import { selectConnectionsById } from '../redux/selectors/connectionsSelector';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { removeRequest } from '../redux/slices/requestsSlice';
+import { clearRequest } from '../redux/slices/requestSlice';
+import { clearOtherProfile } from '../redux/slices/otherProfileSlice';
+import { clearOtherPosts } from '../redux/slices/otherPostsSlice';
 
 dayjs.extend(relativeTime);
 
@@ -17,6 +21,7 @@ const { width } = Dimensions.get('window');
 
 const MyConnectionCard = ({ connectionId }) => {
     const navigation = useNavigation();
+    const loading = useRef(false);
     const dispatch = useDispatch();
 
     const connection = useSelector(state => selectConnectionsById(state, connectionId), shallowEqual);
@@ -29,6 +34,8 @@ const MyConnectionCard = ({ connectionId }) => {
     };
 
     const removeHandler = async () => {
+        if (loading.current) return;
+        loading.current = true;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -48,7 +55,11 @@ const MyConnectionCard = ({ connectionId }) => {
                 Alert.alert(response.data.message);
 
                 // Update Redux
-                dispatch(removeConnection({_id: connectionId}));
+                dispatch(removeConnection(connectionId));
+                dispatch(removeRequest(connectionId));
+                dispatch(clearRequest(connectionId));
+                dispatch(clearOtherProfile());
+                dispatch(clearOtherPosts());
                 //dispatch(setOtherProfileStatus("none")); // Instant sync for profile view
 
             } else {
@@ -62,6 +73,7 @@ const MyConnectionCard = ({ connectionId }) => {
         } catch (err) {
             console.error('Error removing:', err);
         }
+        loading.current = false;
     };
 
     return (

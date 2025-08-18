@@ -15,6 +15,8 @@ import { addFeedPosts, setFeedPosts } from '../../redux/slices/feedSlice';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import FeedList from '../../lists/FeedList';
+import { addConnection } from '../../redux/slices/connectionsSlice';
+import { updateRequestsStatus } from '../../redux/slices/requestsSlice';
 
 dayjs.extend(relativeTime);
 
@@ -94,10 +96,17 @@ const HomeScreen = () => {
             const authToken = await AsyncStorage.getItem('authToken');
             initSocket(authToken);
         }
+        const handleConnection = (data) => {
+            dispatch(addConnection(data));
+            dispatch(updateRequestsStatus({ _id: data._id, status: data.status }));
+        };
         connectSocket();
+        socket.off('receive_connection', handleConnection); // prevent duplicates
+        socket.on('receive_connection', handleConnection);
         fetchPosts(1);
 
         return () => {
+            socket.off('receive_connection', handleConnection);
             socket.disconnect(); // ✅ disconnects only on unmount
             console.log('Socket disconnected on component unmount');
         };

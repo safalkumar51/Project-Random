@@ -1,9 +1,8 @@
 import {
-    ActivityIndicator,
-    FlatList,
     StyleSheet,
     View,
     Animated,
+    Alert,
 } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
@@ -13,9 +12,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
-import PostCards from '../../components/PostCards';
-import ProfileCard from '../../components/ProfileCard';
-import StatusCard from '../../components/StatusCard';
 import SharedHeader from '../../components/SharedHeader';
 import baseURL from '../../assets/config';
 
@@ -84,7 +80,6 @@ const OtherProfileScreen = ({ route }) => {
                 navigation.replace("LoginScreen");
                 return;
             }
-
             const response = await axios.get(`${baseURL}/user/otherprofile`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,

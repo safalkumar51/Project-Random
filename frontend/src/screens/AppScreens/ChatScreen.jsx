@@ -67,6 +67,7 @@ const ChatScreen = ({ route }) => {
         if (page !== 1 && (loading.current || !hasMore.current)) return;
 
         loading.current = true;
+
         try {
 
             const authToken = await AsyncStorage.getItem('authToken');
@@ -83,6 +84,7 @@ const ChatScreen = ({ route }) => {
 
             if (response.data.success) {
                 const chatsData = response.data.chats;
+                console.log(chatsData);
                 if (page === 1) {
                     totalPages.current = response.data.totalPages;
                     dispatch(setChats(chatsData));
@@ -93,7 +95,7 @@ const ChatScreen = ({ route }) => {
                 hasMore.current = page < totalPages.current
             }
             else {
-                console.log(response.data.message);
+                console.error(response.data.message);
                 if (response.data.message === 'Log In Required!') {
                     await AsyncStorage.removeItem('authToken');
                     navigation.replace("LoginScreen");
@@ -101,23 +103,27 @@ const ChatScreen = ({ route }) => {
             }
 
         } catch (err) {
-            console.log('Error fetching requests:', err);
+            console.error('Error fetching requests:', err);
         }
 
         loading.current = false;
     }
 
     useEffect(() => {
-        const handleRequest = (chat) => {
-            dispatch(addChat(chat));
+        const handleChat = ({senderId, chat}) => {
+            if(senderId === otherId) dispatch(addChat(chat));
         };
-        socket.off('receive_chat', handleRequest); // prevent duplicates
-        socket.on('receive_chat', handleRequest);
+        socket.off('receive_chat', handleChat); // prevent duplicates
+        socket.on('receive_chat', handleChat);
         fetchChats(1);
 
         return () => {
-            socket.off('receive_chat', handleRequest);
+            socket.off('receive_chat', handleChat);
             dispatch(clearChats());
+            pageNumber.current = 0;
+            loading.current = false;
+            hasMore.current = true;
+            totalPages.current = undefined;
         }
     }, [otherId]);
 
@@ -187,7 +193,7 @@ const ChatScreen = ({ route }) => {
                                 loading={loading}
                             />
                         </View>
-                        <CommentInput onSend={sendMessage} />
+                        <CommentInput onSend={sendMessage} placeholderText={"Message..."}/>
                     </View>
                 </TouchableWithoutFeedback>
             </KeyboardAvoidingView>

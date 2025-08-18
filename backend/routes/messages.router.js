@@ -28,7 +28,6 @@ router.get('/', isLoggedIn, async (req,res) => {
             .limit(limit) // limit >> To send limit posts
             .populate('from', 'name profilepic')
             .lean();
-        ;
 
         return res.status(200).json({
             success: true,

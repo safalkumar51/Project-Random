@@ -1,7 +1,7 @@
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 
-const CommentInput = ({onSend}) => {
+const CommentInput = ({onSend, placeholderText}) => {
     const [text, setText] = useState('');
     const handlePress = () => {
         if (text.trim() !== '') {
@@ -15,7 +15,7 @@ const CommentInput = ({onSend}) => {
                 style={styles.input}
                 value={text}
                 onChangeText={setText}
-                placeholder="Write a comment"
+                placeholder={placeholderText}
                 placeholderTextColor="#888"
             />
             <TouchableOpacity style={styles.buttonContainer} onPress={handlePress}>

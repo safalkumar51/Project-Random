@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, ScrollView, Pressable, Modal, TouchableOpacity, PermissionsAndroid, Platform, Animated, Alert } from 'react-native';
-import { useEffect, useRef } from 'react';
+import { StyleSheet, Text, View, ScrollView, Pressable, Modal, TouchableOpacity, PermissionsAndroid, Platform, Animated, Alert, ActivityIndicator } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import BackButton from '../../components/BackButton';
 import { Image } from 'react-native'
@@ -16,8 +16,8 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import baseURL from '../../assets/config';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import { selectMyProfileById, selectMyProfileIds } from '../../redux/selectors/myProfileSelectors';
-import { setMyProfile } from '../../redux/slices/myProfileSlice';
+import { selectMyProfile, selectMyProfileById, selectMyProfileIds } from '../../redux/selectors/myProfileSelectors';
+import { changeMyProfilePhoto, editMyProfile, setMyProfile } from '../../redux/slices/myProfileSlice';
 import { addMyPosts, setMyPosts } from '../../redux/slices/myPostsSlice';
 
 
@@ -26,23 +26,20 @@ const EditProfileScreen = () => {
     const navigation = useNavigation();
     const headerTranslateY = useRef(new Animated.Value(0)).current;
 
-    const [name, setname] = useState("")
     const [modalVisible, setModalVisible] = useState(false);
-    const [imageUri, setImageUri] = useState(null);
+    const [name, setname] = useState("");
     const [bio, setBio] = useState('');
     const [password, setPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
     const loading = useRef(false);
+    const profileLoading = useRef(false);
 
     const dispatch = useDispatch();
 
-    const profileId = useSelector(selectMyProfileIds, shallowEqual);
-    const profile = useSelector(
-        (state) => profileId[0] ? selectMyProfileById(state, profileId[0]) : null,
-        shallowEqual
-    );
+    const profileData = useSelector(selectMyProfile, shallowEqual);
+    const profile = useMemo(() => profileData, [profileData]);
 
     const requestPermissions = async () => {
         if (Platform.OS === 'android') {
@@ -59,7 +56,7 @@ const EditProfileScreen = () => {
     };
 
     const changeProfilePhotoHandler = async (image) => {
-        try{
+        try {
 
             const authToken = await AsyncStorage.getItem('authToken');
 
@@ -86,7 +83,7 @@ const EditProfileScreen = () => {
                 name: filename,                 // File name like 'photo.jpg'
             });
 
-            const response = await axios.post(`${ baseURL }/user/changeprofilephoto`, formData, {
+            const response = await axios.post(`${baseURL}/user/changeprofilephoto`, formData, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                     'Content-Type': 'multipart/form-data',
@@ -95,7 +92,7 @@ const EditProfileScreen = () => {
 
             if (response.data.success) {
                 Alert.alert("Profile Picture Changed Successfully!");
-                navigation.goBack();
+                dispatch(changeMyProfilePhoto({ profileId: profile._id, profilepic: response.data.profilepic }));
             } else {
                 console.error(response.data.message);
                 if (response.data.message === 'Log In Required!') {
@@ -104,7 +101,7 @@ const EditProfileScreen = () => {
                 }
             }
 
-        } catch(err){
+        } catch (err) {
             console.error('Error changing profile picture:', err);
         }
     }
@@ -124,7 +121,7 @@ const EditProfileScreen = () => {
                 return;
             }
 
-            const response = await axios.post(`${ baseURL }/user/editprofile`, {
+            const response = await axios.post(`${baseURL}/user/editprofile`, {
                 name,
                 bio
             }, {
@@ -133,7 +130,8 @@ const EditProfileScreen = () => {
                 }
             });
             if (response.data.success) {
-                Alert.alert("Edit Profile")
+                Alert.alert("Edit Profile");
+                dispatch(editMyProfile({ profileId: profile._id, name: response.data.name, bio: response.data.bio }));
             }
             else {
                 console.error(response.data.message);
@@ -175,7 +173,7 @@ const EditProfileScreen = () => {
                 return;
             }
 
-            const response = await axios.post(`${ baseURL }/user/changepassword`, {
+            const response = await axios.post(`${baseURL}/user/changepassword`, {
                 oldPassword: password,
                 newPassword
             }, {
@@ -200,7 +198,7 @@ const EditProfileScreen = () => {
     }
 
     const fetchProfile = async (page) => {
-        if (page !== 1 && loading.current || profileId?.length) return;
+        if (page !== 1 && loading.current || profileData?.length) return;
         loading.current = true;
 
         try {
@@ -240,55 +238,64 @@ const EditProfileScreen = () => {
 
     useEffect(() => {
         requestPermissions();
-        fetchProfile(1);
-        if (profile) {   // ✅ guard
-            setname(profile.name);
-            setBio(profile.bio);
-            setImageUri(profile.profilepic);
+        profileLoading.loading = true;
+
+        const loadData = async () => {
+            await fetchProfile(1);            
         }
-    }, [profileId, profile])
+        loadData();
+
+        profileLoading.loading = false;
+    }, [])
 
 
-    const handleCamera = () => {
+    const handleCamera = useCallback(() => {
         ImageCropPicker.openCamera({
-             width: 1200,                 
-            height: 1200,                 
-        cropping: true,             
-        freeStyleCropEnabled: false, 
-        hideBottomControls: true,    
-        cropperToolbarTitle: 'Crop Image',
-        compressImageQuality: 1,    
-        compressImageFormat: 'PNG', 
+            width: 1200,
+            height: 1200,
+            cropping: true,
+            freeStyleCropEnabled: false,
+            hideBottomControls: true,
+            cropperToolbarTitle: 'Crop Image',
+            compressImageQuality: 1,
+            compressImageFormat: 'PNG',
         }).then(image => {
-            setImageUri({ path: image.path, mime: image.mime });
             changeProfilePhotoHandler(image);
             setModalVisible(false);
         }).catch(err => {
             console.log("Camera error:", err);
             setModalVisible(false);
         });
-    };
+    },[]);
 
 
-    const handleGallery = () => {
+    const handleGallery = useCallback(() => {
         ImageCropPicker.openPicker({
-            width: 1200,                 
-            height: 1200,                 
-        cropping: true,             
-        freeStyleCropEnabled: false, 
-        hideBottomControls: true,    
-        cropperToolbarTitle: 'Crop Image',
-        compressImageQuality: 1,    
-        compressImageFormat: 'PNG',  
+            width: 1200,
+            height: 1200,
+            cropping: true,
+            freeStyleCropEnabled: false,
+            hideBottomControls: true,
+            cropperToolbarTitle: 'Crop Image',
+            compressImageQuality: 1,
+            compressImageFormat: 'PNG',
         }).then(image => {
-            setImageUri({ path: image.path, mime: image.mime });
             changeProfilePhotoHandler(image);
             setModalVisible(false);
         }).catch(err => {
             console.log("Gallery error:", err);
             setModalVisible(false);
         });
-    };
+    },[]);
+
+    if (loading.current || profileLoading.current) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" />
+                <Text>Loading...</Text>
+            </View>
+        )
+    }
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
@@ -306,7 +313,7 @@ const EditProfileScreen = () => {
                     <View style={styles.form}>
                         <View style={styles.avatarContainer}>
                             <Image
-                                source={{ uri: imageUri }} style={styles.avatar}
+                                source={{ uri: profile[0]?.profilepic }} style={styles.avatar}
                             />
 
                             <TouchableOpacity style={styles.cameraIcon} onPress={() => setModalVisible(true)} >
@@ -324,7 +331,7 @@ const EditProfileScreen = () => {
 
                         <Input
                             placeholder="Enter your name"
-                            value={name}
+                            value={profile[0]?.name}
                             onChangeText={setname}
                             leftIcon={
                                 <Ionicons name="person-outline" size={20} color="gray" />}
@@ -334,7 +341,7 @@ const EditProfileScreen = () => {
                         />
                         <Input
                             placeholder="Enter your Bio"
-                            value={bio}
+                            value={profile[0]?.bio}
                             onChangeText={setBio}
                             multiline={true}
 
@@ -433,7 +440,7 @@ const EditProfileScreen = () => {
     );
 };
 
-export default EditProfileScreen;
+export default React.memo(EditProfileScreen);
 
 const styles = StyleSheet.create({
     container: {

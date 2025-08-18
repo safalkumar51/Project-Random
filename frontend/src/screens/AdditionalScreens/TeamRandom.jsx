@@ -40,7 +40,7 @@ const members = [
   },
   {
      id: '5',
-    name: 'Pao sahab',
+    name: 'Aniket Singh',
      avatar: 'https://res.cloudinary.com/project-random/image/upload/v1751710445/default_yte3vu.png',
     github: 'https://github.com/manish00355',
     instagram: 'https://www.instagram.com/_manish49_/?hl=en',

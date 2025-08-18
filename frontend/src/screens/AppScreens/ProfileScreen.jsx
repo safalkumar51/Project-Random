@@ -50,7 +50,6 @@ const ProfileScreen = () => {
 
     const fetchProfile = async (page) => {
         if (page !== 1 && (loading.current || !hasMore.current)) return;
-        Alert.alert("y");
         loading.current = true;
 
         try {

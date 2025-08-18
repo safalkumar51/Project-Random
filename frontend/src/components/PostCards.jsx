@@ -60,12 +60,13 @@ const PostCards = ({ postId, counter }) => {
     const time = useMemo(() => dayjs(post?.createdAt).fromNow(), [post?.createdAt]);
 
     const getProfileHandler = () => {
+        if(counter === 3 || counter === 4) return;
         if (post.isMine) {
             if (counter === 1) {
                 navigation.navigate("Home", { screen: "Profile" });
-            } else if (counter === 2) {
+            } else {
                 navigation.navigate("Profile");
-            } else return;
+            }
 
         } else {
             navigation.navigate("OtherProfileScreen", { otherId: post?.owner._id });
@@ -73,10 +74,13 @@ const PostCards = ({ postId, counter }) => {
     };
 
     const getPostHandler = () => {
+        if(counter===1) return;
         navigation.navigate("PostScreen", { postId });
     }
 
     const handleLike = async () => {
+        if (loading.current) return;
+        loading.current = true;
         try {
 
             const authToken = await AsyncStorage.getItem('authToken');
@@ -113,6 +117,7 @@ const PostCards = ({ postId, counter }) => {
         } catch (err) {
             console.error('Error like/unlike post:', err);
         }
+        loading.current = false;
     };
 
     const handleDeletePost = async () => {
@@ -173,11 +178,35 @@ const PostCards = ({ postId, counter }) => {
     }
 
     const reportPost = async () => {
+        if (loading.current) return;
+        loading.current = true;
         try {
-            return;
+            const authToken = await AsyncStorage.getItem('authToken');
+            if (!authToken) {
+                navigation.replace('LoginScreen');
+                return;
+            }
+
+            const response = await axios.post(`${baseURL}/user/report/post`, {
+                problem
+            }, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                }
+            })
+
+            if (response.data.success) {
+                Alert.alert("Reported Successfully!!", "Our Support Team wiil tend to your report ASAP")
+            } else {
+                if (response.data.message === 'Log In Required!') {
+                    await AsyncStorage.removeItem('authToken');
+                    navigation.replace('LoginScreen');
+                }
+            }
         } catch (err) {
             console.error('Error reporting post:', err);
         }
+        loading.current = false;
     }
 
     return (
