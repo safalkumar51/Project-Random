@@ -1,11 +1,48 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, Dimensions, TouchableOpacity } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, Dimensions, TouchableOpacity, Alert } from 'react-native';
 import BackButton from '../../components/BackButton';
+import baseURL from '../../assets/config';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
 const HelpScreen = () => {
-    const [problem, setProblem] =useState()
+    const [problem, setProblem] =useState();
+    const loading = useRef(false);
+
+    const submitHandler = async () => {
+        if (loading.current) return;
+        loading.current = true;
+        try {
+            const authToken = await AsyncStorage.getItem('authToken');
+            if (!authToken) {
+                navigation.replace('LoginScreen');
+                return;
+            }
+
+            const response = await axios.post(`${baseURL}/user/help`,{
+                problem
+            }, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                }
+            })
+
+            if(response.data.success){
+                Alert.alert("Problem Submitted!!", "Our Support Team wiil tend to your problem ASAP")
+            } else{
+                if (response.data.message === 'Log In Required!') {
+                    await AsyncStorage.removeItem('authToken');
+                    navigation.replace('LoginScreen');
+                }
+            }
+
+        } catch(err){
+            console.error('Submit Error:', err);
+        }
+        loading.current = false;
+    }
     return (
         <ScrollView style={styles.container}>
             <View style={styles.header}>
@@ -30,7 +67,7 @@ const HelpScreen = () => {
                 textAlignVertical="top"
                 maxLength={300}
             />
-            <TouchableOpacity style={styles.submitBtn}>
+            <TouchableOpacity style={styles.submitBtn} onPress={submitHandler}>
                 <Text style={styles.submitText}>Submit</Text>
             </TouchableOpacity>
         </ScrollView>

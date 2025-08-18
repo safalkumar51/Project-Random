@@ -7,6 +7,7 @@ const likeUnlikePost = require('../controllers/post.controllers/post.likeUnlike'
 const { addComment, deleteComment } = require('../controllers/post.controllers/post.comment');
 const getPostWithComments = require('../controllers/post.controllers/post.PostWithComments');
 const likeUnlikeComment = require('../controllers/post.controllers/post.commentLikeUnlike');
+const postDelete = require('../controllers/post.controllers/post.delete');
 
 const router = express.Router();
 
@@ -22,7 +23,9 @@ router.post('/comment', isLoggedIn, addComment);
 
 router.post('/comment/like', isLoggedIn, likeUnlikeComment);
 
+router.post('/delete', isLoggedIn, postDelete);
+
 // Delete a comment by ID
-router.delete('/comment/:commentId', isLoggedIn, deleteComment);
+router.post('/comment/delete', isLoggedIn, deleteComment);
 
 module.exports = router;

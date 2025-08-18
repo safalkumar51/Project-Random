@@ -1,18 +1,31 @@
-import { Alert, StyleSheet, Text, TouchableOpacity, View, Dimensions } from 'react-native'
-import React from 'react'
-
+import { Alert, StyleSheet, Text, TouchableOpacity, View, Dimensions } from 'react-native';
+import React, { useEffect, useMemo, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import baseURL from '../assets/config';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import { selectRequestById } from '../redux/selectors/otherProfileSelectors';
+import { clearRequest, updateRequestStatus } from '../redux/slices/requestSlice';
+import { removeRequest, updateRequestsStatus } from '../redux/slices/requestsSlice';
+import { clearOtherProfile } from '../redux/slices/otherProfileSlice';
+import { clearOtherPosts } from '../redux/slices/otherPostsSlice';
 
 const { width } = Dimensions.get('window');
 
-const StatusCard = ({status, requestId, senderId}) => {
+const StatusCard = ({ requestId }) => {
     const navigation = useNavigation();
+    const loading = useRef(false);
+
+    const dispatch = useDispatch();
+
+    const request = useSelector(state => selectRequestById(state, requestId), shallowEqual);
+
+    const data = useMemo(() => request, [request]);
 
     const connectHandler = async () => {
-        return;
+        if (loading.current) return;
+        loading.current = true;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -22,7 +35,7 @@ const StatusCard = ({status, requestId, senderId}) => {
 
             const response = await axios.post(`${ baseURL }/connection/accept`, {
                 requestId,
-                senderId
+                senderId: data.from
             }, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
@@ -30,9 +43,8 @@ const StatusCard = ({status, requestId, senderId}) => {
             });
 
             if (response.data.success) {
-
-                Alert.alert(response.data.message);
-
+                dispatch(updateRequestStatus({ requestId, status: response.data.status }));
+                dispatch(updateRequestsStatus({ requestId, status: response.data.status }));
             } else {
                 console.error(response.data.message);
                 if (response.data.message === 'Log In Required!') {
@@ -40,14 +52,15 @@ const StatusCard = ({status, requestId, senderId}) => {
                     navigation.replace("LoginScreen");
                 }
             }
-
         } catch (err) {
             console.error('Error connecting:', err);
         }
-    }
+        loading.current = false;
+    };
 
     const removeHandler = async () => {
-        return;
+        if (loading.current) return;
+        loading.current = true;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -55,9 +68,9 @@ const StatusCard = ({status, requestId, senderId}) => {
                 return;
             }
 
-            const response = await axios.post(`${ baseURL } /connection/reject`, {
+            const response = await axios.post(`${baseURL}/connection/reject`, {
                 requestId,
-                senderId
+                senderId: data.from
             }, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
@@ -65,9 +78,11 @@ const StatusCard = ({status, requestId, senderId}) => {
             });
 
             if (response.data.success) {
-
-                Alert.alert(response.data.message);
-
+                dispatch(removeRequest(requestId));
+                dispatch(clearRequest(requestId));
+                dispatch(clearOtherProfile());
+                dispatch(clearOtherPosts());
+                navigation.navigate("Home");
             } else {
                 console.error(response.data.message);
                 if (response.data.message === 'Log In Required!') {
@@ -75,23 +90,23 @@ const StatusCard = ({status, requestId, senderId}) => {
                     navigation.replace("LoginScreen");
                 }
             }
-
         } catch (err) {
-            console.log('Error rejecting:', err);
+            console.error('Error rejecting:', err);
         }
-    }
+        loading.current = false;
+    };
 
     return (
         <View style={styles.card}>
-            {(status === "requested" || status === "connected") && (
+            {(data?.status !== "pending") && (
                 <View style={styles.statusWrapper}>
-                    <Text style={[styles.statusText, status === "connected" ? styles.connected : styles.requested]}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                    <Text style={[styles.statusText, data?.status === "connected" ? styles.connected : styles.requested]}>
+                        {data?.status.charAt(0).toUpperCase() + data?.status.slice(1)}
                     </Text>
                 </View>
             )}
 
-            {status === "pending" && (
+            {data?.status === "pending" && (
                 <View style={styles.container}>
                     <TouchableOpacity style={styles.connectBtn} onPress={connectHandler}>
                         <Text style={styles.connectTxt}>Connect</Text>
@@ -102,10 +117,10 @@ const StatusCard = ({status, requestId, senderId}) => {
                 </View>
             )}
         </View>
-    )
-}
+    );
+};
 
-export default StatusCard
+export default React.memo(StatusCard);
 
 const styles = StyleSheet.create({
     card: {
@@ -127,8 +142,8 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         borderRadius: 20,
         backgroundColor: '#e0e0e0',
-        marginLeft: 10, // Prevent overlap
-        flexShrink: 0,  // Prevent shrinking
+        marginLeft: 10,
+        flexShrink: 0,
     },
     statusText: {
         fontSize: 25,
@@ -136,11 +151,11 @@ const styles = StyleSheet.create({
         textTransform: 'capitalize',
     },
     requested: {
-        color: '#4f7cf0', // Light Blue
+        color: '#4f7cf0',
         fontWeight: 600
     },
     connected: {
-        color: '#2e7d32', // Green
+        color: '#2e7d32',
         fontWeight: 600
     },
     container: {
@@ -176,4 +191,4 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 15,
     },
-})
+});

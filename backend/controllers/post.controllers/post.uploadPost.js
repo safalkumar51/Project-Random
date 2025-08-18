@@ -59,9 +59,64 @@ const uploadPost = async (req, res) => {
             }
         }
 
+        const post = await postModel.aggregate([
+            {
+                $match: { _id: createdPost._id}
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'owner',
+                    foreignField: '_id',
+                    as: 'owner',
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                                profilepic: 1
+                            }
+                        }
+                    ],
+                    
+                }
+            },
+            {
+                $addFields: {
+                    owner: {
+                        $first: '$owner',
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    likesCount: 0,
+                    commentsCount: 0,
+                    isLiked: false,
+                    isCommented: false,
+                    isMine: true,
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    postpic: 1,
+                    caption: 1,
+                    owner: 1,
+                    likesCount: 1,
+                    commentsCount: 1,
+                    isLiked: 1,
+                    isCommented: 1,
+                    isMine: 1,
+                    createdAt: 1
+                }
+            }
+        ]);
+
         return res.status(200).json({
             success: true,
-            message: 'Post uploaded successfully'
+            message: 'Post uploaded successfully',
+            post: post[0]
         });
 
     } catch(err){

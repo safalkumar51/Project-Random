@@ -27,6 +27,7 @@ router.post('/', isLoggedIn, async (req, res) => {
         // find users in loaction: lon and lat with range maxDist, except user himself
         const nearby = await userModel.find({
             _id: { $ne: req.userId }, // to exclude the user
+            'location.coordinates': { $exists: true }, //added so that Mongo can use the partial index
             location: {
                 // $near is used to search nearby
                 $near: {
@@ -52,9 +53,18 @@ router.post('/', isLoggedIn, async (req, res) => {
                     friendRequestModel.create({ from: other._id, to: me._id })
                 ]);
 
+                const [myWayPopulated, otherWayPopulated] = await Promise.all([
+                    friendRequestModel.findById(myWay._id)
+                        .select('from status createdAt')
+                        .populate('from', 'name profilepic'),
+                    friendRequestModel.findById(otherWay._id)
+                        .select('from status createdAt')
+                        .populate('from', 'name profilepic')
+                ]);
+
                 const io = req.app.get('io');
-                io.to(me._id.toString()).emit('receive_request', otherWay);
-                io.to(other._id.toString()).emit('receive_request', myWay);
+                io.to(me._id.toString()).emit('receive_request', otherWayPopulated);
+                io.to(other._id.toString()).emit('receive_request', myWayPopulated);
             }
         }
 

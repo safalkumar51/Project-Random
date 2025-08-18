@@ -8,7 +8,7 @@ const CommentLikeSchema = mongoose.Schema({
     },
     comment: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Post',
+        ref: 'Comment',
         required: true
     },
     type: {

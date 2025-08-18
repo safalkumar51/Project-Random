@@ -15,7 +15,12 @@ const uploadOnCloudinary = async (localFilePath) => {
 
         // upload file on cloudinary
         const response = await cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto"
+            folder: 'uploads',
+            resource_type: 'auto', // Keep original format (image/video/raw)
+            use_filename: true,
+            unique_filename: false,
+            overwrite: true,
+            transformation: [] // 🚫 No transformations = no compression
         })
 
         // file uploaded on cloudinary
