@@ -296,7 +296,7 @@ const PostCards = ({ postId, counter }) => {
                             color={post?.isLiked ? 'red' : 'black'}
                         />
                         <Text style={[styles.interactionTxt, { color: post?.isLiked ? 'red' : '#333' }]}>
-                            {post?.likesCount > 0 ? `${post?.likesCount} Like` : 'Like'}
+                            {post?.likesCount > 0 ? `${post?.likesCount} ` : ''}{post?.likesCount > 1 ? 'Likes' : 'Like'}
                         </Text>
                     </TouchableOpacity>
 
@@ -307,7 +307,7 @@ const PostCards = ({ postId, counter }) => {
                             color={post?.isCommented ? '#007AFF' : 'black'}
                         />
                         <Text style={[styles.interactionTxt, { color: post?.isCommented ? '#007AFF' : '#333' }]}>
-                            {post?.commentsCount > 0 ? `${post?.commentsCount} Comment` : 'Comment'}
+                            {post?.commentsCount > 0 ? `${post?.commentsCount} ` : ''}{post?.commentsCount > 1 ? 'Comments' : 'Comment'}
                         </Text>
                     </TouchableOpacity>
                 </View>

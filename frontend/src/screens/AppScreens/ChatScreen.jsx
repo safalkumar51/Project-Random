@@ -19,12 +19,15 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import ChatsList from '../../lists/ChatsList';
 import CommentInput from '../../components/CommentInput';
 import { addChat, addChats, clearChats, setChats } from '../../redux/slices/chatsSlice';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { updateUnreadMessageCount } from '../../redux/slices/messagesSlice';
 
 dayjs.extend(relativeTime);
 
 const ChatScreen = ({ route }) => {
+
+    const navigation = useNavigation();
+    
     const headerHeight = 60;
     const headerTranslateY = useRef(new Animated.Value(0)).current;
     const lastScrollY = useRef(0);
@@ -129,15 +132,32 @@ const ChatScreen = ({ route }) => {
         }
     }, [otherId]);
 
-    useFocusEffect(useCallback( async () => {
-        const authToken = await AsyncStorage.getItem('authToken');
-        if (!authToken) {
-            navigation.replace("LoginScreen");
-            return;
-        }
-        socket.emit('message_read', { authToken, otherId });
-        dispatch(updateUnreadMessageCount(messageId));
-    }, [socket])
+    useFocusEffect(
+        useCallback(() => {
+            const checkAuthAndUpdateMessages = async () => {
+                try {
+                    const authToken = await AsyncStorage.getItem('authToken');
+                    if (!authToken) {
+                        navigation.replace("LoginScreen");
+                        return;
+                    }
+
+                    // Only emit if socket is connected and otherId exists
+                    if (socket?.connected && otherId) {
+                        socket.emit('message_read', { authToken, otherId });
+                    }
+
+                    // Make sure messageId is valid before dispatching
+                    if (messageId) {
+                        dispatch(updateUnreadMessageCount(messageId));
+                    }
+                } catch (error) {
+                    console.error('Error in useFocusEffect:', error);
+                }
+            };
+
+            checkAuthAndUpdateMessages();
+        }, [socket, navigation, otherId, messageId, dispatch]) // Added all dependencies
     );
 
     // if user reaches end to flatlist loadmore

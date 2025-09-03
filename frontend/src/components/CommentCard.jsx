@@ -210,7 +210,7 @@ const CommentCard = ({ commentId }) => {
                                 color={comment.isCommentLiked ? 'red' : 'black'}
                             />
                             <Text style={[styles.interactionTxt, { color: comment.isCommentLiked ? 'red' : '#333' }]}>
-                                {comment.commentLikesCount > 0 ? `${comment.commentLikesCount} Likes` : '0 Like'}
+                                {comment.commentLikesCount > 0 ? `${comment.commentLikesCount} ` : ''}{comment.commentLikesCount > 1 ? 'Likes' : 'Like'}
                             </Text>
                         </TouchableOpacity>
 
@@ -263,19 +263,19 @@ export default React.memo(CommentCard);
 const styles = StyleSheet.create({
     card: {
         flex: 1,
-        backgroundColor: '#f9f9f9',
+        backgroundColor: '#eff1f5ff',
         borderRadius: 14,
-        marginVertical: 2,
+        marginTop: 2,
         width: width,
         alignSelf: 'center',
         padding: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-        elevation: 5,
-        //borderBottomColor: '#777',
-        //borderBottomWidth: 1,
+        //shadowColor: '#000',
+        //shadowOffset: { width: 0, height: 3 },
+        //shadowOpacity: 0.1,
+        //shadowRadius: 6,
+        //elevation: 5,
+        borderTopColor: '#777',
+        borderTopWidth: 1,
     },
     // threeDots:{
     //     flexDirection: 'col',
@@ -293,6 +293,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        paddingBottom: 6,
     },
     userInfo: {
         flexDirection: 'row',
@@ -332,8 +333,10 @@ const styles = StyleSheet.create({
     },
     lower: {
         flex: 1,
-        marginHorizontal: 10,
-        marginTop: 5,
+        paddingHorizontal: 15,
+        paddingVertical: 5,
+        backgroundColor: '#dedcdcff',
+        borderRadius: 8,
     },
     comment: {
         color: '#000',
