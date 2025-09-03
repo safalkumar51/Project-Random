@@ -1,20 +1,41 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View, Dimensions, Alert } from 'react-native';
-import React from 'react';
-import axios from 'axios';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+
 import baseURL from '../assets/config';
+import { selectRequestsById } from '../redux/selectors/requestsSelectors';
+import { removeRequest, updateRequestsStatus } from '../redux/slices/requestsSlice';
+import { updateRequestStatus } from '../redux/slices/requestSlice';
+
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 const { width } = Dimensions.get('window');
 
-const ActivityCard = ({ name, profileImage, status, time, requestId, senderId }) => {
+const ActivityCard = ({ requestId }) => {
     const navigation = useNavigation();
+    const loading = useRef(false);
+
+    const dispatch = useDispatch();
+
+    const request = useSelector(state => selectRequestsById(state, requestId), shallowEqual);
+
+    const requestData = useMemo(() => request, [request]);
+    const time = useMemo(() => dayjs(requestData?.createdAt).fromNow(), [requestData?.createdAt]);
 
     const getProfileHandler = () => {
-        navigation.navigate("OtherProfileScreen", {status: status, otherId: senderId, requestId: requestId});
-    }
+        navigation.navigate("OtherProfileScreen", { otherId: requestData.from._id });
+    };
 
     const connectHandler = async () => {
+        if (loading.current) return;
+        loading.current = true;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -23,18 +44,17 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
             }
 
             const response = await axios.post(`${baseURL}/connection/accept`, {
-                    requestId,
-                    senderId
-                }, {
-                    headers: {
-                        Authorization: `Bearer ${authToken}`,
-                    }
+                requestId,
+                senderId: requestData.from._id
+            }, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                }
             });
 
             if (response.data.success) {
-
-                Alert.alert(response.data.message);
-                
+                dispatch(updateRequestStatus({ requestId, status: response.data.status }));
+                dispatch(updateRequestsStatus({ requestId, status: response.data.status }));
             } else {
                 console.error(response.data.message);
                 if (response.data.message === 'Log In Required!') {
@@ -42,13 +62,15 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
                     navigation.replace("LoginScreen");
                 }
             }
-
         } catch (err) {
             console.error('Error connecting:', err);
         }
-    }
+        loading.current = false;
+    };
 
     const removeHandler = async () => {
+        if (loading.current) return;
+        loading.current = true;
         try {
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -57,17 +79,22 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
             }
 
             const response = await axios.post(`${baseURL}/connection/reject`, {
-                    requestId,
-                    senderId
-                },{
-                    headers: {
-                        Authorization: `Bearer ${authToken}`,
-                    }
+                requestId,
+                senderId: requestData.from._id
+            }, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                }
             });
 
             if (response.data.success) {
-
-                Alert.alert(response.data.message);
+                // Remove from requests slice
+                dispatch(removeRequest(requestId));
+                dispatch(clearRequest(requestId));
+                dispatch(clearOtherProfile());
+                dispatch(clearOtherPosts());
+                // Sync with otherProfileSlice if the profile is open later
+                //dispatch(setOtherProfileStatus("none"));
 
             } else {
                 console.error(response.data.message);
@@ -76,33 +103,33 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
                     navigation.replace("LoginScreen");
                 }
             }
-
         } catch (err) {
-            console.log('Error rejecting:', err);
+            console.error('Error rejecting:', err);
         }
-    }
+        loading.current = false;
+    };
 
     return (
         <View style={styles.card}>
             <View style={styles.upper}>
                 <TouchableOpacity style={styles.userInfo} onPress={getProfileHandler}>
-                    <Image style={styles.avatar} source={{ uri: profileImage }} />
+                    <Image style={styles.avatar} source={{ uri: requestData?.from.profilepic }} />
                     <View style={styles.nameTime}>
-                        <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{name}</Text>
+                        <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{requestData?.from.name}</Text>
                         <Text style={styles.time}>{time}</Text>
                     </View>
                 </TouchableOpacity>
 
-                {(status === "requested" || status === "connected") && (
+                {(requestData?.status !== "pending") && (
                     <View style={styles.statusWrapper}>
-                        <Text style={[styles.statusText, status === "connected" ? styles.connected : styles.requested]}>
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                        <Text style={[styles.statusText, requestData?.status === "connected" ? styles.connected : styles.requested]}>
+                            {requestData?.status.charAt(0).toUpperCase() + requestData?.status.slice(1)}
                         </Text>
                     </View>
                 )}
             </View>
 
-            {status === "pending" && (
+            {requestData?.status === "pending" && (
                 <View style={styles.lower}>
                     <TouchableOpacity style={styles.connectBtn} onPress={connectHandler}>
                         <Text style={styles.connectTxt}>Connect</Text>
@@ -116,7 +143,7 @@ const ActivityCard = ({ name, profileImage, status, time, requestId, senderId })
     );
 };
 
-export default ActivityCard;
+export default React.memo(ActivityCard);
 
 const styles = StyleSheet.create({
     card: {
@@ -140,7 +167,7 @@ const styles = StyleSheet.create({
     userInfo: {
         flexDirection: 'row',
         alignItems: 'center',
-        flex: 1, // Allow it to take available space
+        flex: 1,
     },
     avatar: {
         width: 48,
@@ -168,8 +195,8 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         borderRadius: 20,
         backgroundColor: '#e0e0e0',
-        marginLeft: 10, // Prevent overlap
-        flexShrink: 0,  // Prevent shrinking
+        marginLeft: 10,
+        flexShrink: 0,
     },
     statusText: {
         fontSize: 14,
@@ -177,12 +204,12 @@ const styles = StyleSheet.create({
         textTransform: 'capitalize',
     },
     requested: {
-        color: '#4f7cf0', // Light Blue
-        fontWeight: 600
+        color: '#4f7cf0',
+        fontWeight: '600',
     },
     connected: {
-        color: '#2e7d32', // Green
-        fontWeight: 600
+        color: '#2e7d32',
+        fontWeight: '600',
     },
     lower: {
         flexDirection: 'row',

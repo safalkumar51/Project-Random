@@ -1,41 +1,49 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     View, TextInput, Button, FlatList, Text, StyleSheet, Image, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, Animated, ActivityIndicator,
     TouchableOpacity,
     Alert,
 } from 'react-native';
-import SharedHeader from '../../components/SharedHeader';
+import { useDispatch, useSelector } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import BackButton from '../../components/BackButton';
-import ChatCard from '../../components/ChatCard';
+import axios from 'axios';
+
+import SharedHeader from '../../components/SharedHeader';
+import { socket } from '../../utils/socket';
+import baseURL from '../../assets/config';
+//import { addMessages, addSingleMessage, clearMessages } from '../../redux/slices/chatsSlice';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { socket } from '../../utils/socket';
-import baseURL from '../../assets/config';
+import ChatsList from '../../lists/ChatsList';
+import CommentInput from '../../components/CommentInput';
+import { addChat, addChats, clearChats, setChats } from '../../redux/slices/chatsSlice';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { updateUnreadMessageCount } from '../../redux/slices/messagesSlice';
 
 dayjs.extend(relativeTime);
 
 const ChatScreen = ({ route }) => {
+
+    const navigation = useNavigation();
+    
     const headerHeight = 60;
     const headerTranslateY = useRef(new Animated.Value(0)).current;
     const lastScrollY = useRef(0);
     const scrollDirection = useRef('up');
     const insets = useSafeAreaInsets();
 
-    const { otherId, name, avatar } = route.params;
+    const { messageId, otherId, name, avatar } = route.params;
+    const dispatch = useDispatch();
 
-    const [chats, setChats] = useState([]);
-    const [text, setText] = useState('');
-    const [pageNumber, setPageNumber] = useState(1);
-    const [loading, setLoading] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
-    const [totalPages, setTotalPages] = useState();
+    const pageNumber = useRef(1);
+    const loading = useRef(false);
+    const hasMore = useRef(true);
+    const totalPages = useRef();
 
 
-    const handleScroll = (event) => {
+    const handleScroll = useCallback((event) => {
         const currentY = event.nativeEvent.contentOffset.y;
         if (currentY > lastScrollY.current) {
             if (scrollDirection.current !== 'down' && currentY > 60) {
@@ -58,14 +66,13 @@ const ChatScreen = ({ route }) => {
         }
 
         lastScrollY.current = currentY;
-    }
-
-    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+    }, [headerHeight, insets.top])
 
     const fetchChats = async (page) => {
-        if (page !== 1 && (loading || !hasMore)) return;
+        if (page !== 1 && (loading.current || !hasMore.current)) return;
 
-        setLoading(true);
+        loading.current = true;
+
         try {
 
             const authToken = await AsyncStorage.getItem('authToken');
@@ -74,25 +81,26 @@ const ChatScreen = ({ route }) => {
                 return;
             }
 
-            const response = await axios.get(`${ baseURL }/chat?page=${page}&otherId=${otherId}`, {
+            const response = await axios.get(`${baseURL}/chat?page=${page}&otherId=${otherId}`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                 }
             });
 
             if (response.data.success) {
-
+                const chatsData = response.data.chats;
+                console.log(chatsData);
                 if (page === 1) {
-                    setChats(response.data.chats);
-                    setTotalPages(response.data.totalPages);
+                    totalPages.current = response.data.totalPages;
+                    dispatch(setChats(chatsData));
                 } else {
-                    setChats(prev => [...prev, ...response.data.chats]);
+                    dispatch(addChats(chatsData));
                 }
-                setPageNumber(page);
-                setHasMore(page < totalPages);
+                pageNumber.current = page;
+                hasMore.current = page < totalPages.current
             }
             else {
-                console.log(response.data.message);
+                console.error(response.data.message);
                 if (response.data.message === 'Log In Required!') {
                     await AsyncStorage.removeItem('authToken');
                     navigation.replace("LoginScreen");
@@ -100,33 +108,66 @@ const ChatScreen = ({ route }) => {
             }
 
         } catch (err) {
-            console.log('Error fetching requests:', err);
+            console.error('Error fetching requests:', err);
         }
 
-        setLoading(false);
+        loading.current = false;
     }
 
     useEffect(() => {
-        const handleRequest = (chat) => {
-            setChats(prev => [...prev, chat]);
+        const handleChat = ({ senderId, chat }) => {
+            if (senderId === otherId) dispatch(addChat(chat));
         };
-        socket.off('receive_chat', handleRequest); // prevent duplicates
-        socket.on('receive_chat', handleRequest);
+        socket.off('receive_chat', handleChat); // prevent duplicates
+        socket.on('receive_chat', handleChat);
         fetchChats(1);
 
         return () => {
-            socket.off('receive_chat', handleRequest);
+            socket.off('receive_chat', handleChat);
+            dispatch(clearChats());
+            pageNumber.current = 0;
+            loading.current = false;
+            hasMore.current = true;
+            totalPages.current = undefined;
         }
     }, [otherId]);
 
-    // if user reaches end to flatlist loadmore
-    const loadMore = () => {
-        if (!loading && hasMore) {
-            fetchChats(pageNumber + 1);
-        }
-    };
+    useFocusEffect(
+        useCallback(() => {
+            const checkAuthAndUpdateMessages = async () => {
+                try {
+                    const authToken = await AsyncStorage.getItem('authToken');
+                    if (!authToken) {
+                        navigation.replace("LoginScreen");
+                        return;
+                    }
 
-    const sendMessage = async () => {
+                    // Only emit if socket is connected and otherId exists
+                    if (socket?.connected && otherId) {
+                        socket.emit('message_read', { authToken, otherId });
+                    }
+
+                    // Make sure messageId is valid before dispatching
+                    if (messageId) {
+                        dispatch(updateUnreadMessageCount(messageId));
+                    }
+                } catch (error) {
+                    console.error('Error in useFocusEffect:', error);
+                }
+            };
+
+            checkAuthAndUpdateMessages();
+        }, [socket, navigation, otherId, messageId, dispatch]) // Added all dependencies
+    );
+
+    // if user reaches end to flatlist loadmore
+    const loadMore = useCallback(() => {
+        if (!loading.current && hasMore.current && pageNumber.current) {
+            fetchChats(pageNumber.current + 1);
+        }
+    }, []);
+
+    const sendMessage = async (text) => {
         if (text.trim() !== "") {
             try {
 
@@ -136,7 +177,7 @@ const ChatScreen = ({ route }) => {
                     return;
                 }
 
-                const response = await axios.post(`${ baseURL }/chat/send`, {
+                const response = await axios.post(`${baseURL}/chat/send`, {
                     otherId,
                     message: text
                 }, {
@@ -146,10 +187,7 @@ const ChatScreen = ({ route }) => {
                 });
 
                 if (response.data.success) {
-
-                    Alert.alert(response.data.message);
-                    setChats((prev) => [...prev, response.data.chat]);
-
+                    dispatch(addChat(response.data.chat));
                 } else {
                     console.error(response.data.message);
                     if (response.data.message === 'Log In Required!') {
@@ -166,23 +204,6 @@ const ChatScreen = ({ route }) => {
         }
     };
 
-    const renderItem = ({ item }) => {
-        return (
-            <ChatCard
-                //otherId={'2'}
-                //id={item.id}
-                //avatar={item.avatar}
-                //message={item.text}
-                //time={item.timestamp}
-                otherId={otherId}
-                id={`${item.from}`}
-                avatar={avatar}
-                message={item.message}
-                time={dayjs(item.createdAt).fromNow()}
-            />
-        );
-    };
-
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <KeyboardAvoidingView
@@ -197,44 +218,23 @@ const ChatScreen = ({ route }) => {
                             title={name}
                         />
                         <View style={{ flex: 1 }}>
-                            <AnimatedFlatList
-                                //data={data}
-                                //keyExtractor={(item) => item.id}
-                                data={chats}
-                                keyExtractor={(item) => item._id}
-                                renderItem={renderItem}
+                            <ChatsList
+                                otherId={otherId}
+                                avatar={avatar}
                                 onScroll={handleScroll}
-                                scrollEventThrottle={16}
-
-                                // to run loadmore function when end is reached for infinite scrolling
                                 onEndReached={loadMore}
-                                onEndReachedThreshold={0.5}
-
-                                // to display loading as footer
-                                ListFooterComponent={loading && <ActivityIndicator />}
-                                showsVerticalScrollIndicator={false}
-
-                                contentContainerStyle={styles.messagesContainer}
+                                loading={loading}
                             />
                         </View>
-                        <View style={styles.inputRow}>
-                            <TextInput
-                                style={styles.input}
-                                value={text}
-                                onChangeText={setText}
-                                placeholder="Type a message"
-                                placeholderTextColor="#888"
-                            />
-                            <TouchableOpacity style={styles.buttonContainer} onPress={sendMessage}>
-                                <Text style={styles.buttonText}>SEND</Text>
-                            </TouchableOpacity>
-                        </View>
+                        <CommentInput onSend={sendMessage} placeholderText={"Message..."} />
                     </View>
                 </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };
+
+export default React.memo(ChatScreen);
 
 const styles = StyleSheet.create({
     container: {
@@ -245,10 +245,6 @@ const styles = StyleSheet.create({
         flex: 1,
         //padding: 10,
         margin: 5,
-    },
-    messagesContainer: {
-        paddingBottom: 60,
-        paddingTop: 60
     },
     inputRow: {
         position: 'absolute',
@@ -285,5 +281,3 @@ const styles = StyleSheet.create({
         fontWeight: 500,
     },
 });
-
-export default ChatScreen;

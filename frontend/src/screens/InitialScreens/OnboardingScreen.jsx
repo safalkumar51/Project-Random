@@ -47,12 +47,12 @@ const OnboardingScreen = ({ navigation }) => {
                             }}
                         />
                     ),
-                    title: 'Onboarding',
+                    title: 'RadNow',
                     titleStyles: {
                         fontSize: width * 0.08,       // Responsive font size
                         marginBottom: height * 0.02
                     },
-                    subtitle: 'Done with React Native Onboarding Swiper',
+                    subtitle: 'Welcome to a new way of exploring people!!',
                     subTitleStyles: {
                         fontSize: width * 0.05,
                         paddingHorizontal: width * 0.1
@@ -70,12 +70,12 @@ const OnboardingScreen = ({ navigation }) => {
                             }}
                         />
                     ),
-                    title: 'Onboarding',
+                    title: 'RadNow',
                     titleStyles: {
                         fontSize: width * 0.08,       // Responsive font size
                         marginBottom: height * 0.02
                     },
-                    subtitle: 'Done with React Native Onboarding Swiper',
+                    subtitle: 'Explore people around you in real-time',
                     subTitleStyles: {
                         fontSize: width * 0.05,
                         paddingHorizontal: width * 0.1
@@ -93,12 +93,12 @@ const OnboardingScreen = ({ navigation }) => {
                             }}
                         />
                     ),
-                    title: 'Onboarding',
+                    title: 'RadNow',
                     titleStyles: {
                         fontSize: width * 0.08,       // Responsive font size
                         marginBottom: height * 0.02
                     },
-                    subtitle: 'Done with React Native Onboarding Swiper',
+                    subtitle: 'A Social Media App',
                     subTitleStyles: {
                         fontSize: width * 0.05,
                         paddingHorizontal: width * 0.1

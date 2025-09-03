@@ -1,42 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Animated, ActivityIndicator, Alert } from 'react-native';
-import MessagesCard from '../../components/MessagesCard';
+
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import NavBar from '../../components/NavBar';
+import { useDispatch } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
 import baseURL from '../../assets/config';
-
-dayjs.extend(relativeTime);
-
-const data = [
-    {
-        id: '1',
-        name: 'Nishant',
-        time: '9:45 AM',
-        avatar: 'https://randomuser.me/api/portraits/men/3.jpg',
-        unreadCount: 2,
-    },
-    {
-        id: '2',
-        name: 'Ravi',
-        time: 'Yesterday',
-        avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
-        unreadCount: 0,
-    },
-    {
-        id: '3',
-        name: 'Aryan',
-        time: '2 days ago',
-        avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
-        unreadCount: 1,
-    },
-];
-
+import NavBar from '../../components/NavBar';
+import { addMessages, setMessages, upsertMessage } from '../../redux/slices/messagesSlice';
+import MessagesList from '../../lists/MessagesList';
+import { socket } from '../../utils/socket';
 
 const MessagesScreen = () => {
 
@@ -50,18 +25,19 @@ const MessagesScreen = () => {
     const scrollDirection = useRef('up');
     const insets = useSafeAreaInsets();
 
-    const [messages, setMessages] = useState([]);
-    const [pageNumber, setPageNumber] = useState(1);
-    const [loading, setLoading] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
-    const [totalPages, setTotalPages] = useState();
+    const dispatch = useDispatch();
+
+    const pageNumber = useRef(0);
+    const loading = useRef(false);
+    const hasMore = useRef(true);
+    const totalPages = useRef();
 
 
     // function to fetch profile( if pageno = 1 ) and user post from backend
     const fetchMessages = async (page) => {
-        if (page !== 1 && (loading || !hasMore)) return;
+        if (page !== 1 && (loading.current || !hasMore.current)) return;
 
-        setLoading(true);
+        loading.current = true;
         try {
 
             const authToken = await AsyncStorage.getItem('authToken');
@@ -71,21 +47,21 @@ const MessagesScreen = () => {
                 return;
             }
 
-            const response = await axios.get(`${ baseURL }/messages?page=${page}`, {
+            const response = await axios.get(`${baseURL}/messages?page=${page}`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
                 }
             });
             if (response.data.success) {
+                const messagesData = response.data.messages;
                 if (page === 1) {
-                    setMessages(response.data.messages);
-                    setTotalPages(response.data.totalPages);
+                    totalPages.current = response.data.totalPages;
+                    dispatch(setMessages(messagesData));
                 } else {
-                    setMessages(prev => [...prev, ...response.data.messages]);
+                    dispatch(addMessages(messagesData));
                 }
-
-                setPageNumber(page);
-                setHasMore(page < totalPages);
+                pageNumber.current = page;
+                hasMore.current = page < totalPages.current;
             }
             else {
                 console.log(response.data.message);
@@ -99,16 +75,14 @@ const MessagesScreen = () => {
             console.log('Error fetching messages:', err);
         }
 
-        setLoading(false);
+        loading.current = false;
     };
 
     useEffect(() => {
-        console.log(navigation.getState());
         // function to reload or scroll to top 
         const reload = navigation.addListener('tabPress', () => {
             if (isFocused) {
                 if (lastScrollY.current > 0) {
-                    //Alert.alert("y");
                     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
                 } else {
                     fetchMessages(1);
@@ -121,14 +95,22 @@ const MessagesScreen = () => {
 
     // on mounting fetchposts(pageno = 1)
     useEffect(() => {
+        const handleMessage = (message) => {
+            dispatch(upsertMessage(message));
+        };
+        socket.off('receive_message', handleMessage); // prevent duplicates
+        socket.on('receive_message', handleMessage);
         fetchMessages(1);
+
+        return () => {
+            socket.off('receive_message', handleMessage);
+        }
     }, []);
 
     // Track scroll offset
 
-    const handleScroll = (event) => {
+    const handleScroll = useCallback((event) => {
         const currentY = event.nativeEvent.contentOffset.y;
-
         if (currentY > lastScrollY.current) {
             if (scrollDirection.current !== 'down' && currentY > 60) {
                 Animated.timing(headerTranslateY, {
@@ -150,56 +132,25 @@ const MessagesScreen = () => {
         }
 
         lastScrollY.current = currentY;
-    }
-
-    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+    }, [headerHeight, insets.top])
 
     // if user reaches end to flatlist loadmore
-    const loadMore = () => {
-        if (!loading && hasMore) {
-            fetchMessages(pageNumber + 1);
+    const loadMore = useCallback(() => {
+        if (!loading.current && hasMore.current && pageNumber.current) {
+            fetchMessages(pageNumber.current + 1);
         }
-    };
-
-    const renderItem = ({ item }) => {
-        return (
-            <MessagesCard
-                //name={item.name}
-                //time={item.time}
-                //avatar={item.avatar}
-                //unreadCount={item.unreadCount}
-                name={item.from.name}
-                avatar={item.from.profilepic}
-                time={dayjs(item.updatedAt).fromNow()}
-                unreadCount={item.newMessages}
-                otherId={item.from._id}
-            />
-        );
-    };
+    }, []);
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.container}>
                 <NavBar scrollY={headerTranslateY} />
                 <View style={{ flex: 1 }}>
-                    <AnimatedFlatList
-                        ref={flatListRef}
-                        //data={data}
-                        //keyExtractor={(item) => item.id}
-                        data={messages}
-                        keyExtractor={(item => item._id)}
-                        renderItem={renderItem}
+                    <MessagesList
+                        flatListRef={flatListRef}
                         onScroll={handleScroll}
-                        scrollEventThrottle={16}
-                        contentContainerStyle={{ paddingTop: headerHeight }}
-
-                        // to run loadmore function when end is reached for infinite scrolling
                         onEndReached={loadMore}
-                        onEndReachedThreshold={0.5}
-
-                        // to display loading as footer
-                        ListFooterComponent={loading && <ActivityIndicator />}
-                        showsVerticalScrollIndicator={false}
+                        loading={loading}
                     />
                 </View>
             </View>
@@ -207,8 +158,8 @@ const MessagesScreen = () => {
     );
 };
 
+export default React.memo(MessagesScreen);
+
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },
 });
-
-export default MessagesScreen;

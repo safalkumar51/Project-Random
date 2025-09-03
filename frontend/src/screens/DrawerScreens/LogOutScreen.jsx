@@ -38,6 +38,7 @@ const LogOutScreen = () => {
                 console.error('Sign Out Error:', err);
             }
         }
+
         logout();
     }, []);
 

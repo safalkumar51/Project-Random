@@ -20,7 +20,8 @@ const userSignUpVerify = async (req, res) => {
         let createdUser = await userModel.create({
             name: otpExists.name,
             email: otpExists.email,
-            password: otpExists.password
+            password: otpExists.password,
+            location: { type: 'Point', coordinates: [179.0, 85.0] }
         });
 
         await otpModel.deleteOne({ email });

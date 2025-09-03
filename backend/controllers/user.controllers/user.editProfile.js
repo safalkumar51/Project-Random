@@ -5,7 +5,7 @@ const userEditProfile = async (req,res) => {
 
     try{
 
-        const user = await userModel.findOne({_id: req.userId})
+        let user = await userModel.findOne({_id: req.userId})
             .select('name bio token');
 
         if(!user || req.userToken !== user.token){
@@ -29,6 +29,8 @@ const userEditProfile = async (req,res) => {
         return res.status(200).json({
             success: true,
             message: "Profile Edited Successfully",
+            name: user.name,
+            bio: user.bio
         })
 
     } catch(err){

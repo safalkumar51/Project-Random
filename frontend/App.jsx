@@ -11,6 +11,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import checkOnboardingStatus from './src/utils/checkOnboardingStatus';
 import InitialStackNavigator from './src/Navigations/InitialStackNavigator';
 
+import { Provider } from 'react-redux';      
+import { store } from './src/redux/store'; 
+
 
 enableScreens();
 
@@ -50,6 +53,7 @@ const App = () => {
   }
 
   return (
+    <Provider store={store}>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <NavigationContainer>
@@ -57,6 +61,7 @@ const App = () => {
         </NavigationContainer>
       </SafeAreaProvider>
     </GestureHandlerRootView>
+    </Provider>
   );
 }
 

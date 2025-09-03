@@ -12,6 +12,7 @@ const userForgotPasswordOtp = require('../controllers/user.controllers/user.forg
 const userForgotPasswordVerify = require('../controllers/user.controllers/user.forgotPasswordVerify');
 const userHomeFeed = require('../controllers/user.controllers/user.homeFeed');
 const userProfile = require('../controllers/user.controllers/user.profile');
+const userOtherProfile = require('../controllers/user.controllers/user.otherProfile');
 const userSignOut = require('../controllers/user.controllers/user.signOut');
 const userDelete = require('../controllers/user.controllers/user.delete');
 const userEditProfile = require('../controllers/user.controllers/user.editProfile');
@@ -35,6 +36,7 @@ router.post('/forgotpassword/otp', userForgotPasswordOtp);
 router.post('/forgotpassword/verify', userForgotPasswordVerify);
 router.get('/home', isLoggedIn , userHomeFeed);
 router.get('/profile', isLoggedIn, userProfile);
+router.get('/otherprofile', isLoggedIn, userOtherProfile);
 router.post('/editprofile', isLoggedIn, userEditProfile);
 router.post('/changeprofilephoto', isLoggedIn, upload.single("profilepic"), userChangeProfilePhoto);
 router.post('/changepassword', isLoggedIn, userChangePassword);

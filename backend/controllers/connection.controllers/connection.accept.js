@@ -23,8 +23,19 @@ const connectionAccept = async (req, res) => {
         const sender = await userModel.findOne({ _id: senderId }).select('_id');
 
         // Ensure both requests exist
-        let myWay = await friendRequestModel.findOne({ from: req.userId, to: senderId });
-        let otherWay = await friendRequestModel.findOne({ from: senderId, to: req.userId });
+        let myWay = await friendRequestModel.findOne({ from: req.userId, to: senderId })
+            .select('from updatedAt status')
+            .populate({
+                path: 'from',
+                select: 'name profilepic'
+            });
+
+        let otherWay = await friendRequestModel.findOne({ from: senderId, to: req.userId })
+            .select('from updatedAt status')
+            .populate({
+                path: 'from',
+                select: 'name profilepic'
+            });
 
         if (!sender || !myWay || !otherWay) {
             await friendRequestModel.deleteMany({
@@ -50,6 +61,7 @@ const connectionAccept = async (req, res) => {
 
             const io = req.app.get('io');
             io.to(senderId).emit('receive_connection', myWay);
+            io.to(req.userId).emit('recieve_connection', otherWay);
 
             return res.status(201).json({
                 success: true,

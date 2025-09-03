@@ -1,30 +1,35 @@
 import { Image, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import React, { useEffect, useMemo } from 'react'
+import { shallowEqual, useSelector } from 'react-redux'
+import { selectChatsById } from '../redux/selectors/chatsSelectors'
 
-const ChatCard = ({otherId, id, avatar, message, time}) => {
-    const isMe = id !== otherId;
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
+
+const ChatCard = ({otherId, avatar, chatId}) => {
+    const chat = useSelector(state => selectChatsById(state, chatId), shallowEqual);
+    const chatData = useMemo(() => chat, [chat]);
+    const time = useMemo(() => dayjs(chatData?.createdAt).fromNow(), [chatData?.createdAt]);
     return (
         <View
             style={[
                 styles.messageContainer,
-                isMe ? styles.rightAlign : styles.leftAlign,
+                chatData.from !== otherId ? styles.rightAlign : styles.leftAlign,
             ]}
         >
-            {!isMe && (
-                <View style={styles.avatarWrapper}>
-                    <Image source={{uri: avatar}} style={styles.avatar} />
-                </View>
-            )}
+            
 
-            <View style={[styles.bubble, isMe ? styles.myBubble : styles.theirBubble]}>
-                <Text style={[styles.text, isMe && styles.myText]}>{message}</Text>
-                <Text style={[styles.time, isMe && styles.myText]}>{time}</Text>
+            <View style={[styles.bubble, chatData.from !== otherId ? styles.myBubble : styles.theirBubble]}>
+                <Text style={[styles.text, chatData.from !== otherId && styles.myText]}>{chatData.message}</Text>
+                <Text style={[styles.time, chatData.from !== otherId && styles.myText]}>{time}</Text>
             </View>
         </View>
     )
 }
 
-export default ChatCard
+export default React.memo(ChatCard)
 
 const styles = StyleSheet.create({
     messageContainer: {

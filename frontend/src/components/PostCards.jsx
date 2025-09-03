@@ -1,33 +1,87 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, Dimensions, Alert } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Dimensions, Alert, Modal } from 'react-native';
+import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import Icon from 'react-native-vector-icons/FontAwesome';
+import Icons from 'react-native-vector-icons/Entypo';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import baseURL from '../assets/config';
 
 const { width, height } = Dimensions.get('window');
 
-const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, postId, likesCount, commentsCount, isLiked, isCommented, isMine }) => {
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+import baseURL from '../assets/config';
+import { removeFeedPost, toggleFeedLike } from '../redux/slices/feedSlice';
+import { selectSinglePostById } from '../redux/selectors/singlePostSelectors';
+import { selectFeedPostById } from '../redux/selectors/feedSelectors';
+import { removePost, toggleLike } from '../redux/slices/singlePostSlice';
+import { selectOtherPostsById } from '../redux/selectors/otherProfileSelectors';
+import { toggleOtherPostsLike } from '../redux/slices/otherPostsSlice';
+import { selectMyPostsById } from '../redux/selectors/myProfileSelectors';
+import { removeMyPost, toggleMyPostLike } from '../redux/slices/myPostsSlice';
+
+dayjs.extend(relativeTime);
+
+const PostCards = ({ postId, counter }) => {
+
+    const [modalVisible, setModalVisible] = useState(false);
+
+    const handleMenuPress = () => {
+        setModalVisible(true);
+    }
+
+    const handleCloseModal = () => {
+        setModalVisible(false);
+    }
+
+    const loading = useRef(false);
+
+
     const navigation = useNavigation();
-    
-    const [liked, setLiked] = useState(false);
-    const [likeCount, setLikeCount] = useState(0);
-    const [commented, setCommented] = useState(false);
-    const [commentCount, setCommentCount] = useState(0);
-    const [mine, setMine] = useState(false);
+
+    const dispatch = useDispatch();
+
+    let post = {};
+
+    if (counter === 1) {
+        post = useSelector(state => selectSinglePostById(state, postId), shallowEqual);
+    } else if (counter === 2) {
+        post = useSelector(state => selectFeedPostById(state, postId), shallowEqual);
+    } else if (counter === 3) {
+        post = useSelector(state => selectMyPostsById(state, postId), shallowEqual);
+    } else if (counter === 4) {
+        post = useSelector(state => selectOtherPostsById(state, postId), shallowEqual);
+    }
+
+    const time = useMemo(() => dayjs(post?.createdAt).fromNow(), [post?.createdAt]);
 
     const getProfileHandler = () => {
-        navigation.navigate("OtherProfileScreen", {status: "connected", otherId: ownerId, requestId: ""});
-    }
+        if(counter === 3 || counter === 4) return;
+        if (post.isMine) {
+            if (counter === 1) {
+                navigation.navigate("Home", { screen: "Profile" });
+            } else {
+                navigation.navigate("Profile");
+            }
+
+        } else {
+            navigation.navigate("OtherProfileScreen", { otherId: post?.owner._id });
+        }
+    };
 
     const getPostHandler = () => {
-        navigation.navigate("PostScreen", {postId});
+        if(counter===1) return;
+        navigation.navigate("PostScreen", { postId });
     }
 
-    const toggleLike = async () => {
-        try{
+    const handleLike = async () => {
+        if (loading.current) return;
+        loading.current = true;
+        try {
 
             const authToken = await AsyncStorage.getItem('authToken');
             if (!authToken) {
@@ -36,7 +90,7 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, pos
             }
 
             const response = await axios.post(`${baseURL}/post/like`, {
-                postId
+                postId: post._id
             }, {
                 headers: {
                     Authorization: `Bearer ${authToken}`,
@@ -44,10 +98,13 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, pos
             });
 
             if (response.data.success) {
-
-                //Alert.alert(response.data.message);
-                setLiked(!liked);
-                setLikeCount(prev => liked ? prev - 1 : prev + 1);
+                dispatch(toggleLike(post._id));
+                dispatch(toggleFeedLike(post._id));
+                if (post.isMine) {
+                    dispatch(toggleMyPostLike(post._id));
+                } else {
+                    dispatch(toggleOtherPostsLike(post._id));
+                }
 
             } else {
                 console.error(response.data.message);
@@ -57,57 +114,200 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, pos
                 }
             }
 
-        } catch(err){
+        } catch (err) {
             console.error('Error like/unlike post:', err);
         }
+        loading.current = false;
     };
-    
-    useEffect(() => {
-        setLikeCount(likesCount);
-        setCommentCount(commentsCount);
-        setLiked(isLiked);
-        setCommented(isCommented);
-        setMine(isMine);
-    }, [])
+
+    const handleDeletePost = async () => {
+        Alert.alert(
+            'Confirm Deletion',
+            'Are you sure you want to delete this post?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => deletePost() },
+            ]
+        );
+    }
+    // report function
+    const handleReportPost = async () => {
+        Alert.alert(
+            'Confirm Report',
+            'Are you sure you want to report this post?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => reportPost() },
+            ]
+        );
+    }
+
+    const deletePost = async () => {
+        if(loading.current) return;
+        loading.current = true;
+        try{
+            const authToken = await AsyncStorage.getItem('authToken');
+            if (!authToken) {
+                navigation.replace('LoginScreen');
+                return;
+            }
+
+            const response = await axios.post(`${baseURL}/post/delete`,{
+                postId
+            }, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                }
+            });
+
+            if (response.data.success) {
+                dispatch(removePost(response.data.post._id));
+                dispatch(removeFeedPost(response.data.post._id));
+                dispatch(removeMyPost(response.data.post._id));
+                if(counter===1) navigation.goBack();
+            } else {
+                if (response.data.message === 'Log In Required!') {
+                    await AsyncStorage.removeItem('authToken');
+                    navigation.replace('LoginScreen');
+                }
+            }
+        } catch(err){
+            console.error('Error deleting post:', err);
+        }
+        loading.current = false;
+    }
+
+    const reportPost = async () => {
+        if (loading.current) return;
+        loading.current = true;
+        try {
+            const authToken = await AsyncStorage.getItem('authToken');
+            if (!authToken) {
+                navigation.replace('LoginScreen');
+                return;
+            }
+
+            const response = await axios.post(`${baseURL}/user/report/post`, {
+                problem
+            }, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                }
+            })
+
+            if (response.data.success) {
+                Alert.alert("Reported Successfully!!", "Our Support Team wiil tend to your report ASAP")
+            } else {
+                if (response.data.message === 'Log In Required!') {
+                    await AsyncStorage.removeItem('authToken');
+                    navigation.replace('LoginScreen');
+                }
+            }
+        } catch (err) {
+            console.error('Error reporting post:', err);
+        }
+        loading.current = false;
+    }
 
     return (
         <View style={styles.shadowWrapper}>
             <View style={styles.card}>
-                <TouchableOpacity style={styles.topRow} onPress={getProfileHandler}>
-                    <Image style={styles.avatar} source={{ uri: profileImage }} />
-                    <View style={styles.ImageTxt}>
-                        <Text style={styles.name}>{name}</Text>
-                        <Text style={styles.time}>{time}</Text>
-                    </View>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={getPostHandler}>
-                    <Text style={styles.postText}>{postText}</Text>
+                <View style={styles.topRowContainer}>
+                    <TouchableOpacity style={styles.topRow} onPress={getProfileHandler}>
+                        <Image style={styles.avatar} source={{ uri: post?.owner?.profilepic }} />
+                        <View style={styles.ImageTxt}>
+                            <Text style={styles.name}>{post?.owner?.name}</Text>
+                            <Text style={styles.time}>{time}</Text>
+                        </View>
+                    </TouchableOpacity>
 
-                    {postImage ? (
-                        <Image style={styles.PostImage} source={{ uri: postImage }} />
-                    ) : null}
+                    <TouchableOpacity onPress={handleMenuPress} style={styles.menuButton}>
+                        <Icons name="dots-three-vertical" size={20} color="#333" />
+                    </TouchableOpacity>
+
+                </View>
+
+                {/* Model for three dots  */}
+
+                <Modal
+                    animationType='slide'
+                    transparent={true}
+                    visible={modalVisible}
+                    onRequestClose={handleCloseModal}
+
+                >
+                    <TouchableOpacity style={styles.modalOverlay} onPress={handleCloseModal}>
+                        <View style={styles.modalContainer}>
+                            {
+                                post?.isMine && (
+                                    <TouchableOpacity
+
+                                        style={styles.modalOption}
+                                        onPress={() => {
+                                            handleCloseModal();
+                                            handleDeletePost();
+                                        }}
+                                    >
+                                        <Text style={[styles.modalText, { color: "red" }]}>Delete</Text>
+                                    </TouchableOpacity>
+                                )
+                            }
+                            <TouchableOpacity
+                                style={styles.modalOption}
+                                onPress={() => {
+                                    handleCloseModal();
+                                    handleReportPost();
+                                }}
+                            >
+                                <Text style={styles.modalText}>Report</Text>
+
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.modalOption}
+                                onPress={handleCloseModal}
+                            >
+                                <Text style={styles.modalText}>Cancel</Text>
+
+                            </TouchableOpacity>
+
+                        </View>
+                    </TouchableOpacity>
+
+                </Modal>
+
+                <TouchableOpacity onPress={getPostHandler}>
+
+                    {post?.caption ? (
+                        <Text style={styles.postText}>{post?.caption}</Text>
+                    ) : <View style={{ paddingTop: 10 }} />}
+
+
+                    {post?.postpic && (
+                        <Image style={styles.PostImage} source={{ uri: post?.postpic }} />
+                    )}
                 </TouchableOpacity>
 
                 <View style={styles.interactionWrapper}>
-                    <TouchableOpacity style={styles.interaction} onPress={toggleLike}>
+                    <TouchableOpacity style={styles.interaction} onPress={handleLike}>
                         <Icon
-                            name={liked ? 'heart' : 'heart-o'}
+                            name={post?.isLiked ? 'heart' : 'heart-o'}
                             size={26}
-                            color={liked ? 'red' : 'black'}
+                            color={post?.isLiked ? 'red' : 'black'}
                         />
-                        <Text style={[styles.interactionTxt, { color: liked ? 'red' : '#333' }]}>
-                            {likeCount > 0 ? `${likeCount} Like` : 'Like'}
+                        <Text style={[styles.interactionTxt, { color: post?.isLiked ? 'red' : '#333' }]}>
+                            {post?.likesCount > 0 ? `${post?.likesCount} ` : ''}{post?.likesCount > 1 ? 'Likes' : 'Like'}
                         </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.interaction} onPress={getPostHandler}>
                         <Icon
-                            name={commented ? 'comment' : 'comment-o'}
+                            name={post?.isCommented ? 'comment' : 'comment-o'}
                             size={26}
-                            color={commented ? '#007AFF' : 'black'}
+                            color={post?.isCommented ? '#007AFF' : 'black'}
                         />
-                        <Text style={[styles.interactionTxt, { color: commented ? '#007AFF' : '#333' }]}>
-                            {commentCount > 0 ? `${commentCount} Comment` : 'Comment'}
+                        <Text style={[styles.interactionTxt, { color: post?.isCommented ? '#007AFF' : '#333' }]}>
+                            {post?.commentsCount > 0 ? `${post?.commentsCount} ` : ''}{post?.commentsCount > 1 ? 'Comments' : 'Comment'}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -116,7 +316,7 @@ const PostCards = ({ name, time, profileImage, postText, postImage, ownerId, pos
     );
 };
 
-export default PostCards;
+export default React.memo(PostCards);
 
 const styles = StyleSheet.create({
     card: {
@@ -130,6 +330,38 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 10,
         elevation: 7,
+    },
+    topRowContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 10,
+        marginHorizontal: 10,
+    },
+    menuButton: {
+        padding: 5,
+        paddingRight: 15
+
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContainer: {
+        backgroundColor: '#fff',
+        paddingVertical: 10,
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
+    },
+    modalOption: {
+        paddingVertical: 15,
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    modalText: {
+        fontSize: 16,
     },
     topRow: {
         flexDirection: 'row',
@@ -166,9 +398,11 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     PostImage: {
+        // width: width,
+        // maxHeight: width,
+        // minHeight: width * 0.7
         width: width,
-        maxHeight: width,
-        minHeight: width * 0.7
+        height: width * 3 / 4,
     },
     interactionWrapper: {
         flexDirection: 'row',

@@ -6,7 +6,7 @@ const userChangePassword = async (req,res) => {
 
     try{
 
-        const user = await userModel.findOne({_id: req.userId}).select('password token');
+        let user = await userModel.findOne({_id: req.userId}).select('password token');
         if(!user || user.token !== req.userToken){
             return res.status(404).json({
                 success: false,
